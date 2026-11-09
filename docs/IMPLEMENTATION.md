@@ -188,6 +188,9 @@ checkout (switched to classic shortcodes to match the live classic theme); setup
 
 ## 11. Local staging (Docker)
 
+To copy the **live** site instead of a fresh install, see `docs/STAGING-CLONE.md`.
+
+
 ```
 cd dev && cp .env.dev.example .env      # edit the passwords
 docker compose up -d db wordpress

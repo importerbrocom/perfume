@@ -1,1 +1,6 @@
 .env
+*.sql
+*.sql.gz
+*.wpress
+dev/import/
+dev/wp.log

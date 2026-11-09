@@ -5,34 +5,120 @@ on:
     paths: ['wp-content/**','dev/**','tests/**','.github/workflows/e2e.yml']
 permissions:
   contents: read
+env:
+  ADMIN_PASSWORD: ci-admin-Pass1!   # throwaway CI-only password
 jobs:
-  e2e:
+  fresh:
+    name: Fresh install
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
-      - name: Start WordPress + WooCommerce (test passwords are throwaway)
+      - name: Start WordPress + WooCommerce + Mailpit
         working-directory: dev
         run: |
-          printf 'DB_PASSWORD=ci-db\nDB_ROOT_PASSWORD=ci-root\nADMIN_PASSWORD=ci-admin-Pass1!\n' > .env
-          docker compose up -d db wordpress
+          printf 'DB_PASSWORD=ci-db\nDB_ROOT_PASSWORD=ci-root\nADMIN_PASSWORD=%s\n' "$ADMIN_PASSWORD" > .env
+          docker compose up -d db wordpress mailpit
           ./setup.sh
-          docker compose run --rm -T wpcli eval-file /seed-staging.php
+          ./test-pages.sh --seed
       - name: Playwright
         working-directory: tests/e2e
+        env: { BASE_URL: 'http://localhost:8080', ADMIN_USER: admin, MAILPIT_URL: 'http://localhost:8025' }
         run: |
           npm install
           npx playwright install --with-deps chromium
-          BASE_URL=http://localhost:8080 npx playwright test
+          npx playwright test
       - name: No PHP errors/warnings from the plugin
         if: always()
         working-directory: dev
         run: |
           docker compose logs wordpress > wp.log 2>&1 || true
-          if grep -iE "PHP (Fatal|Parse|Warning|Notice|Deprecated).*perfumarathi-shop" wp.log; then echo "Plugin produced PHP errors"; exit 1; fi
+          if grep -iE "PHP (Fatal|Parse|Warning|Notice|Deprecated).*(perfumarathi-shop|pm-staging-safety)" wp.log; then exit 1; fi
           echo "No plugin PHP errors in server log"
       - uses: actions/upload-artifact@v4
         if: always()
-        with: { name: playwright-report, path: tests/e2e/test-results }
+        with: { name: playwright-fresh, path: tests/e2e/test-results }
+
+  clone:
+    name: Clone round-trip (import-live.sh)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Build a fake "live" site (custom table prefix, live URL, Elementor JSON URL, active webhook)
+        working-directory: dev
+        run: |
+          printf 'DB_PASSWORD=ci-db\nDB_ROOT_PASSWORD=ci-root\nADMIN_PASSWORD=%s\nTABLE_PREFIX=pmx_\n' "$ADMIN_PASSWORD" > .env
+          docker compose up -d db wordpress mailpit
+          ./setup.sh
+          wp() { docker compose run --rm -T wpcli "$@"; }
+          # Raw insert so the JSON-escaped slashes are stored exactly like Elementor stores them.
+          wp eval-file - <<'PHP'
+          <?php
+          global $wpdb;
+          $id = (int) $wpdb->get_var( "SELECT ID FROM {$wpdb->posts} WHERE post_name='staging-home'" );
+          $wpdb->insert( $wpdb->postmeta, array( 'post_id' => $id, 'meta_key' => '_elementor_data', 'meta_value' => '[{"settings":{"link":{"url":"http:\/\/localhost:8080\/shop\/"}}}]' ) );
+          echo "fixture meta on #$id\n";
+          PHP
+          wp wc webhook create --name=live-hook --topic=order.created --delivery_url=https://example.test/hook --status=active --user=admin
+          wp search-replace http://localhost:8080 https://live.example.test --all-tables-with-prefix --skip-columns=guid
+          wp search-replace 'http:\/\/localhost:8080' 'https:\/\/live.example.test' --all-tables-with-prefix --skip-columns=guid
+      - name: Export it like a host would (SQL dump + wp-content archive)
+        working-directory: dev
+        run: |
+          docker compose exec -T db sh -c 'mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" --single-transaction --default-character-set=utf8mb4 wordpress' | gzip > /tmp/live.sql.gz
+          mkdir -p /tmp/export && docker compose cp wordpress:/var/www/html/wp-content /tmp/export/wp-content
+          echo '<?php // host drop-in that must be removed' > /tmp/export/wp-content/object-cache.php
+          tar -czf /tmp/live-content.tgz -C /tmp/export wp-content
+          docker compose down -v
+          sed -i '/^TABLE_PREFIX=/d' .env
+      - name: Import with dev/import-live.sh
+        working-directory: dev
+        run: |
+          ./import-live.sh /tmp/live.sql.gz /tmp/live-content.tgz https://live.example.test
+          ./test-pages.sh --seed
+      - name: Verify clone safety and URL rewrite
+        working-directory: dev
+        run: |
+          set -e
+          wp() { docker compose run --rm -T wpcli "$@"; }
+          grep -q '^TABLE_PREFIX=pmx_$' .env
+          test "$(wp option get home)" = "http://localhost:8080"
+          test "$(wp option get blog_public)" = "0"
+          wp eval-file - <<'PHP'
+          <?php
+          global $wpdb;
+          $meta = $wpdb->get_var( "SELECT meta_value FROM {$wpdb->postmeta} WHERE meta_key='_elementor_data' LIMIT 1" );
+          if ( false === strpos( $meta, 'http:\/\/localhost:8080' ) ) { WP_CLI::error( "Elementor JSON URL not rewritten: $meta" ); }
+          $left = (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->options} WHERE option_value LIKE '%live.example.test%'" )
+                + (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->postmeta} WHERE meta_value LIKE '%live.example.test%'" )
+                + (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_content LIKE '%live.example.test%'" );
+          if ( $left ) { WP_CLI::error( "$left rows still contain the live URL" ); }
+          $hook = $wpdb->get_var( "SELECT status FROM {$wpdb->prefix}wc_webhooks WHERE name='live-hook'" );
+          if ( 'paused' !== $hook ) { WP_CLI::error( "webhook status is '$hook', expected paused" ); }
+          if ( 'pmx_' !== $wpdb->prefix ) { WP_CLI::error( "prefix is {$wpdb->prefix}" ); }
+          WP_CLI::success( 'URLs rewritten, webhook paused, prefix detected' );
+          PHP
+          if docker compose exec -T wordpress test -f /var/www/html/wp-content/object-cache.php; then echo 'host drop-in not removed'; exit 1; fi
+          echo "Clone checks passed"
+      - name: Playwright against the clone
+        working-directory: tests/e2e
+        env: { BASE_URL: 'http://localhost:8080', ADMIN_USER: pmstaging, MAILPIT_URL: 'http://localhost:8025' }
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
+          npx playwright test
+      - name: No PHP errors/warnings from the plugin
+        if: always()
+        working-directory: dev
+        run: |
+          docker compose logs wordpress > wp.log 2>&1 || true
+          if grep -iE "PHP (Fatal|Parse|Warning|Notice|Deprecated).*(perfumarathi-shop|pm-staging-safety)" wp.log; then exit 1; fi
+          echo "No plugin PHP errors in server log"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: playwright-clone, path: tests/e2e/test-results }
