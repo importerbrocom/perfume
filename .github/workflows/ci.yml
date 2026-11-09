@@ -15,7 +15,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - name: PHP syntax
-        run: find wp-content dev -name '*.php' -print0 | xargs -0 -n1 php -l
+        run: find wp-content dev server -name '*.php' -print0 | xargs -0 -n1 php -l
       - name: JS syntax
         run: |
           node --check wp-content/plugins/perfumarathi-shop/assets/pm-shop.js
@@ -23,7 +23,7 @@ jobs:
           node --check tests/e2e/playwright.config.js
           for f in tests/e2e/*.js; do node --check "$f"; done
       - name: Shell syntax
-        run: for f in dev/*.sh; do bash -n "$f"; done
+        run: for f in dev/*.sh server/*.sh; do bash -n "$f"; done
       - name: Original homepage backup untouched
         run: |
           git fetch origin main --depth=1 || true
