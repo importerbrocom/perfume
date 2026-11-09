@@ -602,6 +602,9 @@ body.home.has_trans_header .header #simple-menu{color:!important;}
 #pf-brand-home .pf-subtitle{font-size:14px;color:#6b625c;margin:27px 0 24px;line-height:1.6}
 #pf-brand-home .pf-enter{display:inline-flex;justify-content:center;align-items:center;gap:12px;min-height:49px;padding:12px 28px;border-radius:999px;background:#ec7d28;color:#fff!important;font-size:12px;font-weight:800;letter-spacing:.7px;text-decoration:none!important;box-shadow:0 8px 24px rgba(192,89,20,.22);transition:transform .2s,background .2s}
 #pf-brand-home .pf-enter:hover{background:#d96513;transform:translateY(-2px)}
+#pf-brand-home .pf-shop{margin-top:12px;background:transparent;color:#b64f12!important;border:1px solid #ec7d28}
+#pf-brand-home .pf-shop:hover{background:#ffe7d2}
+#pf-brand-home .pf-bag-fixed{position:fixed;top:14px;right:14px;z-index:9990}
 #pf-brand-home .pf-foot{font-size:10px;letter-spacing:1.6px;color:#98847a;margin:17px 0 0;text-transform:uppercase}
 #pf-brand-home .pf-social-section{padding:42px 18px 24px;background:#fff;text-align:center}
 #pf-brand-home .pf-social-title{margin:0 0 8px;font-size:22px;letter-spacing:1px;color:#3e2a21}
@@ -635,6 +638,7 @@ body.home.has_trans_header .header #simple-menu{color:!important;}
 @media(prefers-reduced-motion:reduce){#pf-brand-home .pf-enter,#pf-brand-home .pf-social{transition:none}}
 </style>
 <div id="pf-brand-home">
+ <div class="pf-bag-fixed"><button type="button" class="pm-bag" aria-label="Open shopping bag" data-pm-open-cart><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l1 13H5L6 7Z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg><span class="pm-bag__count" data-pm-count>0</span></button></div>
  <section class="pf-video-section" aria-label="Perfumarathi perfume spray video">
   <h2 class="pf-video-title">THE ART OF FRAGRANCE</h2>
   <p class="pf-video-caption">Experience the scent</p>
@@ -654,6 +658,7 @@ body.home.has_trans_header .header #simple-menu{color:!important;}
      <div class="pf-logo-wrap"><img decoding="async" class="pf-logo pf-logo-perf" src="https://perfumarathi.com/wp-content/uploads/2026/10/IMG_2610.png" alt="Perfumarathi — Secret of Attractiveness"></div>
      <p class="pf-subtitle">Pure Fragrances · Timeless Impressions</p>
      <a class="pf-enter" href="https://perfumarathi.com/?page_id=990" aria-label="Enter Perfumarathi">ENTER PERFUMARATHI <span aria-hidden="true">→</span></a>
+     <a class="pf-enter pf-shop" href="https://perfumarathi.com/brand/perfumarathi/" aria-label="Shop Perfumarathi">SHOP PERFUMARATHI</a>
      <p class="pf-foot">Retail · Wholesale · Special Offers</p>
     </div>
    </section>
@@ -663,11 +668,13 @@ body.home.has_trans_header .header #simple-menu{color:!important;}
      <div class="pf-logo-wrap"><img decoding="async" class="pf-logo pf-logo-fix" src="https://perfumarathi.com/wp-content/uploads/2026/10/IMG_2609.jpg" alt="Fixnote Fragrances"></div>
      <p class="pf-subtitle">Inspired Fragrances by Perfumarathi</p>
      <a class="pf-enter" href="https://perfumarathi.com/?page_id=1074" aria-label="Enter Fixnote">ENTER FIXNOTE <span aria-hidden="true">→</span></a>
+     <a class="pf-enter pf-shop" href="https://perfumarathi.com/brand/fixnote/" aria-label="Shop Fixnote">SHOP FIXNOTE</a>
      <p class="pf-foot">Inspired Fragrance Collection</p>
     </div>
    </section>
   </main>
  </div>
+ <!-- SHOP SECTIONS: add an Elementor "Shortcode" widget below this HTML widget containing [pm_home_shop]. -->
  <section class="pf-social-section" aria-label="Perfumarathi social media">
   <h2 class="pf-social-title">FOLLOW PERFUMARATHI</h2>
   <p class="pf-social-sub">Connect with us on social media</p>
