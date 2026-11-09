@@ -27,17 +27,11 @@ wp option update woocommerce_calc_taxes no
 wp option update woocommerce_currency AED
 wp option update woocommerce_default_country AE:DU
 wp option update woocommerce_cod_settings '{"enabled":"yes","title":"Cash on delivery"}' --format=json
-track_id=$(wp post create --post_type=page --post_status=publish --post_title="Track Order" --post_content="[pm_order_tracking]" --porcelain)
-wp option update pm_tracking_page_id "$track_id"
-shop_id=$(wp option get woocommerce_shop_page_id)
 # Classic shortcode cart/checkout (matches the classic skt-fragrance theme on the live site).
 wp post update "$(wp option get woocommerce_checkout_page_id)" --post_content="[woocommerce_checkout]"
 wp post update "$(wp option get woocommerce_cart_page_id)" --post_content="[woocommerce_cart]"
-wp post update "$shop_id" --post_content="[pm_shop]"
-wp post create --post_type=page --post_status=publish --post_title="Perfumarathi" --post_content='[pm_shop brand="perfumarathi"]'
-wp post create --post_type=page --post_status=publish --post_title="Fixnote" --post_content='[pm_shop brand="fixnote"]'
-wish_id=$(wp post create --post_type=page --post_status=publish --post_title="Wishlist" --post_content="[pm_wishlist]" --porcelain)
-wp option update pm_wishlist_page_id "$wish_id"
+wp post update "$(wp option get woocommerce_shop_page_id)" --post_content="[pm_shop]"
 wp post create --post_type=page --post_status=publish --post_title="Staging Home" --post_content='[pm_cart_icon] [pm_home_shop]'
+./test-pages.sh
 echo "Done. Site: http://localhost:8080  Admin: http://localhost:8080/wp-admin (user: admin)"
-echo "Optional test products (STAGING ONLY): docker compose run --rm -T wpcli eval-file /seed-staging.php"
+echo "Emails: http://localhost:8025 (Mailpit).  Test products (STAGING ONLY): ./test-pages.sh --seed"

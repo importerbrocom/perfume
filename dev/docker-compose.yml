@@ -1,4 +1,16 @@
-# Local staging only. Usage: cd dev && cp .env.dev.example .env && docker compose up -d && ./setup.sh
+# Local staging only (fresh install or a clone of the live site). See docs/STAGING-CLONE.md.
+#   Fresh:  cd dev && cp .env.dev.example .env && docker compose up -d db wordpress mailpit && ./setup.sh
+#   Clone:  cd dev && cp .env.dev.example .env && ./import-live.sh <db.sql[.gz]> <wp-content.zip|.tar.gz|dir>
+# All outgoing email is captured by Mailpit (http://localhost:8025) - nothing reaches real customers.
+x-wp-env: &wp-env
+  WORDPRESS_DB_HOST: db
+  WORDPRESS_DB_NAME: wordpress
+  WORDPRESS_DB_USER: wp
+  WORDPRESS_DB_PASSWORD: ${DB_PASSWORD}
+  WORDPRESS_TABLE_PREFIX: ${TABLE_PREFIX:-wp_}
+  WP_ENVIRONMENT_TYPE: staging
+  PM_MAIL_CATCHER: "mailpit:1025"
+
 services:
   db:
     image: mysql:8.0
@@ -7,21 +19,22 @@ services:
       MYSQL_USER: wp
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    command: ["--max_allowed_packet=256M"]
     volumes: [dbdata:/var/lib/mysql]
   wordpress:
     image: wordpress:php8.2-apache
-    depends_on: [db]
+    depends_on: [db, mailpit]
     ports: ["8080:80"]
     environment:
-      WORDPRESS_DB_HOST: db
-      WORDPRESS_DB_NAME: wordpress
-      WORDPRESS_DB_USER: wp
-      WORDPRESS_DB_PASSWORD: ${DB_PASSWORD}
+      <<: *wp-env
       WORDPRESS_DEBUG: "1"
-      WP_ENVIRONMENT_TYPE: staging
     volumes:
       - wpdata:/var/www/html
       - ../wp-content/plugins/perfumarathi-shop:/var/www/html/wp-content/plugins/perfumarathi-shop
+      - ./mu-plugins/pm-staging-safety.php:/var/www/html/wp-content/mu-plugins/pm-staging-safety.php:ro
+  mailpit:
+    image: axllent/mailpit:latest
+    ports: ["8025:8025"]
   wpcli:
     image: wordpress:cli-php8.2
     user: "33:33"
@@ -29,13 +42,11 @@ services:
     volumes:
       - wpdata:/var/www/html
       - ../wp-content/plugins/perfumarathi-shop:/var/www/html/wp-content/plugins/perfumarathi-shop
+      - ./mu-plugins/pm-staging-safety.php:/var/www/html/wp-content/mu-plugins/pm-staging-safety.php:ro
       - ./seed-staging.php:/seed-staging.php:ro
+      - ./clone-safety.php:/clone-safety.php:ro
     environment:
-      WORDPRESS_DB_HOST: db
-      WORDPRESS_DB_NAME: wordpress
-      WORDPRESS_DB_USER: wp
-      WORDPRESS_DB_PASSWORD: ${DB_PASSWORD}
-      WP_ENVIRONMENT_TYPE: staging
+      <<: *wp-env
       WP_CLI_CACHE_DIR: /tmp/wp-cli-cache
     entrypoint: ["wp"]
     profiles: [tools]
