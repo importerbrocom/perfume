@@ -25,10 +25,9 @@ test('product page: choose size, add to cart, drawer quantity, remove', async ({
   await page.locator('.pm-card h3 a').first().click();
   await page.selectOption('select[name="attribute_size"]', '50ml');
   await page.click('button.single_add_to_cart_button');
-  await page.goto('/');
   await page.goto('/perfumarathi/');
-  await expect(page.locator('[data-pm-count]').first()).toHaveText('1');
-  await page.locator('[data-pm-open-cart]').first().click();
+  await expect(page.locator('.pm-bag:visible [data-pm-count]')).toHaveText('1');
+  await page.locator('.pm-bag:visible').click();
   await expect(page.locator('#pm-drawer.is-open')).toBeVisible();
   await page.click('.pm-line [data-qty="1"]');
   await expect(page.locator('.pm-line .pm-qty span')).toHaveText('2');
@@ -38,14 +37,14 @@ test('product page: choose size, add to cart, drawer quantity, remove', async ({
 
 test('invalid coupon is rejected by the server', async ({ page }) => {
   await page.goto('/perfumarathi/');
-  await page.locator('.pm-card [data-add]').first().click({ timeout: 3000 }).catch(() => {});
-  await page.locator('[data-pm-open-cart]').first().click();
-  const input = page.locator('#pm-coupon-in');
-  if (await input.count()) {
-    await input.fill('NOT-A-COUPON');
-    await page.click('.pm-coupon button');
-    await expect(page.locator('.pm-toast--error')).toBeVisible();
-  }
+  await page.locator('.pm-card h3 a').first().click();
+  await page.selectOption('select[name="attribute_size"]', '30ml');
+  await page.click('button.single_add_to_cart_button');
+  await page.goto('/perfumarathi/');
+  await page.locator('.pm-bag:visible').click();
+  await page.locator('#pm-coupon-in').fill('NOT-A-COUPON');
+  await page.click('.pm-coupon button');
+  await expect(page.locator('.pm-toast--error')).toBeVisible();
 });
 
 test.describe.serial('checkout then tracking', () => {
@@ -109,8 +108,9 @@ test('empty wishlist shows the empty state', async ({ page }) => {
 test('reduced motion disables reveal animation', async ({ browser, baseURL }) => {
   const ctx = await browser.newContext({ baseURL, reducedMotion: 'reduce' });
   const page = await ctx.newPage();
-  await page.goto('/');
-  const t = await page.locator('.pm-card').first().evaluate((el) => getComputedStyle(el).transitionDuration).catch(() => '0s');
+  await page.goto('/perfumarathi/');
+  await expect(page.locator('.pm-card').first()).toBeVisible();
+  const t = await page.locator('.pm-card').first().evaluate((el) => getComputedStyle(el).transitionDuration);
   expect(t).toBe('0s');
   await ctx.close();
 });

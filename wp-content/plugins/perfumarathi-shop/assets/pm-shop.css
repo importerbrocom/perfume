@@ -147,3 +147,6 @@
 .pm-video{margin:28px 0}.pm-video video,.pm-video iframe{width:100%;max-width:800px;aspect-ratio:16/9;border-radius:16px;border:0}
 .pm-notes{margin:14px 0;padding:14px 16px;background:var(--pm-cream);border-left:3px solid var(--pm-orange);border-radius:8px}
 .pm-notes p{margin:4px 0}
+
+.pm-bag-float{position:fixed;top:14px;right:14px;z-index:9990}
+.pm-bag-float .pm-bag{box-shadow:0 6px 18px rgba(62,42,33,.18)}

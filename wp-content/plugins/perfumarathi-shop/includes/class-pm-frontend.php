@@ -228,6 +228,11 @@ class PM_Frontend {
 	/* ---------- Cart drawer + quick view container ---------- */
 
 	public static function drawer() {
+		// Sitewide bag so the live counter exists on every page; hidden by JS if a header [pm_cart_icon] exists.
+		// Disable with: wp option update pm_floating_bag no
+		if ( 'no' !== get_option( 'pm_floating_bag', 'yes' ) ) {
+			echo '<div class="pm-bag-float">' . self::sc_cart_icon() . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput -- static markup.
+		}
 		?>
 		<div class="pm-overlay" data-pm-close hidden></div>
 		<aside class="pm-drawer" id="pm-drawer" role="dialog" aria-modal="true" aria-label="Shopping bag" aria-hidden="true">

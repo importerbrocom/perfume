@@ -30,6 +30,9 @@ wp option update woocommerce_cod_settings '{"enabled":"yes","title":"Cash on del
 track_id=$(wp post create --post_type=page --post_status=publish --post_title="Track Order" --post_content="[pm_order_tracking]" --porcelain)
 wp option update pm_tracking_page_id "$track_id"
 shop_id=$(wp option get woocommerce_shop_page_id)
+# Classic shortcode cart/checkout (matches the classic skt-fragrance theme on the live site).
+wp post update "$(wp option get woocommerce_checkout_page_id)" --post_content="[woocommerce_checkout]"
+wp post update "$(wp option get woocommerce_cart_page_id)" --post_content="[woocommerce_cart]"
 wp post update "$shop_id" --post_content="[pm_shop]"
 wp post create --post_type=page --post_status=publish --post_title="Perfumarathi" --post_content='[pm_shop brand="perfumarathi"]'
 wp post create --post_type=page --post_status=publish --post_title="Fixnote" --post_content='[pm_shop brand="fixnote"]'

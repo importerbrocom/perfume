@@ -304,6 +304,9 @@
       $$('.pm-fbt').forEach(initFbt);
     });
     $$('.pm-track').forEach(initTrack);
+    // Hide the floating bag when the page already has a header/homepage bag.
+    var fl = $('.pm-bag-float');
+    if (fl && $$('.pm-bag').some(function (b) { return !fl.contains(b); })) fl.hidden = true;
     loadCart();
     // Subtle scroll reveal (skipped for reduced motion).
     if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
