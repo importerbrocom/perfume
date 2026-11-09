@@ -32,3 +32,9 @@ jobs:
         run: |
           if git ls-files | grep -E '(^|/)\.env$'; then echo ".env committed"; exit 1; fi
           if grep -RIEn '(sk_live_|AKIA[0-9A-Z]{16}|-----BEGIN (RSA )?PRIVATE KEY)' --exclude-dir=.git --exclude=ci.yml .; then exit 1; fi
+      - name: No deployment to the live site (owner's rule)
+        run: |
+          bad=$(git ls-files | grep -iE '(^|/)(\.cpanel\.yml|wrangler\.(toml|json)|netlify\.toml|vercel\.json|\.ftp-deploy.*|deploy.*\.sh)$' || true)
+          if [ -n "$bad" ]; then echo "Deploy config found: $bad"; exit 1; fi
+          if grep -nIE '(ssh|scp|sftp|rsync|lftp|ftp-deploy|cloudflare/wrangler-action|appleboy/)' .github/workflows/*.yml | grep -v 'ci.yml'; then echo "Workflow contacts a remote server"; exit 1; fi
+          echo "No deployment paths"
