@@ -65,7 +65,8 @@ test('guest checkout with cash on delivery creates an order', async ({ page }) =
   if (await terms.count()) await terms.check();
   await page.click('#place_order');
   await expect(page).toHaveURL(/order-received/);
-  orderNumber = (await page.locator('.woocommerce-order-overview__order strong').innerText()).trim();
+  // Theme-independent: /checkout/order-received/<id>/?key=...
+  orderNumber = (page.url().match(/order-received\/(\d+)/) || [])[1];
   expect(orderNumber).toMatch(/^\d+$/);
 });
 
@@ -109,8 +110,9 @@ test('reduced motion disables reveal animation', async ({ browser, baseURL }) =>
   const ctx = await browser.newContext({ baseURL, reducedMotion: 'reduce' });
   const page = await ctx.newPage();
   await page.goto('/perfumarathi/');
-  await expect(page.locator('.pm-card').first()).toBeVisible();
-  const t = await page.locator('.pm-card').first().evaluate((el) => getComputedStyle(el).transitionDuration);
+  const real = page.locator('.pm-card:not(.pm-skel)').first();
+  await expect(real).toBeVisible();
+  const t = await real.evaluate((el) => getComputedStyle(el).transitionDuration);
   expect(t).toBe('0s');
   await ctx.close();
 });
