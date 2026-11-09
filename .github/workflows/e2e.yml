@@ -1,0 +1,28 @@
+name: E2E (staging, manual)
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Start WordPress + WooCommerce (test passwords are throwaway)
+        working-directory: dev
+        run: |
+          printf 'DB_PASSWORD=ci-db\nDB_ROOT_PASSWORD=ci-root\nADMIN_PASSWORD=ci-admin-Pass1!\n' > .env
+          docker compose up -d db wordpress
+          ./setup.sh
+          docker compose run --rm -T wpcli eval-file /seed-staging.php
+      - name: Playwright
+        working-directory: tests/e2e
+        run: |
+          npm install
+          npx playwright install --with-deps chromium
+          BASE_URL=http://localhost:8080 npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: playwright-report, path: tests/e2e/test-results }

@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Protect original homepage backup",
+      "trigger": "PreToolUse",
+      "description": "Blocks edits or deletion of backup/H.original.HTML",
+      "matcher": "fs_write|str_replace|fs_append|delete_file",
+      "action": {
+        "type": "command",
+        "command": "if grep -q 'backup/H.original.HTML'; then echo 'backup/H.original.HTML is the untouched original and must not be modified or deleted.' >&2; exit 2; fi; exit 0"
+      }
+    }
+  ]
+}
