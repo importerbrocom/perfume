@@ -116,6 +116,9 @@ Card fields plus `excerpt`, `notes{top,middle,base}`, `gallery[]`, `sizes[{varia
 ### `POST pm/v1/track`
 Body `{order, email}`. Requires the order number **and** billing email; identical error for either mismatch; limit 10 attempts / 10 min / IP (429). Returns `{order,status,html}`.
 
+### `GET|POST pm/v1/wishlist` (logged-in customers only; `X-WP-Nonce` header)
+`GET` returns `{ids:[...]}`; `POST {ids:[...]}` replaces the list (max 200, published products only) and returns the saved list. Anonymous requests get 401.
+
 ### WooCommerce Store API (cart / checkout) – used by the drawer
 `GET cart`, `POST cart/add-item {id,quantity,variation}`, `POST cart/update-item {key,quantity}`, `POST cart/remove-item {key}`,
 `POST cart/apply-coupon {code}`, `POST cart/remove-coupon {code}`, `POST checkout`. Mutations need the `Nonce` header returned by earlier responses (handled in JS).
@@ -140,28 +143,47 @@ public catalog endpoints return only published/visible products.
 Provided by WordPress/WooCommerce: password hashing (phpass/bcrypt), roles/capabilities, CSRF nonces, Store API nonce, upload validation.
 You must configure: HTTPS + HSTS, 2FA for staff, login-attempt limiting/WAF, `DISALLOW_FILE_EDIT`, keep core/plugins updated, secrets only in environment/`wp-config.php`.
 
-## 9. Known gaps (not done in this delivery)
+## 9. Remaining gaps / things to configure
 
-- Not run on a live WordPress (see section 10).
-- **Invoices / PDF and CSV order reports:** use WooCommerce Analytics export plus a PDF-invoice plugin (e.g. "PDF Invoices & Packing Slips"). Not built here.
-- **Wishlist** is stored in the visitor's browser (localStorage); it is not synced to accounts and there is no wishlist page yet.
-- **Frequently bought together, product-page zoom/gallery, and size selector styling** rely on the theme/WooCommerce defaults (WooCommerce supports gallery zoom/lightbox; enable in the theme). Related products are native.
-- **Homepage banner / content management:** use Elementor.
-- **Admin analytics charts:** use WooCommerce Analytics; no custom dashboard was built.
-- **WhatsApp/SMS status notifications:** email only; the existing WhatsApp-order plugin can be used for chat orders.
-- Product video requires adding a video block to the product description.
-- Final shopper-facing visual polish (single product, cart and checkout pages) depends on the `skt-fragrance` theme and should be reviewed in a staging site.
+Built in this repo since the first version: account-synced wishlist + `[pm_wishlist]` page (My Account menu link), frequently bought
+together and product video fields (Product > Linked Products), printable/PDF-saveable invoices (admin order screen and customer "Invoice"
+button), CSV order report, Store Dashboard (WooCommerce > Store Dashboard: sales, charts, best sellers, low stock, recent orders),
+WhatsApp "Notify" button, brand in Product schema, customer lockout from wp-admin, Playwright E2E tests.
+
+Still your responsibility / not built:
+- **Payment gateway**: choose and install one (`docs/PAYMENTS.md`). Nothing can take card payments until you do.
+- **Gallery zoom/lightbox, size-selector look, cart and checkout page styling**: provided by WooCommerce + the `skt-fragrance` theme; review on staging.
+- **Homepage banners, website content, testimonials moderation, review moderation, coupons, shipping, tax**: managed with Elementor and native WooCommerce screens (no code edits needed).
+- **Automatic WhatsApp/SMS sending**: the button opens a prefilled WhatsApp chat; true automation needs the WhatsApp Business API provider.
+- **Dashboard totals** cover the last 12 months and are cached 5 minutes; "Customers" counts the `customer` role.
+- Stock and best-seller figures count simple/parent products; variation-level low stock is visible in WooCommerce > Products.
+- Admin roles: use WordPress roles (Administrator, Shop manager). Finer-grained custom roles need a role-editor plugin.
 
 ## 10. Testing report (honest status)
 
 | Check | Result |
 |---|---|
-| JS syntax (`node --check pm-shop.js`) | Pass |
-| PHP syntax (parsed with a JS PHP parser, since PHP cannot run in this sandbox) | Pass for all 5 PHP files |
+| JS syntax (`node --check`) for `pm-shop.js`, E2E spec and config | Pass |
+| PHP syntax (parsed with a JS PHP parser; PHP cannot run in the authoring sandbox) | Pass for all 7 plugin PHP files and the seed script |
+| Shell syntax (`bash -n dev/setup.sh`) | Pass |
 | Homepage diff vs backup | 7 added lines, 0 removed or changed |
-| Runtime tests on WordPress/WooCommerce (18-step shopping workflow, mobile, payment failure/cancel, webhooks, security) | **NOT RUN** – no WordPress/MySQL/PHP runtime is available in this environment and the site is on a live host |
+| **Runtime tests** on WordPress/WooCommerce (Playwright suite in `tests/e2e`, manual 18-step workflow, mobile, payment failure/cancel, webhooks, security) | **NOT RUN** - no PHP/MySQL/container runtime in the authoring environment |
 
-Do not deploy until the 18-step workflow from the brief is executed on a **staging copy** with the gateway in test mode.
-Recommended order: (1) admin creates variable perfume; (2) it shows in `/brand/<brand>/` and `[pm_shop]`; (3) search/sort/load more;
-(4) quick view; (5) add size to cart; (6) change qty/coupon in drawer; (7) COD order; (8) test-card success, decline, cancel; (9) status changes and emails;
-(10) guest tracking with right/wrong email and rate-limit; (11) customer cannot open `/wp-admin` or `wc/v3` endpoints; (12) mobile + reduced-motion + keyboard-only pass.
+The Playwright suite (`tests/e2e/shopping.spec.js`, desktop + mobile profiles) covers: brand shop listing and search, brand separation,
+size selection, add to cart, drawer quantity/remove, invalid coupon, guest COD checkout, tracking (right/wrong email), tracking rate limit,
+anonymous access to admin/REST endpoints, customer lockout from wp-admin, empty wishlist, reduced motion.
+Not automated (do manually): admin product creation + image upload, order status emails, invoice/CSV downloads, real payment cases (`docs/PAYMENTS.md`).
+
+Do not deploy until these pass on staging.
+
+## 11. Local staging (Docker)
+
+```
+cd dev && cp .env.dev.example .env      # edit the passwords
+docker compose up -d db wordpress
+./setup.sh                              # installs WP + WooCommerce, activates plugin, creates pages
+docker compose run --rm -T wpcli eval-file /seed-staging.php   # optional [TEST] products (staging only)
+```
+Site: http://localhost:8080, admin: `/wp-admin` (user `admin`, password from `.env`). The seed script refuses to run
+when `WP_ENVIRONMENT_TYPE=production`. These scripts were written but **not executed** in the authoring environment
+(no container runtime available), so expect to fix small issues on first run.

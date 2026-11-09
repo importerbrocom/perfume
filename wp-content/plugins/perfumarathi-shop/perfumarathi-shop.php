@@ -18,6 +18,8 @@ require_once PM_SHOP_DIR . 'includes/class-pm-catalog.php';
 require_once PM_SHOP_DIR . 'includes/class-pm-order-statuses.php';
 require_once PM_SHOP_DIR . 'includes/class-pm-rest.php';
 require_once PM_SHOP_DIR . 'includes/class-pm-frontend.php';
+require_once PM_SHOP_DIR . 'includes/class-pm-extras.php';
+require_once PM_SHOP_DIR . 'includes/class-pm-admin.php';
 
 register_activation_hook( __FILE__, array( 'PM_Catalog', 'activate' ) );
 
@@ -32,6 +34,8 @@ add_action( 'plugins_loaded', function () {
 	PM_Order_Statuses::init();
 	PM_REST::init();
 	PM_Frontend::init();
+	PM_Extras::init();
+	PM_Admin::init();
 } );
 
 // Declare HPOS compatibility.
