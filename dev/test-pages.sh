@@ -25,6 +25,10 @@ page wishlist "Wishlist" '[pm_wishlist]' pm_wishlist_page_id
 wp option update woocommerce_cod_settings '{"enabled":"yes","title":"Cash on delivery"}' --format=json >/dev/null
 wp option update woocommerce_enable_guest_checkout yes >/dev/null
 wp option update woocommerce_enable_myaccount_registration yes >/dev/null
+# Visitors must see the store during tests. Report the previous value (tells you if the live store is in "Coming soon" mode).
+cs=$(wp option get woocommerce_coming_soon 2>/dev/null || echo unset)
+[ "$cs" = "yes" ] && echo "NOTE: WooCommerce 'Coming soon' mode was ON (visitors see a placeholder). Turned OFF on this staging copy only."
+wp option update woocommerce_coming_soon no >/dev/null
 wp rewrite flush >/dev/null
 if [ "${1:-}" = "--seed" ]; then wp eval-file /seed-staging.php; fi
 echo "Checkout: $(wp eval 'echo wp_make_link_relative(wc_get_checkout_url());')  My account: $(wp eval 'echo wp_make_link_relative(wc_get_page_permalink("myaccount"));')"

@@ -19,6 +19,9 @@ wp core install --url=http://localhost:8080 --title="Perfumarathi Staging" \
   --admin_user=admin --admin_password="$ADMIN_PASSWORD" --admin_email=admin@example.test --skip-email
 wp plugin install woocommerce --activate
 wp plugin activate perfumarathi-shop
+# Flush WooCommerce's post-install background jobs now (one of them turns on "Coming soon" mode mid-test otherwise).
+wp action-scheduler run --batches=5 >/dev/null 2>&1 || true
+wp cron event run --due-now >/dev/null 2>&1 || true
 wp rewrite structure '/%postname%/' --hard
 wp option update woocommerce_enable_guest_checkout yes
 wp option update woocommerce_enable_signup_and_login_from_checkout yes
