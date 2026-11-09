@@ -23,6 +23,8 @@ shop_id=$(wp option get woocommerce_shop_page_id)
 wp post update "$shop_id" --post_content="[pm_shop]"
 wp post create --post_type=page --post_status=publish --post_title="Perfumarathi" --post_content='[pm_shop brand="perfumarathi"]'
 wp post create --post_type=page --post_status=publish --post_title="Fixnote" --post_content='[pm_shop brand="fixnote"]'
+wish_id=$(wp post create --post_type=page --post_status=publish --post_title="Wishlist" --post_content="[pm_wishlist]" --porcelain)
+wp option update pm_wishlist_page_id "$wish_id"
 wp post create --post_type=page --post_status=publish --post_title="Staging Home" --post_content='[pm_cart_icon] [pm_home_shop]'
 echo "Done. Site: http://localhost:8080  Admin: http://localhost:8080/wp-admin (user: admin)"
 echo "Optional test products (STAGING ONLY): docker compose run --rm -T wpcli eval-file /seed-staging.php"

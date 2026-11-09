@@ -40,6 +40,9 @@ class PM_Frontend {
 			'cartUrl'  => esc_url_raw( wc_get_cart_url() ),
 			'shopUrl'  => esc_url_raw( wc_get_page_permalink( 'shop' ) ),
 			'currency' => get_woocommerce_currency(),
+			'loggedIn' => is_user_logged_in(),
+			'userId'   => get_current_user_id(),
+			'wpNonce'  => wp_create_nonce( 'wp_rest' ),
 			'terms'    => array(
 				'perfumarathi' => ( $t = get_term_link( 'perfumarathi', 'pm_brand' ) ) && ! is_wp_error( $t ) ? esc_url_raw( $t ) : '',
 				'fixnote'      => ( $t = get_term_link( 'fixnote', 'pm_brand' ) ) && ! is_wp_error( $t ) ? esc_url_raw( $t ) : '',

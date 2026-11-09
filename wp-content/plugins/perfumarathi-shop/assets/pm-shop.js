@@ -100,6 +100,26 @@
   /* ---------- Product cards ---------- */
   var wish = (function () { try { return JSON.parse(localStorage.getItem('pm_wish') || '[]'); } catch (e) { return []; } })();
   function saveWish() { try { localStorage.setItem('pm_wish', JSON.stringify(wish)); } catch (e) {} }
+  function wishHeaders() { return { 'Content-Type': 'application/json', 'X-WP-Nonce': C.wpNonce }; }
+  function pushWish() {
+    if (!C.loggedIn) return Promise.resolve();
+    return fetch(C.rest + 'wishlist', { method: 'POST', credentials: 'same-origin', headers: wishHeaders(), body: JSON.stringify({ ids: wish }) })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { if (d) { wish = d.ids; saveWish(); } }).catch(function () {});
+  }
+  // Logged-in users: server list is the source of truth. Guest items are merged in once per user.
+  function pullWish() {
+    if (!C.loggedIn) return Promise.resolve();
+    return fetch(C.rest + 'wishlist', { credentials: 'same-origin', headers: { 'X-WP-Nonce': C.wpNonce } })
+      .then(function (r) { return r.ok ? r.json() : { ids: wish }; })
+      .then(function (d) {
+        var key = 'pm_wish_merged_' + C.userId, merged = false;
+        try { merged = localStorage.getItem(key) === '1'; } catch (e) {}
+        if (!merged) { wish.forEach(function (id) { if (d.ids.indexOf(id) < 0) d.ids.push(id); }); try { localStorage.setItem(key, '1'); } catch (e) {} }
+        wish = d.ids; saveWish();
+        return merged ? null : pushWish();
+      }).catch(function () {});
+  }
 
   function stars(r) { var n = Math.round(r); return '<span class="pm-stars" aria-label="Rated ' + r.toFixed(1) + ' out of 5">' + '★★★★★'.slice(0, n) + '<span class="pm-stars__off">' + '★★★★★'.slice(n) + '</span></span>'; }
 
@@ -164,6 +184,42 @@
     }).catch(function () { sec.hidden = true; });
   }
 
+  /* ---------- Wishlist page ---------- */
+  function emptyWishlist(grid) {
+    grid.innerHTML = '<div class="pm-empty pm-empty--grid"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.6-9.3-9A5.3 5.3 0 0 1 12 6.2 5.3 5.3 0 0 1 21.3 12C19 16.4 12 21 12 21Z"/></svg><h3>Your wishlist is empty</h3><p>Tap the heart on any perfume to save it here.</p><a class="pm-btn" href="' + esc(C.shopUrl) + '">Discover Perfumes</a></div>';
+  }
+  function initWishlist(root) {
+    var grid = $('.pm-grid', root);
+    if (!wish.length) return emptyWishlist(grid);
+    grid.innerHTML = skeleton(Math.min(wish.length, 4));
+    fetchProducts({ ids: wish.join(','), per_page: 48 }).then(function (d) {
+      if (!d.items.length) return emptyWishlist(grid);
+      grid.innerHTML = d.items.map(card).join('');
+    }).catch(function () { grid.innerHTML = '<p class="pm-error">Could not load your wishlist.</p>'; });
+  }
+
+  /* ---------- Frequently bought together ---------- */
+  function initFbt(sec) {
+    var list = $('.pm-fbt__list', sec), cur = parseInt(sec.dataset.current, 10);
+    fetchProducts({ ids: sec.dataset.ids, per_page: 8 }).then(function (d) {
+      if (d.items.length < 2) { sec.hidden = true; return; }
+      list.innerHTML = d.items.map(function (p) {
+        var ok = p.simple && p.purchasable;
+        return '<label class="pm-fbt__item"><input type="checkbox" value="' + p.id + '"' + (ok ? ' checked' : ' disabled') + '>' +
+          '<img src="' + esc(p.image) + '" alt="" loading="lazy" width="64" height="64"><span><strong>' + esc(p.name) + (p.id === cur ? ' (this item)' : '') + '</strong>' +
+          (ok ? '' : '<small>Select a size on its page</small>') + '</span><span>' + priceHtml(p.price_html) + '</span></label>';
+      }).join('') + '<button type="button" class="pm-btn" data-fbt-add>Add selected to bag</button>';
+    }).catch(function () { sec.hidden = true; });
+    sec.addEventListener('click', function (e) {
+      if (!e.target.closest('[data-fbt-add]')) return;
+      var ids = $$('input:checked', sec).map(function (i) { return parseInt(i.value, 10); });
+      if (!ids.length) return toast('Select at least one item', 'error');
+      ids.reduce(function (pr, id) { return pr.then(function () { return api('cart/add-item', 'POST', { id: id, quantity: 1 }).then(setCart); }); }, Promise.resolve())
+        .then(function () { toast('Added to your bag'); openDrawer(); })
+        .catch(function (er) { toast(er.message.replace(/<[^>]+>/g, ''), 'error'); });
+    });
+  }
+
   /* ---------- Quick view ---------- */
   function quickView(id) {
     var m = $('#pm-modal'); lastFocus = document.activeElement;
@@ -206,6 +262,9 @@
       var id = parseInt(t.dataset.wish, 10), i = wish.indexOf(id);
       if (i > -1) wish.splice(i, 1); else wish.push(id);
       saveWish(); t.classList.toggle('is-on', i === -1); t.setAttribute('aria-pressed', String(i === -1));
+      pushWish();
+      var wp = t.closest('[data-pm-wishlist]');
+      if (wp && i > -1) { var cd = t.closest('.pm-card'); if (cd) cd.remove(); if (!$('.pm-card', wp)) emptyWishlist($('.pm-grid', wp)); }
       toast(i === -1 ? 'Saved to wishlist' : 'Removed from wishlist'); return;
     }
     var line = t.closest('.pm-line');
@@ -238,8 +297,12 @@
   if (window.jQuery) window.jQuery(document.body).on('added_to_cart removed_from_cart wc_fragments_refreshed', loadCart);
 
   function boot() {
-    $$('.pm-shop').forEach(initShop);
-    $$('[data-pm-rail]').forEach(initRail);
+    pullWish().then(function () {
+      $$('.pm-shop:not([data-pm-wishlist])').forEach(initShop);
+      $$('[data-pm-rail]').forEach(initRail);
+      $$('[data-pm-wishlist]').forEach(initWishlist);
+      $$('.pm-fbt').forEach(initFbt);
+    });
     $$('.pm-track').forEach(initTrack);
     loadCart();
     // Subtle scroll reveal (skipped for reduced motion).
