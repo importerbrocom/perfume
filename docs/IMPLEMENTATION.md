@@ -165,3 +165,15 @@ Do not deploy until the 18-step workflow from the brief is executed on a **stagi
 Recommended order: (1) admin creates variable perfume; (2) it shows in `/brand/<brand>/` and `[pm_shop]`; (3) search/sort/load more;
 (4) quick view; (5) add size to cart; (6) change qty/coupon in drawer; (7) COD order; (8) test-card success, decline, cancel; (9) status changes and emails;
 (10) guest tracking with right/wrong email and rate-limit; (11) customer cannot open `/wp-admin` or `wc/v3` endpoints; (12) mobile + reduced-motion + keyboard-only pass.
+
+## 11. Local staging (Docker)
+
+```
+cd dev && cp .env.dev.example .env      # edit the passwords
+docker compose up -d db wordpress
+./setup.sh                              # installs WP + WooCommerce, activates plugin, creates pages
+docker compose run --rm -T wpcli eval-file /seed-staging.php   # optional [TEST] products (staging only)
+```
+Site: http://localhost:8080, admin: `/wp-admin` (user `admin`, password from `.env`). The seed script refuses to run
+when `WP_ENVIRONMENT_TYPE=production`. These scripts were written but **not executed** in the authoring environment
+(no container runtime available), so expect to fix small issues on first run.
