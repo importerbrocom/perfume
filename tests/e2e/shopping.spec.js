@@ -3,7 +3,6 @@ const { test, expect, request } = require('@playwright/test');
 const EMAIL = `e2e+${Date.now()}@example.test`;
 let orderNumber;
 
-test.describe.configure({ mode: 'serial' });
 
 test('brand shop lists products and search works', async ({ page }) => {
   await page.goto('/perfumarathi/');
@@ -12,7 +11,7 @@ test('brand shop lists products and search works', async ({ page }) => {
   await page.fill('.pm-search', 'Oud');
   await expect(page.locator('.pm-card').first()).toContainText('Oud');
   await page.fill('.pm-search', 'zzzz-no-match');
-  await expect(page.locator('.pm-empty')).toContainText('No perfumes found');
+  await expect(page.locator('.pm-shop .pm-empty')).toContainText('No perfumes found');
 });
 
 test('fixnote shop is separate from perfumarathi', async ({ page }) => {
@@ -34,7 +33,7 @@ test('product page: choose size, add to cart, drawer quantity, remove', async ({
   await page.click('.pm-line [data-qty="1"]');
   await expect(page.locator('.pm-line .pm-qty span')).toHaveText('2');
   await page.click('.pm-line [data-remove]');
-  await expect(page.locator('.pm-empty')).toContainText('Your bag is empty');
+  await expect(page.locator('#pm-drawer .pm-empty')).toContainText('Your bag is empty');
 });
 
 test('invalid coupon is rejected by the server', async ({ page }) => {
@@ -49,6 +48,7 @@ test('invalid coupon is rejected by the server', async ({ page }) => {
   }
 });
 
+test.describe.serial('checkout then tracking', () => {
 test('guest checkout with cash on delivery creates an order', async ({ page }) => {
   await page.goto('/perfumarathi/');
   await page.locator('.pm-card h3 a').first().click();
@@ -80,6 +80,7 @@ test('tracking: correct email shows timeline, wrong email is rejected', async ({
   await page.click('.pm-track button');
   await expect(page.locator('.pm-timeline')).toBeVisible();
 });
+});
 
 test('tracking endpoint is rate limited', async ({ baseURL }) => {
   const ctx = await request.newContext({ baseURL });
@@ -109,7 +110,7 @@ test('security: registered customer is kept out of wp-admin', async ({ page }) =
 
 test('empty wishlist shows the empty state', async ({ page }) => {
   await page.goto('/wishlist/');
-  await expect(page.locator('.pm-empty')).toContainText('wishlist is empty');
+  await expect(page.locator('[data-pm-wishlist] .pm-empty')).toContainText('wishlist is empty');
 });
 
 test('reduced motion disables reveal animation', async ({ browser, baseURL }) => {
