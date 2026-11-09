@@ -1,0 +1,34 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: '8.2' }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: PHP syntax
+        run: find wp-content dev -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: JS syntax
+        run: |
+          node --check wp-content/plugins/perfumarathi-shop/assets/pm-shop.js
+          node --check tests/e2e/shopping.spec.js
+          node --check tests/e2e/playwright.config.js
+          node --check tests/e2e/ratelimit.spec.js
+      - name: Shell syntax
+        run: bash -n dev/setup.sh
+      - name: Original homepage backup untouched
+        run: |
+          git fetch origin main --depth=1 || true
+          if git diff --quiet origin/main -- backup/H.original.HTML 2>/dev/null; then echo ok; else echo "backup/H.original.HTML must not change"; exit 1; fi
+      - name: No committed secrets
+        run: |
+          if git ls-files | grep -E '(^|/)\.env$'; then echo ".env committed"; exit 1; fi
+          if grep -RIEn '(sk_live_|AKIA[0-9A-Z]{16}|-----BEGIN (RSA )?PRIVATE KEY)' --exclude-dir=.git --exclude=ci.yml .; then exit 1; fi

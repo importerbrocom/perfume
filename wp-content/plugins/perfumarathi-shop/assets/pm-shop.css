@@ -136,3 +136,17 @@
  .pm-reveal{opacity:1;transform:none}
 }
 @media(max-width:600px){.pm-grid{grid-template-columns:repeat(2,1fr);gap:12px}.pm-card__actions .pm-btn{flex:1}}
+
+/* Frequently bought together, video, notes */
+.pm-fbt{margin:32px 0;padding:20px;background:var(--pm-cream);border:1px solid var(--pm-line);border-radius:18px;font-family:Arial,Helvetica,sans-serif}
+.pm-fbt h2{margin:0 0 14px;font-size:18px;color:var(--pm-brown)}
+.pm-fbt__item{display:grid;grid-template-columns:auto 64px 1fr auto;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid #f5e0d0}
+.pm-fbt__item img{border-radius:10px;object-fit:cover}
+.pm-fbt__item small{display:block;color:var(--pm-muted)}
+.pm-fbt .pm-btn{margin-top:14px}
+.pm-video{margin:28px 0}.pm-video video,.pm-video iframe{width:100%;max-width:800px;aspect-ratio:16/9;border-radius:16px;border:0}
+.pm-notes{margin:14px 0;padding:14px 16px;background:var(--pm-cream);border-left:3px solid var(--pm-orange);border-radius:8px}
+.pm-notes p{margin:4px 0}
+
+.pm-bag-float{position:fixed;top:14px;right:14px;z-index:9990}
+.pm-bag-float .pm-bag{box-shadow:0 6px 18px rgba(62,42,33,.18)}

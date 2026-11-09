@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Plugin security checklist on save",
+      "trigger": "PostFileSave",
+      "description": "Reminds the agent to apply the security checklist after plugin edits",
+      "matcher": "perfumarathi-shop/.*\\.(php|js)$",
+      "action": {
+        "type": "agent",
+        "prompt": "A perfumarathi-shop plugin file was saved. Before finishing, re-check that file against .kiro/steering/project.md: output escaped, input sanitized, nonce plus capability checks on writes, no raw SQL, no secrets. Run `node --check` on changed JS. Remind the user PHP could not be executed here, so CI must confirm syntax."
+      }
+    }
+  ]
+}
