@@ -7,11 +7,13 @@ wp() { docker compose run --rm -T wpcli "$@"; }
 # Wait (max ~4 min) for WordPress files + wp-config + DB, using PHP only (no mysql client needed).
 ready=0
 for i in $(seq 1 80); do
-  if wp eval 'exit( @mysqli_connect( DB_HOST, DB_USER, DB_PASSWORD, DB_NAME ) ? 0 : 1 );' >/dev/null 2>&1; then ready=1; break; fi
+  # --skip-wordpress: WordPress is not installed yet, so only test wp-config presence + a raw DB connection.
+  if wp config path >/dev/null 2>&1 && \
+     wp eval --skip-wordpress 'exit( @mysqli_connect( getenv("WORDPRESS_DB_HOST"), getenv("WORDPRESS_DB_USER"), getenv("WORDPRESS_DB_PASSWORD"), getenv("WORDPRESS_DB_NAME") ) ? 0 : 1 );' >/dev/null 2>&1; then ready=1; break; fi
   echo "waiting for WordPress/database ($i/80)..."; sleep 3
 done
 if [ "$ready" != "1" ]; then
-  echo "ERROR: WordPress/database not ready. Diagnostics:"; docker compose ps; docker compose logs --tail=40 db wordpress; wp eval 'echo 1;' || true; exit 1
+  echo "ERROR: WordPress/database not ready. Diagnostics:"; docker compose ps; docker compose logs --tail=40 db wordpress; wp config path || true; exit 1
 fi
 wp core install --url=http://localhost:8080 --title="Perfumarathi Staging" \
   --admin_user=admin --admin_password="$ADMIN_PASSWORD" --admin_email=admin@example.test --skip-email
