@@ -6,7 +6,8 @@ module.exports = defineConfig({
   retries: 0,
   use: { baseURL: process.env.BASE_URL || 'http://localhost:8080', trace: 'retain-on-failure' },
   projects: [
-    { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
-    { name: 'mobile', use: { ...devices['Pixel 7'] } },
+    { name: 'desktop', use: { ...devices['Desktop Chrome'] }, testIgnore: /ratelimit/ },
+    { name: 'mobile', use: { ...devices['Pixel 7'] }, testIgnore: /ratelimit/ },
+    { name: 'ratelimit', testMatch: /ratelimit\.spec\.js/, dependencies: ['desktop', 'mobile'] },
   ],
 });

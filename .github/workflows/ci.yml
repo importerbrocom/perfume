@@ -21,6 +21,7 @@ jobs:
           node --check wp-content/plugins/perfumarathi-shop/assets/pm-shop.js
           node --check tests/e2e/shopping.spec.js
           node --check tests/e2e/playwright.config.js
+          node --check tests/e2e/ratelimit.spec.js
       - name: Shell syntax
         run: bash -n dev/setup.sh
       - name: Original homepage backup untouched

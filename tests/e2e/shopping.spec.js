@@ -82,13 +82,6 @@ test('tracking: correct email shows timeline, wrong email is rejected', async ({
 });
 });
 
-test('tracking endpoint is rate limited', async ({ baseURL }) => {
-  const ctx = await request.newContext({ baseURL });
-  let last;
-  for (let i = 0; i < 12; i++) last = await ctx.post('/wp-json/pm/v1/track', { data: { order: '1', email: 'x@example.test' } });
-  expect(last.status()).toBe(429);
-});
-
 test('security: anonymous users cannot reach admin APIs or dashboard', async ({ baseURL }) => {
   const ctx = await request.newContext({ baseURL });
   expect((await ctx.get('/wp-json/wc/v3/orders')).status()).toBe(401);
