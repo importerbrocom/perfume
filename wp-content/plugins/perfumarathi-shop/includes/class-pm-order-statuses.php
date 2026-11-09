@@ -135,7 +135,15 @@ class PM_Order_Statuses {
 			$body .= '<p>Carrier: ' . esc_html( $order->get_meta( '_pm_carrier' ) ) . '<br>Tracking number: ' . esc_html( $tn ) . '</p>';
 		}
 		$body .= '<p>Track your order: <a href="' . esc_url( PM_Frontend::tracking_url() ) . '">' . esc_html( PM_Frontend::tracking_url() ) . '</a></p>';
-		wp_mail( $order->get_billing_email(), $subject, $body, array( 'Content-Type: text/html; charset=UTF-8' ) );
+
+		// Send through WooCommerce so the From name/address and template from
+		// WooCommerce > Settings > Emails are used (plain wp_mail would send as wordpress@<host>).
+		$mailer = WC()->mailer();
+		$html   = $mailer->wrap_message( sprintf( 'Order #%s: %s', $order->get_order_number(), $label ), $body );
+		$sent   = $mailer->send( $order->get_billing_email(), $subject, $html, "Content-Type: text/html; charset=UTF-8\r\n" );
+		$order->add_order_note( $sent
+			? sprintf( 'Customer emailed: status "%s".', $label )
+			: sprintf( 'Could not email the customer about status "%s". Check the site email settings.', $label ) );
 	}
 
 	/* ---------- Timeline rendering ---------- */
