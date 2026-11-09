@@ -93,7 +93,7 @@ jobs:
           code=$(curl -s -o /tmp/home.html -w '%{http_code}' "${H[@]}" -H "X-PM-Gate: $KEY" http://127.0.0.1:8090/)
           test "$code" = 200 && grep -q 'pm-home' /tmp/home.html && grep -q 'noindex' /tmp/home.html
           curl -s "${H[@]}" -H "X-PM-Gate: $KEY" "http://127.0.0.1:8090/wp-json/pm/v1/products?brand=fixnote" | grep -q '\[TEST\] Fixnote'
-          if grep -iE "PHP (Fatal|Parse|Warning)" /tmp/php.log; then exit 1; fi
+          if grep -iE "PHP (Fatal|Parse|Warning|Notice|Deprecated).*(perfumarathi-shop|pm-staging-guard)" /tmp/php.log; then exit 1; fi
           echo "Gate verified"
       - name: Secrets were not written to disk outside wp-config.php
         run: |
