@@ -168,25 +168,31 @@ Automated runs on GitHub Actions against a real WordPress (PHP 8.2, MySQL 8.0) +
 |---|---|
 | CI: PHP lint (real `php -l`), JS/shell syntax, backup untouched, no secrets | Pass |
 | Plugin activation on WP + WooCommerce 11.2.2 | Pass (no fatal) |
-| Playwright, desktop (Chrome) + mobile (Pixel 7) + rate-limit project | **21 / 21 pass** |
+| Playwright (desktop, mobile, admin, rate-limit projects) on a fresh install | **26 / 26 pass** |
+| Same suite on a **clone** made by `dev/import-live.sh` (custom prefix, URL + Elementor JSON rewrite, webhook paused, host drop-in removed) | **26 / 26 pass** |
 | PHP errors/warnings from the plugin in the server log | None |
 
 Covered by the suite: brand shop listing and search + empty state; Perfumarathi/Fixnote separation; product page size selection and
 add to cart; live bag counter; cart drawer quantity and remove; invalid coupon rejected by the server; **guest checkout with Cash on
 Delivery creates an order**; tracking with wrong email rejected and correct email showing the timeline; tracking rate limit (429);
 anonymous access to `wc/v3/orders`, `pm/v1/wishlist` and the admin dashboard denied; registered customer redirected away from wp-admin;
-empty wishlist state; reduced motion disables transitions.
+empty wishlist state; reduced motion disables transitions; **admin flow**: order email received (Mailpit), admin sets Shipped + tracking number,
+customer receives the Shipped email with the tracking number, tracking timeline shows Shipped, invoice prints, Store Dashboard lists the order, CSV report contains it.
 
 Bugs the runs found and fixed: bag counter missing outside the homepage (added a sitewide floating bag); staging used the block
-checkout (switched to classic shortcodes to match the live classic theme); setup readiness check; several test-locator issues.
+checkout (switched to classic shortcodes to match the live classic theme); setup readiness check; several test-locator issues;
+**status emails were silently failing** when the default WordPress sender was invalid (now sent via the WooCommerce mailer with the configured From address, plus an order note); WooCommerce's "Coming soon" mode switching on mid-test on new installs.
 
 **Still not tested** (manual, before go-live):
 - Card payments: no gateway chosen yet (`docs/PAYMENTS.md` matrix, incl. failure, cancel and webhook signature).
-- Admin flows by hand: create product with images, change order statuses and receive emails (staging has no mail server), tracking number, invoice print, CSV export, Store Dashboard figures, valid coupon discounts, shipping/tax rules.
-- The real `skt-fragrance` theme, Elementor homepage and existing plugins (YayCurrency, WhatsApp order): staging uses the default WordPress theme. Test on a clone of the live site.
+- Admin flows by hand: create a product with image upload, valid coupon discounts, shipping/tax rules, refunds.
+- The real `skt-fragrance` theme, Elementor homepage and existing plugins (YayCurrency, WhatsApp order): CI's clone uses a simulated site. Import the **real** live export with `dev/import-live.sh` (`docs/STAGING-CLONE.md`) and run the suite.
 - Block-based checkout (if the live site uses it instead of the classic shortcode).
 
 ## 11. Local staging (Docker)
+
+To copy the **live** site instead of a fresh install, see `docs/STAGING-CLONE.md`.
+
 
 ```
 cd dev && cp .env.dev.example .env      # edit the passwords
