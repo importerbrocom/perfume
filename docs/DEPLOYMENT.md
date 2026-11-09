@@ -1,5 +1,8 @@
 # Deployment checklist
 
+> **Owner's rule: the live site is not to be changed.** Nothing in this repository deploys automatically; merging a PR only
+> changes GitHub. This checklist is for later, and only runs when the owner decides to do it themselves (or explicitly asks for it).
+
 Never deploy straight to production. Order of operations:
 
 1. **Backup** production DB and `wp-content` (store off-server). Confirm you can restore.
