@@ -159,22 +159,32 @@ Still your responsibility / not built:
 - Stock and best-seller figures count simple/parent products; variation-level low stock is visible in WooCommerce > Products.
 - Admin roles: use WordPress roles (Administrator, Shop manager). Finer-grained custom roles need a role-editor plugin.
 
-## 10. Testing report (honest status)
+## 10. Testing report
+
+Automated runs on GitHub Actions against a real WordPress (PHP 8.2, MySQL 8.0) + **WooCommerce 11.2.2** in Docker
+(`.github/workflows/e2e.yml`), with the plugin activated and two `[TEST]` variable products seeded.
 
 | Check | Result |
 |---|---|
-| JS syntax (`node --check`) for `pm-shop.js`, E2E spec and config | Pass |
-| PHP syntax (parsed with a JS PHP parser; PHP cannot run in the authoring sandbox) | Pass for all 7 plugin PHP files and the seed script |
-| Shell syntax (`bash -n dev/setup.sh`) | Pass |
-| Homepage diff vs backup | 7 added lines, 0 removed or changed |
-| **Runtime tests** on WordPress/WooCommerce (Playwright suite in `tests/e2e`, manual 18-step workflow, mobile, payment failure/cancel, webhooks, security) | **NOT RUN** - no PHP/MySQL/container runtime in the authoring environment |
+| CI: PHP lint (real `php -l`), JS/shell syntax, backup untouched, no secrets | Pass |
+| Plugin activation on WP + WooCommerce 11.2.2 | Pass (no fatal) |
+| Playwright, desktop (Chrome) + mobile (Pixel 7) + rate-limit project | **21 / 21 pass** |
+| PHP errors/warnings from the plugin in the server log | None |
 
-The Playwright suite (`tests/e2e/shopping.spec.js`, desktop + mobile profiles) covers: brand shop listing and search, brand separation,
-size selection, add to cart, drawer quantity/remove, invalid coupon, guest COD checkout, tracking (right/wrong email), tracking rate limit,
-anonymous access to admin/REST endpoints, customer lockout from wp-admin, empty wishlist, reduced motion.
-Not automated (do manually): admin product creation + image upload, order status emails, invoice/CSV downloads, real payment cases (`docs/PAYMENTS.md`).
+Covered by the suite: brand shop listing and search + empty state; Perfumarathi/Fixnote separation; product page size selection and
+add to cart; live bag counter; cart drawer quantity and remove; invalid coupon rejected by the server; **guest checkout with Cash on
+Delivery creates an order**; tracking with wrong email rejected and correct email showing the timeline; tracking rate limit (429);
+anonymous access to `wc/v3/orders`, `pm/v1/wishlist` and the admin dashboard denied; registered customer redirected away from wp-admin;
+empty wishlist state; reduced motion disables transitions.
 
-Do not deploy until these pass on staging.
+Bugs the runs found and fixed: bag counter missing outside the homepage (added a sitewide floating bag); staging used the block
+checkout (switched to classic shortcodes to match the live classic theme); setup readiness check; several test-locator issues.
+
+**Still not tested** (manual, before go-live):
+- Card payments: no gateway chosen yet (`docs/PAYMENTS.md` matrix, incl. failure, cancel and webhook signature).
+- Admin flows by hand: create product with images, change order statuses and receive emails (staging has no mail server), tracking number, invoice print, CSV export, Store Dashboard figures, valid coupon discounts, shipping/tax rules.
+- The real `skt-fragrance` theme, Elementor homepage and existing plugins (YayCurrency, WhatsApp order): staging uses the default WordPress theme. Test on a clone of the live site.
+- Block-based checkout (if the live site uses it instead of the classic shortcode).
 
 ## 11. Local staging (Docker)
 
