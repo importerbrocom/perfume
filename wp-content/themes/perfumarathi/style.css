@@ -1,0 +1,98 @@
+/*
+Theme Name: Perfumarathi
+Description: Store theme for Perfumarathi & Fixnote. Header, footer and WooCommerce pages in the style of the Perfumarathi collection page (perfumarathi.com/pm-page-new). Works with the perfumarathi-shop plugin.
+Version: 1.0.0
+Requires PHP: 7.4
+Text Domain: perfumarathi
+*/
+
+/* Palette and type from the collection page */
+:root{--ink:#1f1711;--gold:#a36a22;--cream:#fffaf0;--line:#eadbc7;--brown:#4b2c16;--dark:#25180f;--orange:#ec7d28;--orange-d:#d96513;--wa:#1f7a3d}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f8f3e9;color:var(--ink);line-height:1.5}
+img{max-width:100%;height:auto}
+a{color:var(--brown)}
+.screen-reader-text{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.skip-link:focus{position:fixed;left:8px;top:8px;width:auto;height:auto;clip:auto;z-index:100002;background:#fff;padding:10px 14px}
+.pmt-wrap{background:#fffdf8;min-height:100vh;overflow-x:hidden}
+.pmt-container{max-width:1280px;margin:0 auto;padding:0 clamp(14px,3vw,32px)}
+
+/* ---------- Header ---------- */
+.pmt-topbar{background:var(--dark);color:#f1d7ad;font-size:12px;letter-spacing:.08em;font-weight:700;text-align:center;padding:8px 12px}
+.pmt-topbar a{color:#fff;text-decoration:none}
+.pmt-header{position:sticky;top:0;z-index:9000;background:linear-gradient(180deg,#fff,#fff8ea);border-bottom:1px solid var(--line)}
+.pmt-header-inner{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;padding:10px 0}
+.pmt-brand{grid-column:2;text-align:center;text-decoration:none;color:#171313}
+.pmt-brand-main{display:block;font-family:Didot,"Bodoni MT","Times New Roman",serif;font-size:clamp(28px,4vw,46px);letter-spacing:-.045em;line-height:.95}
+.pmt-brand-tag{display:block;font-family:Didot,"Bodoni MT","Times New Roman",serif;font-size:clamp(11px,1.4vw,16px);letter-spacing:.02em;margin-top:3px}
+.pmt-actions{grid-column:3;display:flex;justify-content:flex-end;align-items:center;gap:10px}
+.pmt-icon{display:inline-flex;width:44px;height:44px;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:50%;background:#fff;color:var(--brown);text-decoration:none}
+.pmt-icon svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pmt-menu-toggle{grid-column:1;justify-self:start;display:none;cursor:pointer}
+.pmt-nav{border-top:1px solid var(--line)}
+.pmt-nav ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;justify-content:center;gap:4px 22px}
+.pmt-nav a{display:block;padding:11px 2px;color:var(--ink);text-decoration:none;font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;border-bottom:2px solid transparent}
+.pmt-nav a:hover,.pmt-nav .current-menu-item>a,.pmt-nav .current_page_item>a{color:var(--gold);border-bottom-color:var(--gold)}
+.pmt-search{display:flex;gap:6px}
+.pmt-search input{min-height:40px;padding:8px 14px;border:1px solid var(--line);border-radius:999px;background:#fff;font:14px Arial,Helvetica,sans-serif;width:180px}
+@media(max-width:860px){
+ .pmt-menu-toggle{display:inline-flex}
+ .pmt-search{display:none}
+ .pmt-nav{display:none}
+ .pmt-nav.is-open{display:block}
+ .pmt-nav ul{flex-direction:column;align-items:stretch;gap:0;padding:6px 0}
+ .pmt-nav a{padding:13px 4px;border-bottom:1px solid var(--line)}
+}
+
+/* ---------- Content ---------- */
+.pmt-main{padding:clamp(18px,3vw,40px) 0}
+.pmt-page-title{text-align:center;font-family:Georgia,serif;font-size:clamp(28px,3vw,44px);margin:0 0 18px}
+.pmt-entry{max-width:1280px;margin:0 auto}
+
+/* ---------- Footer (from the collection page) ---------- */
+.pmt-delivery{background:var(--dark);color:#fff;text-align:center;padding:clamp(32px,4vw,58px) clamp(16px,4vw,64px)}
+.pmt-delivery h2{font-family:Georgia,serif;font-size:clamp(28px,2.6vw,44px);margin:0 0 14px}
+.pmt-places{font-weight:700;line-height:2;color:#f1d7ad}
+.pmt-delivery p{color:#e9dccd}
+.pmt-cta{display:inline-block;background:var(--brown);color:#fff!important;text-decoration:none;padding:15px 22px;border-radius:999px;font-weight:800;letter-spacing:.04em;margin:8px 0;border:1px solid #f1d7ad55}
+.pmt-cta:hover{background:#6a3e1e}
+.pmt-footer{background:#fffdf8;text-align:center;padding:26px 20px 90px;color:#6b5d53;font-size:clamp(13px,1vw,16px);border-top:1px solid var(--line)}
+.pmt-footer-links{list-style:none;margin:0 0 14px;padding:0;display:flex;flex-wrap:wrap;justify-content:center;gap:8px 18px}
+.pmt-footer-links a{color:var(--brown);text-decoration:none;font-weight:700;font-size:13px}
+.pmt-socials{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:0 0 16px}
+.pmt-socials a{padding:9px 15px;border:1px solid #f2d4bc;border-radius:999px;background:#fff8f2;color:#4a3226;text-decoration:none;font-size:13px;font-weight:700}
+.pmt-socials a:hover{background:#ffe7d2}
+.pmt-sticky{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:8000}
+.pmt-sticky a{display:inline-block;background:var(--wa);color:#fff;text-decoration:none;padding:13px 22px;border-radius:999px;font-weight:900;box-shadow:0 8px 24px rgba(0,0,0,.2);white-space:nowrap}
+
+/* ---------- WooCommerce pages ---------- */
+.woocommerce .woocommerce-breadcrumb{font-size:13px;color:#75665c;margin:0 0 18px}
+.woocommerce .woocommerce-breadcrumb a{color:var(--gold)}
+.woocommerce div.product{background:#fff;border:1px solid var(--line);border-radius:22px;padding:clamp(16px,3vw,34px);box-shadow:0 8px 26px rgba(70,40,10,.06)}
+.woocommerce div.product .product_title{font-family:Georgia,serif;font-size:clamp(30px,3vw,46px);margin:0 0 6px}
+.woocommerce div.product p.price,.woocommerce div.product span.price{color:var(--brown);font-size:24px;font-weight:800}
+.woocommerce div.product .woocommerce-product-gallery img{border-radius:18px;border:1px solid var(--line)}
+.woocommerce div.product .woocommerce-tabs ul.tabs li{background:var(--cream);border-color:var(--line)}
+.woocommerce div.product .woocommerce-tabs ul.tabs li.active{background:#fff}
+.woocommerce span.onsale{background:var(--orange);border-radius:999px;min-width:auto;padding:0 12px}
+.woocommerce .button,.woocommerce button.button,.woocommerce a.button,.woocommerce input.button,
+.woocommerce #respond input#submit,.woocommerce button.button.alt,.woocommerce a.button.alt{background:var(--brown)!important;color:#fff!important;border-radius:999px!important;padding:13px 22px!important;font-weight:800!important;letter-spacing:.04em}
+.woocommerce .button:hover,.woocommerce button.button:hover,.woocommerce a.button:hover{background:#6a3e1e!important}
+.woocommerce .quantity .qty{min-height:46px;border:1px solid var(--line);border-radius:12px}
+.woocommerce div.product form.cart .variations select{min-height:44px;border:1px solid var(--line);border-radius:12px;padding:0 12px}
+.woocommerce ul.products li.product{background:#fff;border:1px solid var(--line);border-radius:20px;padding:12px;text-align:center}
+.woocommerce ul.products li.product img{border-radius:14px}
+.woocommerce ul.products li.product .woocommerce-loop-product__title{font-family:Georgia,serif;font-size:19px}
+.woocommerce-message,.woocommerce-info{border-top-color:var(--gold)}
+.woocommerce-message::before,.woocommerce-info::before{color:var(--gold)}
+.woocommerce form .form-row input.input-text,.woocommerce form .form-row textarea,.woocommerce form .form-row select{min-height:44px;border:1px solid var(--line);border-radius:12px;padding:8px 12px;background:#fff}
+.woocommerce-cart table.cart,.woocommerce-checkout-review-order-table,.woocommerce table.shop_table{background:#fff;border-color:var(--line)!important;border-radius:16px}
+.woocommerce-account .woocommerce-MyAccount-navigation ul{list-style:none;padding:0}
+.woocommerce-account .woocommerce-MyAccount-navigation a{display:block;padding:10px 14px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:#fff;text-decoration:none;font-weight:700}
+.woocommerce-account .woocommerce-MyAccount-navigation .is-active a{background:var(--cream);color:var(--gold)}
+
+/* Enquiry + WhatsApp on product pages */
+.pm-enquire{display:inline-flex;align-items:center;gap:8px;background:#25D366;color:#fff!important;text-decoration:none!important;font-weight:900;padding:13px 20px;border-radius:999px;box-shadow:0 8px 22px rgba(37,211,102,.28);margin:8px 0}
+.pm-price-on-request{display:block;color:#75665c;font-weight:700;margin:6px 0}
+
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}

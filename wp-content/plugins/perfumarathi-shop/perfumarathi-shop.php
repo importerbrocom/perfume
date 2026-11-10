@@ -21,6 +21,7 @@ require_once PM_SHOP_DIR . 'includes/class-pm-frontend.php';
 require_once PM_SHOP_DIR . 'includes/class-pm-extras.php';
 require_once PM_SHOP_DIR . 'includes/class-pm-admin.php';
 require_once PM_SHOP_DIR . 'includes/class-pm-brand-home.php';
+require_once PM_SHOP_DIR . 'includes/class-pm-collection.php';
 
 register_activation_hook( __FILE__, array( 'PM_Catalog', 'activate' ) );
 
@@ -38,6 +39,7 @@ add_action( 'plugins_loaded', function () {
 	PM_Extras::init();
 	PM_Admin::init();
 	PM_Brand_Home::init();
+	PM_Collection::init();
 } );
 
 // Declare HPOS compatibility.
