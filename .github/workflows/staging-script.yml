@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
-        with: { php-version: '8.2', extensions: mysqli, tools: none }
+        with: { php-version: '8.2', extensions: 'mysqli, gd', tools: none }
       - name: Fake cPanel home (MySQL db + user, empty domain folder, a "live" folder)
         run: |
           sudo systemctl start mysql
@@ -147,6 +147,84 @@ jobs:
           if grep -q 'perfumarathi.com/?page_id' /tmp/front.html; then echo "links point at live site"; exit 1; fi
           if grep -iE "PHP (Fatal|Parse|Warning|Notice|Deprecated).*(perfumarathi-shop|pm-staging-guard)" /tmp/php3.log; then exit 1; fi
           echo "Brand homepage verified"
+      - name: Collection shop (theme header/footer, 15 products from the page, product pages, prices)
+        run: |
+          set -o pipefail
+          D="$HOME/perfume.nokkoo.in"
+          W="php $HOME/.wp-cli/pm-staging-wp-cli.phar --path=$D"
+          if DOCROOT=/tmp bash server/setup-collection.sh; then echo "should refuse non-staging"; exit 1; fi
+          # Stand-in for perfumarathi.com/pm-page-new: same markup, small generated JPEGs (CI never contacts the live site).
+          mkdir -p /tmp/fixture/pm-page-new
+          php -r '
+            $names = ["Perfumarathi signature","2 PCS Combo","3 PCS Combo","4 PCS Combo","Kausar","Oud Al Rizq","Hubb Al Hayatt","Zayrah","Fruity Crunch","Umm Al Mymuna","Inspired Man","Ayrin","Mahar","Emarathi Edition","Miskeen","Ruh"];
+            $h = "<html><body><section class=\"feedback\"><div class=\"feedback-track\">";
+            for ($r = 0; $r < 2; $r++) {
+              $h .= "<div class=\"feedback-card\"><strong>Kausar</strong><div class=\"reviewer\">Rohit Verma</div><div class=\"stars\">★★★★★</div><p>“Fresh &amp; classy 👌”</p></div>";
+              $h .= "<div class=\"feedback-card\"><strong>Hubb Al Hayat</strong><div class=\"reviewer\">Sameer Khan</div><div class=\"stars\">★★★★★</div><p>“Second time ordering this one 😍”</p></div>";
+            }
+            $h .= "</div></section>";
+            foreach ($names as $i => $n) {
+              $im = imagecreatetruecolor(320, 320); imagefill($im, 0, 0, imagecolorallocate($im, 40 + $i * 10, 80, 120));
+              ob_start(); imagejpeg($im, null, 80); $b = base64_encode(ob_get_clean());
+              $h .= "<div class=\"product\"><img decoding=\"async\" alt=\"$n\" loading=\"lazy\" src=\"data:image/jpeg;base64,$b\"/><h3>$n</h3></div>";
+            }
+            file_put_contents("/tmp/fixture/pm-page-new/index.html", $h . "</body></html>");'
+          php -S 127.0.0.1:8096 -t /tmp/fixture >/tmp/fixture.log 2>&1 &
+          sleep 1
+          PM_COLLECTION_SRC=http://127.0.0.1:8096/pm-page-new/ bash server/setup-collection.sh | tee /tmp/coll.log
+          PM_COLLECTION_SRC=http://127.0.0.1:8096/pm-page-new/ bash server/setup-collection.sh > /tmp/coll2.log   # idempotent
+          grep -q "exists: Kausar" /tmp/coll2.log
+          test "$($W theme list --status=active --field=name)" = "perfumarathi"
+          $W eval-file - <<'PHP'
+          <?php
+          $f = function ( $m ) { WP_CLI::error( $m ); };
+          $q = new WP_Query( array( 'post_type' => 'product', 'post_status' => 'publish', 'posts_per_page' => -1, 'fields' => 'ids',
+            'tax_query' => array( array( 'taxonomy' => 'pm_brand', 'field' => 'slug', 'terms' => 'perfumarathi' ) ) ) );
+          if ( 15 !== count( $q->posts ) ) $f( 'expected 15 published Perfumarathi products, got ' . count( $q->posts ) );
+          $k = wc_get_product( get_page_by_path( 'kausar', OBJECT, 'product' ) );
+          if ( ! $k || ! $k->get_image_id() ) $f( 'Kausar missing or has no image' );
+          if ( 'Saffron, Jasmine' !== get_post_meta( $k->get_id(), '_pm_notes_top', true ) ) $f( 'Kausar notes' );
+          if ( '' !== (string) $k->get_price() ) $f( 'a price was invented' );
+          if ( 1 !== (int) $k->get_review_count() ) $f( 'Kausar should have exactly 1 review (duplicates on page), has ' . $k->get_review_count() );
+          $h = wc_get_product( get_page_by_path( 'hubb-al-hayatt', OBJECT, 'product' ) );
+          if ( 1 !== (int) $h->get_review_count() ) $f( 'alias Hubb Al Hayat -> Hubb Al Hayatt review missing' );
+          $c = get_page_by_path( '4-pcs-combo', OBJECT, 'product' );
+          if ( 4 !== count( array_filter( explode( ',', (string) get_post_meta( $c->ID, '_pm_fbt_ids', true ) ) ) ) ) $f( '4 PCS combo items' );
+          if ( ! has_term( 'combos', 'product_cat', $c->ID ) ) $f( 'combo category' );
+          if ( ! has_term( 'mens-perfumes', 'product_cat', get_page_by_path( 'inspired-man', OBJECT, 'product' ) ) ) $f( "Inspired Man not in Men's" );
+          if ( ! get_option( 'pm_collection_hero_perfumarathi' ) ) $f( 'hero image' );
+          $t = get_posts( array( 'post_type' => 'product', 'post_status' => 'publish', 's' => '[TEST]', 'numberposts' => 5 ) );
+          if ( $t ) $f( '[TEST] products still published' );
+          WP_CLI::success( 'Collection data verified' );
+          PHP
+          KEY=$(grep -oE 'Staging key \(visitors\):\s+[0-9a-f]+' /tmp/install.log | awk '{print $NF}')
+          php -S 127.0.0.1:8097 -t "$D" /tmp/router.php >/tmp/php4.log 2>&1 &
+          sleep 2
+          get() { curl -s -H 'Host: perfume.nokkoo.in' -H 'X-Forwarded-Proto: https' -H "X-PM-Gate: $KEY" "http://127.0.0.1:8097$1"; }
+          need() { grep -qF -- "$2" "$1" || { echo "missing in $1: $2"; exit 1; }; }
+          get /shop-perfumarathi/ > /tmp/shop.html
+          for w in 'class="pmt-brand-main">PERFUMARATHI' 'Find Your Perfumarathi' 'pmc-fb-card' 'Rohit Verma' 'SPECIAL PERFUME OFFER' 'Choose Your Combo' \
+                   'Our Perfume Collection' '/product/kausar/' '/product/4-pcs-combo/' 'Price on request' 'Enquire on WhatsApp' 'Delivery Across' 'pmt-sticky'; do need /tmp/shop.html "$w"; done
+          test "$(grep -o 'class="pmc-card"' /tmp/shop.html | wc -l)" = 12
+          test "$(grep -o 'pmc-card pmc-card--combo' /tmp/shop.html | wc -l)" = 3
+          if grep -q '\[TEST\]' /tmp/shop.html; then echo "test products shown"; exit 1; fi
+          get /product/kausar/ > /tmp/kausar.html
+          for w in 'pmt-brand-main' 'Delivery Across' 'Saffron, Jasmine' 'Fir Resin, Cedar Hard Wood' 'A Fragrance of Divine Elegance' 'Price on request' 'pm-enquire' 'woocommerce-product-gallery'; do need /tmp/kausar.html "$w"; done
+          if grep -q 'single_add_to_cart_button' /tmp/kausar.html; then echo "add to cart without a price"; exit 1; fi
+          get /product/3-pcs-combo/ > /tmp/combo.html
+          need /tmp/combo.html 'class="pm-fbt"'
+          # Owner sets a price -> Add to Cart appears on the product page and the collection card.
+          $W eval '$p = wc_get_product( get_page_by_path( "kausar", OBJECT, "product" ) ); $p->set_regular_price( "150" ); $p->save();'
+          get /product/kausar/ > /tmp/kausar2.html
+          need /tmp/kausar2.html 'single_add_to_cart_button'
+          get /shop-perfumarathi/ > /tmp/shop2.html
+          KID=$($W eval 'echo get_page_by_path( "kausar", OBJECT, "product" )->ID;')
+          need /tmp/shop2.html "data-add=\"$KID\""
+          get /cart/ > /tmp/cart.html; need /tmp/cart.html 'pmt-brand-main'; need /tmp/cart.html 'Delivery Across'
+          get / > /tmp/front2.html; need /tmp/front2.html 'id="pf-brand-home"'
+          if grep -q 'pmt-brand-main' /tmp/front2.html; then echo "brand homepage got the theme header"; exit 1; fi
+          for l in /tmp/php4.log; do if grep -iE "PHP (Fatal|Parse|Warning|Notice|Deprecated).*(perfumarathi)" "$l"; then exit 1; fi; done
+          echo "Collection shop verified"
       - name: Rotate secrets (wrong DB password refused, then new key, admin password and DB password)
         run: |
           set -o pipefail

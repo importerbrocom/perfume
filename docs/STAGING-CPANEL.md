@@ -53,3 +53,22 @@ Updates perfumarathi-shop from GitHub, copies the two logos and the homepage vid
 video section, Perfumarathi and Fixnote halves (Enter + Shop buttons go to the staging brand shops),
 then featured / best sellers / new arrivals / offers / collections / testimonials / Instagram / newsletter,
 then the original social section and footer, with the live bag icon top right. Safe to run again.
+
+## Collection shop + product pages (design of perfumarathi.com/pm-page-new)
+```
+curl -fsSL https://raw.githubusercontent.com/importerbrocom/perfume/main/server/setup-collection.sh -o ~/setup-collection.sh
+bash ~/setup-collection.sh
+```
+- Installs the **Perfumarathi theme** (`wp-content/themes/perfumarathi`): brand header (PERFUMARATHI / SECRET OF ATTRACTIVENESS,
+  menu, search, account, live bag) and footer (Delivery Across, links, socials, sticky WhatsApp) on every shop, product, cart,
+  checkout and account page. The homepage keeps its own canvas design.
+- Imports the 12 perfumes and 3 combos shown on the collection page, with their images and the notes/tagline/description
+  printed on each image (`server/collection-data.php`, please check it). The page's customer feedback cards become approved
+  reviews (marked `_pm_imported_feedback`): delete any that are not genuine before going live.
+- **No prices are invented.** Products show "Price on request" + WhatsApp until you set a price (Products > edit > Regular price,
+  or make it a variable product with 30/50/100 ml sizes). Then Add to Cart appears automatically.
+- `/shop-perfumarathi/` becomes the collection page: hero, feedback, special offers, combos, perfume grid; each card opens its product page.
+- Special-offer buttons open WhatsApp with the region in the message. To link a page instead:
+  `php ~/.wp-cli/pm-staging-wp-cli.phar --path=~/perfume.nokkoo.in option update pm_offer_url_uae https://perfume.nokkoo.in/...`
+  (also `pm_offer_url_india`, `pm_offer_url_international`).
+- `[TEST]` products are moved to draft. Safe to run again (existing products are not changed).
