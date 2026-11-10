@@ -39,9 +39,10 @@ echo "    folder: $real_doc (empty) | database: $DB_NAME | user: $DB_USER | tabl
 if command -v wp >/dev/null 2>&1; then WP=(wp); else
   say "Downloading WP-CLI"
   curl -fsSL https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o "$HOME/.wp-cli/wp-cli.phar" --create-dirs
-  WP=(php "$HOME/.wp-cli/wp-cli.phar")
+  WP=(php -d memory_limit=256M "$HOME/.wp-cli/wp-cli.phar")
 fi
 wp() { "${WP[@]}" --path="$DOCROOT" "$@"; }
+export WP_CLI_PHP_ARGS="-d memory_limit=256M"
 
 # ---------- Inputs ----------
 read -rsp "Database password for $DB_USER: " DB_PASS; echo
@@ -50,11 +51,35 @@ read -rp "Email address that should receive ALL staging emails: " STAGING_MAIL
 [[ "$STAGING_MAIL" == *@*.* ]] || die "That does not look like an email address."
 
 # ---------- WordPress ----------
-say "Downloading WordPress"
-wp core download --quiet
+# Downloads use curl + tar/unzip (low memory; shared-hosting LVE limits kill PHP-based unpacking).
+# Everything is unpacked in a temp folder first, so a failure never leaves partial files in the document root.
+TMP=$(mktemp -d "$HOME/.pm-staging-XXXXXX"); trap 'rm -rf "$TMP"' EXIT
+say "Downloading WordPress (curl + tar)"
+mkdir -p "$TMP/wp"
+curl -fsSL https://wordpress.org/latest.tar.gz | tar -xz --strip-components=1 -C "$TMP/wp" \
+  || die "WordPress download failed. Nothing was changed in $DOCROOT."
+[ -f "$TMP/wp/wp-load.php" ] || die "WordPress download incomplete. Nothing was changed in $DOCROOT."
+say "Downloading WooCommerce and perfumarathi-shop"
+curl -fsSL https://downloads.wordpress.org/plugin/woocommerce.latest-stable.zip -o "$TMP/woo.zip" \
+  || die "WooCommerce download failed. Nothing was changed in $DOCROOT."
+unzip -q "$TMP/woo.zip" -d "$TMP/wp/wp-content/plugins" || die "WooCommerce unzip failed. Nothing was changed."
+curl -fsSL "$ZIP_URL" -o "$TMP/repo.zip" || die "GitHub download failed. Nothing was changed."
+unzip -q "$TMP/repo.zip" -d "$TMP"
+SRC=$(find "$TMP" -mindepth 1 -maxdepth 1 -type d -name 'perfume-*' | head -1)
+[ -d "$SRC/wp-content/plugins/perfumarathi-shop" ] || die "Plugin not found in the GitHub download. Nothing was changed."
+cp -R "$SRC/wp-content/plugins/perfumarathi-shop" "$TMP/wp/wp-content/plugins/"
+mkdir -p "$TMP/wp/wp-content/mu-plugins"
+cp "$SRC/server/mu-plugins/pm-staging-guard.php" "$TMP/wp/wp-content/mu-plugins/"
+say "Copying files into $DOCROOT"
+cp -R "$TMP/wp/." "$DOCROOT/"
+# Removes only the files this script copied in (by name, from the temp copy); host files stay.
+undo_copy() {
+  ( cd "$TMP/wp" && for f in * .[!.]*; do if [ -e "$f" ]; then rm -rf "${DOCROOT:?}/$f"; fi; done ) || true
+  rm -f "$DOCROOT/wp-config.php"
+}
 say "Writing wp-config.php (password read from stdin, not the command line)"
 printf '%s' "$DB_PASS" | wp config create --dbname="$DB_NAME" --dbuser="$DB_USER" --dbhost=localhost --dbprefix="$PREFIX" --prompt=dbpass --quiet \
-  || { rm -rf "${DOCROOT:?}"/wp-* "$DOCROOT"/index.php "$DOCROOT"/xmlrpc.php "$DOCROOT"/license.txt "$DOCROOT"/readme.html; die "Could not connect to $DB_NAME with $DB_USER. Check the password and that the user is added to the database (cPanel > MySQL Databases)."; }
+  || { undo_copy; die "Could not connect to $DB_NAME with $DB_USER. Check the password and that the user is added to the database (cPanel > MySQL Databases)."; }
 unset DB_PASS
 chmod 600 "$DOCROOT/wp-config.php"
 
@@ -62,7 +87,7 @@ chmod 600 "$DOCROOT/wp-config.php"
 tables=$(wp db tables --all-tables --format=csv 2>/dev/null || true)
 if [ -z "$tables" ] && wp core is-installed >/dev/null 2>&1; then tables="(WordPress already installed)"; fi
 if [ -n "$tables" ]; then
-  rm -rf "${DOCROOT:?}"/wp-* "$DOCROOT"/index.php "$DOCROOT"/xmlrpc.php "$DOCROOT"/license.txt "$DOCROOT"/readme.html
+  undo_copy
   die "Database $DB_NAME already has tables ($tables). Not overwriting. Use an empty database."
 fi
 
@@ -99,16 +124,8 @@ HT
 fi
 
 # ---------- Plugins from GitHub ----------
-say "Installing WooCommerce and perfumarathi-shop (from GitHub $BRANCH)"
-wp plugin install woocommerce --activate --quiet
-TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
-curl -fsSL "$ZIP_URL" -o "$TMP/repo.zip"
-unzip -q "$TMP/repo.zip" -d "$TMP"
-SRC=$(find "$TMP" -mindepth 1 -maxdepth 1 -type d -name 'perfume-*' | head -1)
-[ -d "$SRC/wp-content/plugins/perfumarathi-shop" ] || die "Plugin not found in the GitHub download."
-cp -R "$SRC/wp-content/plugins/perfumarathi-shop" "$DOCROOT/wp-content/plugins/"
-mkdir -p "$DOCROOT/wp-content/mu-plugins"
-cp "$SRC/server/mu-plugins/pm-staging-guard.php" "$DOCROOT/wp-content/mu-plugins/"
+say "Activating WooCommerce and perfumarathi-shop"
+wp plugin activate woocommerce --quiet
 wp plugin activate perfumarathi-shop --quiet
 
 # ---------- Store settings (staging) ----------
