@@ -41,3 +41,15 @@ classic cart/checkout, COD, AED, and prints the **staging key** and **admin pass
 it must refuse the live folder, a wrong password, a second run and a non-empty database; then the installed site is checked
 (plugins, pages, products, prefix, mail redirect incl. CC removal, Cloudflare IP handling) and the gate is tested over HTTP.
 Not tested: the real cPanel server, LiteSpeed and Cloudflare in front of it.
+
+## Brand homepage (same design as perfumarathi.com, with the shop added)
+```
+curl -fsSL https://raw.githubusercontent.com/importerbrocom/perfume/main/server/setup-brand-home.sh -o ~/setup-brand-home.sh
+bash ~/setup-brand-home.sh
+```
+Updates perfumarathi-shop from GitHub, copies the two logos and the homepage video into
+`wp-content/uploads/pm-brand/` (download only, perfumarathi.com is not changed), and makes the homepage the
+`[pm_brand_home]` page on the "Perfumarathi Canvas" template (no theme header/footer, like Elementor Canvas):
+video section, Perfumarathi and Fixnote halves (Enter + Shop buttons go to the staging brand shops),
+then featured / best sellers / new arrivals / offers / collections / testimonials / Instagram / newsletter,
+then the original social section and footer, with the live bag icon top right. Safe to run again.

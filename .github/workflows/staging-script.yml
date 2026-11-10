@@ -2,7 +2,7 @@ name: cPanel staging installer
 on:
   workflow_dispatch:
   pull_request:
-    paths: ['server/**','wp-content/**','dev/seed-staging.php','.github/workflows/staging-script.yml']
+    paths: ['server/**','wp-content/**','H.HTML','dev/seed-staging.php','.github/workflows/staging-script.yml']
 permissions:
   contents: read
 jobs:
@@ -118,6 +118,35 @@ jobs:
           grep -rl --exclude=wp-config.php "$DBP" "$HOME/perfume.nokkoo.in" && { echo "DB password leaked into files"; exit 1; } || true
           test "$(stat -c %a "$HOME/perfume.nokkoo.in/wp-config.php")" = 600
           if grep -q "$DBP" /tmp/install.log; then echo "password printed in output"; exit 1; fi
+      - name: Brand homepage setup (refuses non-staging, then live design + shop on the homepage)
+        run: |
+          D="$HOME/perfume.nokkoo.in"
+          if DOCROOT=/tmp DOCROOT_NOTE=x bash server/setup-brand-home.sh; then echo "should refuse non-staging"; exit 1; fi
+          # Stand-in for the three public media files (CI never contacts the live site).
+          mkdir -p /tmp/assets && cd /tmp/assets
+          printf '\x89PNG\r\n\x1a\nfake' > IMG_2610.png; printf '\xff\xd8\xff fake' > IMG_2609.jpg; head -c 4096 /dev/urandom > IMG_2654.mp4
+          php -S 127.0.0.1:8095 -t /tmp/assets >/tmp/assets.log 2>&1 &
+          sleep 1; cd "$GITHUB_WORKSPACE"
+          PM_ASSET_SRC=http://127.0.0.1:8095 bash server/setup-brand-home.sh | tee /tmp/brand.log
+          PM_ASSET_SRC=http://127.0.0.1:8095 bash server/setup-brand-home.sh >/dev/null   # idempotent second run
+          for f in IMG_2610.png IMG_2609.jpg IMG_2654.mp4; do test -s "$D/wp-content/uploads/pm-brand/$f"; done
+          test ! -e "$D/wp-content/plugins/perfumarathi-shop.old" && test ! -e "$D/wp-content/plugins/perfumarathi-shop.new"
+          KEY=$(grep -oE 'Staging key \(visitors\):\s+[0-9a-f]+' /tmp/install.log | awk '{print $NF}')
+          php -S 127.0.0.1:8092 -t "$D" /tmp/router.php >/tmp/php3.log 2>&1 &
+          sleep 2
+          curl -s -H 'Host: perfume.nokkoo.in' -H 'X-Forwarded-Proto: https' -H "X-PM-Gate: $KEY" http://127.0.0.1:8092/ > /tmp/front.html
+          for want in 'id="pf-brand-home"' 'THE ART OF FRAGRANCE' 'uploads/pm-brand/IMG_2654.mp4' 'uploads/pm-brand/IMG_2610.png' \
+                      'uploads/pm-brand/IMG_2609.jpg' 'ENTER PERFUMARATHI' 'SHOP FIXNOTE' '/shop-perfumarathi/' '/shop-fixnote/' \
+                      'class="pm-home"' 'data-pm-rail' 'FOLLOW PERFUMARATHI' 'wa.me/971528209716' 'data-pm-open-cart' 'pm-canvas' 'noindex'; do
+            grep -qF "$want" /tmp/front.html || { echo "missing on homepage: $want"; exit 1; }
+          done
+          # Social section must come AFTER the shop sections, and no theme header/footer (canvas template).
+          a=$(grep -bo 'class="pm-home"' /tmp/front.html | head -1 | cut -d: -f1); b=$(grep -bo 'FOLLOW PERFUMARATHI' /tmp/front.html | cut -d: -f1)
+          test "$a" -lt "$b"
+          if grep -q 'wp-site-blocks' /tmp/front.html; then echo "theme header/footer rendered"; exit 1; fi
+          if grep -q 'perfumarathi.com/?page_id' /tmp/front.html; then echo "links point at live site"; exit 1; fi
+          if grep -iE "PHP (Fatal|Parse|Warning|Notice|Deprecated).*(perfumarathi-shop|pm-staging-guard)" /tmp/php3.log; then exit 1; fi
+          echo "Brand homepage verified"
       - name: Rotate secrets (wrong DB password refused, then new key, admin password and DB password)
         run: |
           set -o pipefail
