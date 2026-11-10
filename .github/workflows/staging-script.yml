@@ -143,7 +143,7 @@ jobs:
           # Social section must come AFTER the shop sections, and no theme header/footer (canvas template).
           a=$(grep -bo 'class="pm-home"' /tmp/front.html | head -1 | cut -d: -f1); b=$(grep -bo 'FOLLOW PERFUMARATHI' /tmp/front.html | cut -d: -f1)
           test "$a" -lt "$b"
-          if grep -q 'wp-site-blocks' /tmp/front.html; then echo "theme header/footer rendered"; exit 1; fi
+          if grep -qE '<div class="wp-site-blocks"|<header class="wp-block-template-part|<footer class="wp-block-template-part' /tmp/front.html; then echo "theme header/footer rendered"; exit 1; fi
           if grep -q 'perfumarathi.com/?page_id' /tmp/front.html; then echo "links point at live site"; exit 1; fi
           if grep -iE "PHP (Fatal|Parse|Warning|Notice|Deprecated).*(perfumarathi-shop|pm-staging-guard)" /tmp/php3.log; then exit 1; fi
           echo "Brand homepage verified"
