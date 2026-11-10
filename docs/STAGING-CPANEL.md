@@ -31,7 +31,7 @@ classic cart/checkout, COD, AED, and prints the **staging key** and **admin pass
 - `noindex` everywhere, STAGING banner, `WP_ENVIRONMENT_TYPE=staging`, `DISALLOW_FILE_EDIT`, `wp-config.php` mode 600.
 
 ## Afterwards
-- Change the database password in cPanel > MySQL Databases, then: `wp --path=~/perfume.nokkoo.in config set DB_PASSWORD '<new>'`.
+- Replace secrets any time (staging key, `pmadmin` password, and the database password after changing it in cPanel > MySQL Databases): `bash ~/rotate-staging-secrets.sh`. On this server use the installer's WP-CLI copy (`php ~/.wp-cli/pm-staging-wp-cli.phar`), not the system `wp`, which gets killed.
 - Run the browser tests against it:
   `BASE_URL=https://perfume.nokkoo.in PM_GATE=<staging key> npx playwright test` (from `tests/e2e`). Admin email checks use your inbox, not Mailpit, so the admin spec is skipped.
 - Remove it completely: delete the folder contents and drop all `pmstg_` tables (cPanel > phpMyAdmin), or remove the domain in cPanel.

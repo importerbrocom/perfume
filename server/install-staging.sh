@@ -101,11 +101,27 @@ undo_copy() {
   ( cd "$TMP/wp" && for f in * .[!.]*; do if [ -e "$f" ]; then rm -rf "${DOCROOT:?}/$f"; fi; done ) || true
   rm -f "$DOCROOT/wp-config.php"
 }
-say "Writing wp-config.php (password read from stdin, not the command line)"
+say "Writing wp-config.php (password is never printed or put on a command line)"
+# 1) Test the login with PHP; the password is passed in an environment variable only.
 rc=0
-printf '%s' "$DB_PASS" | "${WP[@]}" --path="$DOCROOT" config create --dbname="$DB_NAME" --dbuser="$DB_USER" --dbhost=localhost --dbprefix="$PREFIX" --prompt=dbpass --quiet || rc=$?
-if [ "$rc" -ge 128 ]; then undo_copy; killed_msg "$rc" "wp config create"; echo "  Nothing was written to the database; $DOCROOT is back to how it was." >&2; exit 1; fi
+PM_DB_PASS="$DB_PASS" PM_DB_USER="$DB_USER" PM_DB_NAME="$DB_NAME" "$PHP_BIN" -r \
+  'mysqli_report(MYSQLI_REPORT_OFF); exit(@mysqli_connect("localhost", getenv("PM_DB_USER"), getenv("PM_DB_PASS"), getenv("PM_DB_NAME")) ? 0 : 1);' || rc=$?
+if [ "$rc" -ge 128 ]; then undo_copy; killed_msg "$rc" "php (database check)"; exit 1; fi
 if [ "$rc" -ne 0 ]; then undo_copy; die "Could not connect to $DB_NAME with $DB_USER. Check the password and that the user is added to the database (cPanel > MySQL Databases). $DOCROOT is back to how it was."; fi
+# 2) Create wp-config.php with a placeholder, 3) put the real password in from the environment.
+rc=0
+"${WP[@]}" --path="$DOCROOT" config create --dbname="$DB_NAME" --dbuser="$DB_USER" --dbhost=localhost --dbprefix="$PREFIX" \
+  --dbpass=PM_PLACEHOLDER --skip-check --quiet || rc=$?
+if [ "$rc" -ge 128 ]; then undo_copy; killed_msg "$rc" "wp config create"; echo "  Nothing was written to the database; $DOCROOT is back to how it was." >&2; exit 1; fi
+[ "$rc" -eq 0 ] || { undo_copy; die "wp config create failed (exit $rc)."; }
+PM_DB_PASS="$DB_PASS" "$PHP_BIN" -- "$DOCROOT/wp-config.php" <<'PHP' || { undo_copy; die "Could not write the password into wp-config.php."; }
+<?php
+$f = $argv[1]; $c = file_get_contents( $f ); $p = getenv( 'PM_DB_PASS' );
+$n = 0;
+$c = preg_replace_callback( "/define\(\s*'DB_PASSWORD'\s*,\s*'(?:[^'\\\\]|\\\\.)*'\s*\);/",
+  function () use ( $p ) { return "define( 'DB_PASSWORD', " . var_export( $p, true ) . ' );'; }, $c, -1, $n );
+if ( 1 !== $n || false === file_put_contents( $f, $c ) ) { exit( 1 ); }
+PHP
 unset DB_PASS
 chmod 600 "$DOCROOT/wp-config.php"
 
@@ -178,6 +194,8 @@ wp option update show_on_front page --quiet && wp option update page_on_front "$
 wp eval-file "$SRC/dev/seed-staging.php"
 wp rewrite flush --quiet
 
+cp "$SRC/server/rotate-staging-secrets.sh" "$HOME/rotate-staging-secrets.sh" 2>/dev/null && chmod 700 "$HOME/rotate-staging-secrets.sh" || true
+
 # ---------- Done ----------
 cat <<EOF
 
@@ -189,7 +207,7 @@ cat <<EOF
  All emails go to: $STAGING_MAIL  (subject starts with [STAGING to ...])
 
  Save the key and password in your password manager now; they are not stored anywhere else.
- Do not paste them into chat. Then change the database password in cPanel > MySQL Databases,
- and update it with:  wp --path="$DOCROOT" config set DB_PASSWORD '<new password>'
+ Do not paste them into chat. To replace them (and after changing the database password in
+ cPanel > MySQL Databases) run:  bash ~/rotate-staging-secrets.sh
 =====================================================================
 EOF

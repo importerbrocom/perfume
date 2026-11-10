@@ -49,7 +49,8 @@ jobs:
         # Approximate a shared-hosting memory cap (address-space limit for the installer and its children).
         run: |
           set -o pipefail
-          printf '%s\nstaging-inbox@example.test\n' "$DBP" | (ulimit -v 3000000; bash server/install-staging.sh) | tee /tmp/install.log
+          # stderr included: the database password must not appear anywhere in the terminal output.
+          printf '%s\nstaging-inbox@example.test\n' "$DBP" | (ulimit -v 3000000; bash server/install-staging.sh 2>&1) | tee /tmp/install.log
       - name: Refuses to run twice (folder not empty)
         run: |
           if printf '%s\nx@example.test\n' "$DBP" | bash server/install-staging.sh; then echo "should have refused"; exit 1; fi
@@ -117,3 +118,31 @@ jobs:
           grep -rl --exclude=wp-config.php "$DBP" "$HOME/perfume.nokkoo.in" && { echo "DB password leaked into files"; exit 1; } || true
           test "$(stat -c %a "$HOME/perfume.nokkoo.in/wp-config.php")" = 600
           if grep -q "$DBP" /tmp/install.log; then echo "password printed in output"; exit 1; fi
+      - name: Rotate secrets (wrong DB password refused, then new key, admin password and DB password)
+        run: |
+          set -o pipefail
+          D="$HOME/perfume.nokkoo.in"
+          OLDKEY=$(grep -oE 'Staging key \(visitors\):\s+[0-9a-f]+' /tmp/install.log | awk '{print $NF}')
+          NEWDB='ci-New-db-2'
+          sudo mysql -uroot -proot -e "ALTER USER 'uddjzwrz_perfume'@'localhost' IDENTIFIED BY '$NEWDB';"
+          cp "$D/wp-config.php" /tmp/cfg.before
+          if printf 'y\nnot-the-password\n' | bash server/rotate-staging-secrets.sh; then echo "should refuse"; exit 1; fi
+          cmp "$D/wp-config.php" /tmp/cfg.before
+          printf 'y\n%s\n' "$NEWDB" | bash server/rotate-staging-secrets.sh 2>&1 | tee /tmp/rotate.log
+          if grep -q "$NEWDB" /tmp/rotate.log; then echo "DB password printed"; exit 1; fi
+          grep -q "define( 'DB_PASSWORD', '$NEWDB' );" "$D/wp-config.php"
+          test "$(stat -c %a "$D/wp-config.php")" = 600
+          test ! -e "$D/wp-config.php.bak"
+          NEWKEY=$(grep -oE 'New staging key \(visitors\):\s+[0-9a-f]+' /tmp/rotate.log | awk '{print $NF}')
+          NEWADMIN=$(grep -oE 'New admin password \(pmadmin\):\s+\S+' /tmp/rotate.log | awk '{print $NF}')
+          test -n "$NEWKEY" && test "$NEWKEY" != "$OLDKEY" && test -n "$NEWADMIN"
+          php "$HOME/.wp-cli/pm-staging-wp-cli.phar" --path="$D" eval "exit( wp_check_password( '$NEWADMIN', get_user_by( 'login', 'pmadmin' )->user_pass ) ? 0 : 1 );"
+          php -S 127.0.0.1:8091 -t "$D" /tmp/router.php >/tmp/php2.log 2>&1 &
+          sleep 2
+          H=(-H 'Host: perfume.nokkoo.in' -H 'X-Forwarded-Proto: https')
+          test "$(curl -s -o /dev/null -w '%{http_code}' "${H[@]}" -H "X-PM-Gate: $OLDKEY" http://127.0.0.1:8091/)" = 401
+          test "$(curl -s -o /dev/null -w '%{http_code}' "${H[@]}" -H "X-PM-Gate: $NEWKEY" http://127.0.0.1:8091/)" = 200
+          # Refuses a folder that is not the staging site
+          mkdir -p /tmp/notstaging && echo "<?php define( 'DB_PASSWORD', 'x' );" > /tmp/notstaging/wp-config.php
+          if printf 'n\n' | DOCROOT=/tmp/notstaging bash server/rotate-staging-secrets.sh; then echo "should refuse"; exit 1; fi
+          echo "Rotation verified"
