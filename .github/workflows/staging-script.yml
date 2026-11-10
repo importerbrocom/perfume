@@ -21,6 +21,7 @@ jobs:
           sudo systemctl start mysql
           sudo mysql -uroot -proot -e "CREATE DATABASE uddjzwrz_perfume; CREATE USER 'uddjzwrz_perfume'@'localhost' IDENTIFIED BY '$DBP'; GRANT ALL ON uddjzwrz_perfume.* TO 'uddjzwrz_perfume'@'localhost';"
           mkdir -p "$HOME/perfume.nokkoo.in/.well-known" "$HOME/perfumarathi.com"
+          printf "memory_limit=256M\n" > "$HOME/perfume.nokkoo.in/php.ini"; cp "$HOME/perfume.nokkoo.in/php.ini" "$HOME/perfume.nokkoo.in/.user.ini"
           echo "LIVE" > "$HOME/perfumarathi.com/index.php"
       - name: Refuses to run against the live site folder
         run: |
@@ -30,7 +31,7 @@ jobs:
       - name: Refuses a wrong database password and leaves the folder clean
         run: |
           if printf 'wrong-pass\nx@example.test\n' | bash server/install-staging.sh; then echo "should have failed"; exit 1; fi
-          test "$(ls -A "$HOME/perfume.nokkoo.in")" = ".well-known"
+          test "$(ls -A "$HOME/perfume.nokkoo.in" | sort | tr "\n" " ")" = ".user.ini .well-known php.ini "
       - name: Install staging
         run: printf '%s\nstaging-inbox@example.test\n' "$DBP" | bash server/install-staging.sh | tee /tmp/install.log
       - name: Refuses to run twice (folder not empty)
