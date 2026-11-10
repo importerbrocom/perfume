@@ -23,6 +23,9 @@ jobs:
           mkdir -p "$HOME/perfume.nokkoo.in/.well-known" "$HOME/perfumarathi.com"
           printf "memory_limit=256M\n" > "$HOME/perfume.nokkoo.in/php.ini"; cp "$HOME/perfume.nokkoo.in/php.ini" "$HOME/perfume.nokkoo.in/.user.ini"
           echo "LIVE" > "$HOME/perfumarathi.com/index.php"
+          # Like the real server: a system `wp` that gets killed on every call. The installer must not use it.
+          printf '#!/bin/bash\nkill -9 $$\n' | sudo tee /usr/local/bin/wp >/dev/null && sudo chmod +x /usr/local/bin/wp
+          if wp --info; then echo "fake wp should be killed"; exit 1; fi
       - name: Refuses to run against the live site folder
         run: |
           if printf '%s\nx@example.test\n' "$DBP" | DOCROOT="$HOME/perfumarathi.com" bash server/install-staging.sh; then echo "should have refused"; exit 1; fi
@@ -31,6 +34,16 @@ jobs:
       - name: Refuses a wrong database password and leaves the folder clean
         run: |
           if printf 'wrong-pass\nx@example.test\n' | bash server/install-staging.sh; then echo "should have failed"; exit 1; fi
+          test "$(ls -A "$HOME/perfume.nokkoo.in" | sort | tr "\n" " ")" = ".user.ini .well-known php.ini "
+      - name: A killed WP-CLI gives a clear message and leaves the folder clean
+        run: |
+          REAL=$(command -v php)
+          mkdir -p /tmp/killphp
+          printf '#!/bin/bash\nfor a in "$@"; do [ "$a" = create ] && kill -9 $$; done\nexec %s "$@"\n' "$REAL" > /tmp/killphp/php && chmod +x /tmp/killphp/php
+          if printf '%s\nx@example.test\n' "$DBP" | PHP_BIN=/tmp/killphp/php bash server/install-staging.sh 2>/tmp/kill.err; then echo "should have stopped"; exit 1; fi
+          cat /tmp/kill.err
+          grep -q "the server killed WP-CLI" /tmp/kill.err
+          if grep -q "Check the password" /tmp/kill.err; then echo "misleading password message"; exit 1; fi
           test "$(ls -A "$HOME/perfume.nokkoo.in" | sort | tr "\n" " ")" = ".user.ini .well-known php.ini "
       - name: Install staging
         # Approximate a shared-hosting memory cap (address-space limit for the installer and its children).
@@ -48,8 +61,7 @@ jobs:
           test -z "$(ls -d "$HOME"/.pm-staging-* 2>/dev/null)"   # temp folders cleaned up
       - name: Verify the installed staging site
         run: |
-          W="php $HOME/.wp-cli/wp-cli.phar --path=$HOME/perfume.nokkoo.in"
-          command -v wp >/dev/null && W="wp --path=$HOME/perfume.nokkoo.in"
+          W="php $HOME/.wp-cli/pm-staging-wp-cli.phar --path=$HOME/perfume.nokkoo.in"
           $W eval-file - <<'PHP'
           <?php
           $fail = function ( $m ) { WP_CLI::error( $m ); };
