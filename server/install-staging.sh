@@ -28,7 +28,8 @@ real_doc=$(cd "$DOCROOT" && pwd -P)
 case "$real_doc" in *perfumarathi.com*) die "Document root resolves to the LIVE site ($real_doc).";; esac
 if [ -d "$LIVE_DOCROOT" ] && [ "$real_doc" = "$(cd "$LIVE_DOCROOT" && pwd -P)" ]; then die "Document root is the LIVE site."; fi
 [ "$real_doc" != "$(cd "$HOME/public_html" 2>/dev/null && pwd -P || echo none)" ] || die "Document root is public_html (main domain). Use a separate folder."
-leftover=$(find "$DOCROOT" -mindepth 1 -maxdepth 1 ! -name '.well-known' ! -name 'cgi-bin' ! -name '.htaccess' ! -name 'error_log' | head -5)
+# Files cPanel/LiteSpeed/Imunify create in a new document root are allowed (and left untouched).
+leftover=$(find "$DOCROOT" -mindepth 1 -maxdepth 1 ! -name '.well-known' ! -name 'cgi-bin' ! -name '.htaccess' ! -name 'error_log' ! -name 'php.ini' ! -name '.user.ini' | head -5)
 [ -z "$leftover" ] || die "$DOCROOT is not empty:
 $leftover
 Not overwriting anything."
