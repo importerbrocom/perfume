@@ -36,13 +36,37 @@ Not overwriting anything."
 echo "    folder: $real_doc (empty) | database: $DB_NAME | user: $DB_USER | table prefix: $PREFIX"
 
 # ---------- WP-CLI ----------
-if command -v wp >/dev/null 2>&1; then WP=(wp); else
-  say "Downloading WP-CLI"
-  curl -fsSL https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o "$HOME/.wp-cli/wp-cli.phar" --create-dirs
-  WP=(php -d memory_limit=256M "$HOME/.wp-cli/wp-cli.phar")
-fi
-wp() { "${WP[@]}" --path="$DOCROOT" "$@"; }
-export WP_CLI_PHP_ARGS="-d memory_limit=256M"
+# Always use our own checksum-verified WP-CLI, never the server's `wp` command
+# (on this host the system `wp` was killed on every call).
+WPCLI="$HOME/.wp-cli/pm-staging-wp-cli.phar"
+say "Downloading WP-CLI (own copy, checksum verified)"
+mkdir -p "$HOME/.wp-cli"
+curl -fsSL https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o "$WPCLI.tmp" || die "WP-CLI download failed."
+want=$(curl -fsSL https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar.sha512 | tr -d '[:space:]')
+have=$(sha512sum "$WPCLI.tmp" | cut -d' ' -f1)
+[ -n "$want" ] && [ "$want" = "$have" ] || { rm -f "$WPCLI.tmp"; die "WP-CLI checksum mismatch. Not running it."; }
+mv "$WPCLI.tmp" "$WPCLI"
+PHP_BIN=${PHP_BIN:-php}
+WP=("$PHP_BIN" -d memory_limit=256M "$WPCLI")
+
+killed_msg() { # $1 = exit code, $2 = what was running
+  echo "STOPPED: the server killed WP-CLI (signal $(( $1 - 128 ))) while running: $2" >&2
+  echo "  This is the hosting account's process limits or security agent, not a password problem." >&2
+  echo "  Please send Kiro: the output of  $PHP_BIN -v  and the cPanel > Resource Usage page (faults)." >&2
+}
+# Exits with a clear message if the server kills WP-CLI; otherwise returns WP-CLI's own exit code.
+wp() {
+  local rc=0
+  "${WP[@]}" --path="$DOCROOT" "$@" || rc=$?
+  if [ "$rc" -ge 128 ]; then killed_msg "$rc" "wp $*"; exit 1; fi
+  return "$rc"
+}
+
+say "Checking WP-CLI runs on this server"
+rc=0; "${WP[@]}" --info >/dev/null 2>&1 || rc=$?
+if [ "$rc" -ge 128 ]; then killed_msg "$rc" "wp --info"; exit 1; fi
+[ "$rc" -eq 0 ] || die "WP-CLI does not run with '$PHP_BIN' (exit $rc). Output: $("${WP[@]}" --info 2>&1 | tail -3)"
+echo "    $("${WP[@]}" --version) on $("$PHP_BIN" -r 'echo "PHP ".PHP_VERSION;')"
 
 # ---------- Inputs ----------
 read -rsp "Database password for $DB_USER: " DB_PASS; echo
@@ -78,8 +102,10 @@ undo_copy() {
   rm -f "$DOCROOT/wp-config.php"
 }
 say "Writing wp-config.php (password read from stdin, not the command line)"
-printf '%s' "$DB_PASS" | wp config create --dbname="$DB_NAME" --dbuser="$DB_USER" --dbhost=localhost --dbprefix="$PREFIX" --prompt=dbpass --quiet \
-  || { undo_copy; die "Could not connect to $DB_NAME with $DB_USER. Check the password and that the user is added to the database (cPanel > MySQL Databases)."; }
+rc=0
+printf '%s' "$DB_PASS" | "${WP[@]}" --path="$DOCROOT" config create --dbname="$DB_NAME" --dbuser="$DB_USER" --dbhost=localhost --dbprefix="$PREFIX" --prompt=dbpass --quiet || rc=$?
+if [ "$rc" -ge 128 ]; then undo_copy; killed_msg "$rc" "wp config create"; echo "  Nothing was written to the database; $DOCROOT is back to how it was." >&2; exit 1; fi
+if [ "$rc" -ne 0 ]; then undo_copy; die "Could not connect to $DB_NAME with $DB_USER. Check the password and that the user is added to the database (cPanel > MySQL Databases). $DOCROOT is back to how it was."; fi
 unset DB_PASS
 chmod 600 "$DOCROOT/wp-config.php"
 
