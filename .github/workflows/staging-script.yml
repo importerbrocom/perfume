@@ -33,7 +33,10 @@ jobs:
           if printf 'wrong-pass\nx@example.test\n' | bash server/install-staging.sh; then echo "should have failed"; exit 1; fi
           test "$(ls -A "$HOME/perfume.nokkoo.in" | sort | tr "\n" " ")" = ".user.ini .well-known php.ini "
       - name: Install staging
-        run: printf '%s\nstaging-inbox@example.test\n' "$DBP" | bash server/install-staging.sh | tee /tmp/install.log
+        # Approximate a shared-hosting memory cap (address-space limit for the installer and its children).
+        run: |
+          set -o pipefail
+          printf '%s\nstaging-inbox@example.test\n' "$DBP" | (ulimit -v 3000000; bash server/install-staging.sh) | tee /tmp/install.log
       - name: Refuses to run twice (folder not empty)
         run: |
           if printf '%s\nx@example.test\n' "$DBP" | bash server/install-staging.sh; then echo "should have refused"; exit 1; fi
@@ -42,6 +45,7 @@ jobs:
           mkdir -p "$HOME/second"
           if printf '%s\nx@example.test\n' "$DBP" | DOCROOT="$HOME/second" bash server/install-staging.sh; then echo "should have refused"; exit 1; fi
           test -z "$(ls -A "$HOME/second")"
+          test -z "$(ls -d "$HOME"/.pm-staging-* 2>/dev/null)"   # temp folders cleaned up
       - name: Verify the installed staging site
         run: |
           W="php $HOME/.wp-cli/wp-cli.phar --path=$HOME/perfume.nokkoo.in"
