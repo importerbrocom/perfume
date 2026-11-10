@@ -15,8 +15,15 @@ async function addTestProduct(page, size = '30ml') {
   await page.goto(P.perfumarathi);
   await page.locator('.pm-card:not(.pm-skel) h3 a', { hasText: '[TEST]' }).first().click();
   await page.selectOption('select[name="attribute_size"]', size);
-  await page.click('button.single_add_to_cart_button');
+  // Wait for the add-to-cart POST to finish and WooCommerce to confirm it; otherwise checkout can open
+  // before the item is in the session (seen as "Your cart is currently empty" on slow runs).
+  await Promise.all([
+    page.waitForResponse((r) => r.request().method() === 'POST' && r.status() < 400),
+    page.click('button.single_add_to_cart_button'),
+  ]);
   await page.waitForLoadState('load');
+  await expect(page.locator('.woocommerce-message, .wc-block-components-notice-banner.is-success').first())
+    .toContainText(/added to your (cart|basket)/i);
 }
 
 /** Guest COD checkout. Supports classic shortcode and block checkout. Returns the order id. */
