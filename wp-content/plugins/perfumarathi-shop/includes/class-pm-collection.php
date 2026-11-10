@@ -19,6 +19,64 @@ class PM_Collection {
 		add_action( 'woocommerce_single_product_summary', array( __CLASS__, 'tagline' ), 6 );
 		add_action( 'woocommerce_single_product_summary', array( __CLASS__, 'enquire' ), 31 );
 		add_action( 'woocommerce_single_product_summary', array( __CLASS__, 'traits' ), 26 );
+		add_shortcode( 'pm_shop_hero', array( __CLASS__, 'sc_hero' ) );
+		// Main Shop page: hero above the product grid (replaces the plain "Shop" title).
+		add_filter( 'woocommerce_show_page_title', array( __CLASS__, 'hide_shop_title' ) );
+		add_action( 'woocommerce_archive_description', array( __CLASS__, 'shop_hero' ), 1 );
+		add_filter( 'body_class', array( __CLASS__, 'body_class' ) );
+	}
+
+	private static function is_shop_front() {
+		return function_exists( 'is_shop' ) && is_shop() && ! is_search() && ! is_paged();
+	}
+
+	public static function hide_shop_title( $show ) {
+		return self::is_shop_front() ? false : $show;
+	}
+
+	public static function shop_hero() {
+		if ( self::is_shop_front() ) {
+			// The Shop page's own content ([pm_shop]) would add a second product grid under WooCommerce's grid.
+			remove_action( 'woocommerce_archive_description', 'woocommerce_product_archive_description', 10 );
+			echo self::hero_html( 'perfumarathi' ); // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in hero_html().
+		}
+	}
+
+	public static function sc_hero( $atts ) {
+		$a = shortcode_atts( array( 'brand' => 'perfumarathi' ), $atts, 'pm_shop_hero' );
+		return self::hero_html( sanitize_title( $a['brand'] ) );
+	}
+
+	/** Pages showing the hero (it has its own big wordmark) get a compact header. */
+	public static function body_class( $classes ) {
+		$post = get_post();
+		if ( self::is_shop_front() || ( is_page() && $post && ( has_shortcode( $post->post_content, 'pm_collection' ) || has_shortcode( $post->post_content, 'pm_shop_hero' ) ) ) ) {
+			$classes[] = 'pm-has-hero';
+		}
+		return $classes;
+	}
+
+	/**
+	 * Hero of perfumarathi.com/pm-page-new: wordmark, signature portrait, kicker, trust line,
+	 * "Find Your ...", intro text and the WhatsApp button. Same wording as the live page.
+	 */
+	public static function hero_html( $brand ) {
+		$term  = get_term_by( 'slug', $brand, 'pm_brand' );
+		$label = $term ? $term->name : ucfirst( $brand );
+		$img   = (int) get_option( 'pm_collection_hero_' . $brand );
+		$h  = '<section class="pmc-hero" aria-label="' . esc_attr( $label ) . '">';
+		$h .= '<div class="pmc-wordmark"><div class="pmc-wordmark-main">' . esc_html( strtoupper( $label ) ) . '</div>'
+			. '<div class="pmc-wordmark-tag">SECRET OF ATTRACTIVENESS</div></div>';
+		$h .= '<div class="pmc-hero-grid">';
+		if ( $img ) {
+			$h .= wp_get_attachment_image( $img, 'large', false, array( 'class' => 'pmc-portrait', 'alt' => $label . ' signature', 'fetchpriority' => 'high' ) );
+		}
+		$h .= '<div><div class="pmc-kicker">PURE FRAGRANCES • TIMELESS IMPRESSIONS</div>'
+			. '<div class="pmc-trust">12–24H LASTING &nbsp;•&nbsp; HIGH PROJECTION &nbsp;•&nbsp; TRUSTED SINCE 2015</div>'
+			. '<h1>Find Your ' . esc_html( $label ) . '</h1>'
+			. '<p>Explore our own-brand perfume collection and premium combo options. For current prices, enquiries and orders, message us directly on WhatsApp.</p>'
+			. '<a class="pmc-cta" href="' . esc_url( self::wa( "Hi Perfumarathi, I'd like to get the price and details for your perfumes." ) ) . '" target="_blank" rel="noopener noreferrer">GET PRICE • ENQUIRIES • ORDER ON WHATSAPP →</a></div>';
+		return $h . '</div></section>';
 	}
 
 	public static function wa( $text ) {
@@ -143,22 +201,11 @@ class PM_Collection {
 		$brand = sanitize_title( $a['brand'] );
 		$term  = get_term_by( 'slug', $brand, 'pm_brand' );
 		$label = $term ? $term->name : ucfirst( $brand );
-		$hero  = (int) get_option( 'pm_collection_hero_' . $brand );
 		$combos     = self::products( $brand, true );
 		$collection = self::products( $brand, false );
 
 		$h  = '<div class="pmc" data-brand="' . esc_attr( $brand ) . '">';
-		$h .= '<section class="pmc-hero"><div class="pmc-hero-grid">';
-		if ( $hero ) {
-			$h .= wp_get_attachment_image( $hero, 'large', false, array( 'class' => 'pmc-portrait', 'alt' => $label . ' signature' ) );
-		}
-		$h .= '<div><div class="pmc-kicker">PURE FRAGRANCES • TIMELESS IMPRESSIONS</div>'
-			. '<div class="pmc-trust">12–24H LASTING &nbsp;•&nbsp; HIGH PROJECTION &nbsp;•&nbsp; TRUSTED SINCE 2015</div>'
-			. '<h1>Find Your ' . esc_html( $label ) . '</h1>'
-			. '<p>Explore our ' . esc_html( $label ) . ' perfume collection and premium combo options. Open any perfume to see its notes, add it to your bag, or message us on WhatsApp.</p>'
-			. '<a class="pmc-cta" href="#pmc-collection">SHOP THE COLLECTION ↓</a> '
-			. '<a class="pmc-cta pmc-cta--wa" href="' . esc_url( self::wa( "Hi Perfumarathi, I'd like to get the price and details for your perfumes." ) ) . '" target="_blank" rel="noopener noreferrer">ORDER ON WHATSAPP →</a></div>';
-		$h .= '</div></section>';
+		$h .= self::hero_html( $brand );
 		$h .= self::feedback( $brand );
 		$h .= self::offers();
 		if ( $combos ) {

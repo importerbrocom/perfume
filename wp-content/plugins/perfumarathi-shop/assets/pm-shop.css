@@ -208,3 +208,23 @@
 .pmc-traits{letter-spacing:.14em;text-transform:uppercase;font-size:12px;color:#6b5d53}
 @media(max-width:760px){.pmc-hero-grid{grid-template-columns:1fr;text-align:center}.pmc-grid{grid-template-columns:repeat(2,1fr);gap:12px}.pmc-grid--combos{grid-template-columns:1fr}.pmc-regions{grid-template-columns:1fr}.pmc-region{min-height:76px;font-size:17px}.pmc-btn{font-size:12px;padding:10px 6px}}
 @media(prefers-reduced-motion:reduce){.pmc-fb-track{animation:none;overflow-x:auto;width:auto}.pmc-fb-set[aria-hidden]{display:none}.pmc-card,.pmc-card__media img,.pmc-region{transition:none}}
+
+/* ---------- Shop hero (perfumarathi.com/pm-page-new) ---------- */
+.pmc-hero{--ink:#1f1711;--gold:#a36a22;--brown:#4b2c16;font-family:Arial,Helvetica,sans-serif;color:var(--ink);width:100%;padding:clamp(24px,3vw,48px) clamp(16px,4vw,64px) 16px;text-align:center;background:linear-gradient(180deg,#fff,#fff8ea);border-radius:0;margin:0 0 28px}
+.pmc-hero *{box-sizing:border-box}
+.pmc-wordmark{padding:10px 0 2px;text-align:center}
+.pmc-wordmark-main{font-family:Didot,"Bodoni MT","Times New Roman",serif;font-size:clamp(42px,7vw,78px);font-weight:400;letter-spacing:-.045em;line-height:.92;color:#171313}
+.pmc-wordmark-tag{font-family:Didot,"Bodoni MT","Times New Roman",serif;font-size:clamp(16px,2.6vw,31px);letter-spacing:-.025em;line-height:1.05;color:#171313;margin-top:5px}
+.pmc-hero .pmc-hero-grid{margin:18px auto 0;text-align:left}
+.pmc-hero .pmc-hero-grid>div:only-child{text-align:center}
+.pmc-hero h1{font-family:Georgia,serif;font-size:clamp(38px,4vw,68px);line-height:1.12;margin:8px 0 12px;color:var(--ink)}
+.pmc-hero p{font-size:clamp(16px,1.35vw,22px);line-height:1.55;color:#5f5147;margin:0 0 10px}
+.pmc-hero .pmc-cta{background:var(--brown);padding:15px 22px}
+.pmc-hero .pmc-cta:hover{background:#6a3e1e}
+/* The hero carries the big wordmark, so the header shows only menu, search, account and bag. */
+.pm-has-hero .pmt-brand{visibility:hidden;height:0;overflow:hidden}
+.pm-has-hero .pmt-header-inner{padding:6px 0}
+.pm-has-hero .pmt-main{padding-top:0}
+.woocommerce-shop .pmc-hero{margin-left:calc(-1 * clamp(14px,3vw,32px));margin-right:calc(-1 * clamp(14px,3vw,32px));width:auto}
+@media(max-width:760px){.pmc-hero .pmc-hero-grid{grid-template-columns:1fr;text-align:center}.pmc-hero h1{font-size:38px}.pmc-hero{padding:24px 14px 10px}}
+@media(max-width:640px){.pmc-wordmark-main{font-size:43px}.pmc-wordmark-tag{font-size:17px}}

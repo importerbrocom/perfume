@@ -220,6 +220,19 @@ jobs:
           get /shop-perfumarathi/ > /tmp/shop2.html
           KID=$($W eval 'echo get_page_by_path( "kausar", OBJECT, "product" )->ID;')
           need /tmp/shop2.html "data-add=\"$KID\""
+          # Main Shop page: hero from pm-page-new above the product grid, no plain "Shop" title.
+          get /shop/ > /tmp/wcshop.html
+          for w in 'class="pmc-wordmark-main">PERFUMARATHI' 'SECRET OF ATTRACTIVENESS' 'class="pmc-portrait' 'PURE FRAGRANCES • TIMELESS IMPRESSIONS' \
+                   'TRUSTED SINCE 2015' 'Find Your Perfumarathi' 'For current prices, enquiries and orders, message us directly on WhatsApp.' \
+                   'GET PRICE • ENQUIRIES • ORDER ON WHATSAPP →' 'wa.me/971528209716' 'pm-has-hero' 'ul class="products' '/product/kausar/' 'Delivery Across'; do need /tmp/wcshop.html "$w"; done
+          a=$(grep -bo 'Find Your Perfumarathi' /tmp/wcshop.html | head -1 | cut -d: -f1); b=$(grep -bo 'ul class="products' /tmp/wcshop.html | head -1 | cut -d: -f1)
+          test "$a" -lt "$b"
+          if grep -q 'class="pm-shop"' /tmp/wcshop.html; then echo "duplicate product grid"; exit 1; fi
+          if grep -q 'class="woocommerce-products-header__title page-title">Shop' /tmp/wcshop.html; then echo "plain Shop title still shown"; exit 1; fi
+          get '/?s=kausar&post_type=product' > /tmp/search.html
+          if grep -q 'Find Your Perfumarathi' /tmp/search.html; then echo "hero shown on search results"; exit 1; fi
+          get /shop-perfumarathi/ > /tmp/shop3.html; need /tmp/shop3.html 'GET PRICE • ENQUIRIES • ORDER ON WHATSAPP →'
+          test "$(grep -o 'Find Your Perfumarathi' /tmp/shop3.html | wc -l)" = 1
           get /cart/ > /tmp/cart.html; need /tmp/cart.html 'pmt-brand-main'; need /tmp/cart.html 'Delivery Across'
           get / > /tmp/front2.html; need /tmp/front2.html 'id="pf-brand-home"'
           if grep -q 'pmt-brand-main' /tmp/front2.html; then echo "brand homepage got the theme header"; exit 1; fi
