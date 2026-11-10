@@ -15,7 +15,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - name: PHP syntax
-        run: find wp-content dev -name '*.php' -print0 | xargs -0 -n1 php -l
+        run: find wp-content dev server -name '*.php' -print0 | xargs -0 -n1 php -l
       - name: JS syntax
         run: |
           node --check wp-content/plugins/perfumarathi-shop/assets/pm-shop.js
@@ -23,7 +23,7 @@ jobs:
           node --check tests/e2e/playwright.config.js
           for f in tests/e2e/*.js; do node --check "$f"; done
       - name: Shell syntax
-        run: for f in dev/*.sh; do bash -n "$f"; done
+        run: for f in dev/*.sh server/*.sh; do bash -n "$f"; done
       - name: Original homepage backup untouched
         run: |
           git fetch origin main --depth=1 || true
@@ -32,3 +32,9 @@ jobs:
         run: |
           if git ls-files | grep -E '(^|/)\.env$'; then echo ".env committed"; exit 1; fi
           if grep -RIEn '(sk_live_|AKIA[0-9A-Z]{16}|-----BEGIN (RSA )?PRIVATE KEY)' --exclude-dir=.git --exclude=ci.yml .; then exit 1; fi
+      - name: No deployment to the live site (owner's rule)
+        run: |
+          bad=$(git ls-files | grep -iE '(^|/)(\.cpanel\.yml|wrangler\.(toml|json)|netlify\.toml|vercel\.json|\.ftp-deploy.*|deploy.*\.sh)$' || true)
+          if [ -n "$bad" ]; then echo "Deploy config found: $bad"; exit 1; fi
+          if grep -nIE '(ssh|scp|sftp|rsync|lftp|ftp-deploy|cloudflare/wrangler-action|appleboy/)' .github/workflows/*.yml | grep -v 'ci.yml'; then echo "Workflow contacts a remote server"; exit 1; fi
+          echo "No deployment paths"

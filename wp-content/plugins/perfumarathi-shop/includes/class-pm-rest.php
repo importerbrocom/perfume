@@ -159,9 +159,58 @@ class PM_REST {
 		return $data;
 	}
 
+	/** Cloudflare edge ranges (https://www.cloudflare.com/ips-v4 and /ips-v6, checked Nov 2026). */
+	const CLOUDFLARE = array(
+		'173.245.48.0/20', '103.21.244.0/22', '103.22.200.0/22', '103.31.4.0/22', '141.101.64.0/18', '108.162.192.0/18',
+		'190.93.240.0/20', '188.114.96.0/20', '197.234.240.0/22', '198.41.128.0/17', '162.158.0.0/15', '104.16.0.0/13',
+		'104.24.0.0/14', '172.64.0.0/13', '131.0.72.0/22',
+		'2400:cb00::/32', '2606:4700::/32', '2803:f800::/32', '2405:b500::/32', '2405:8100::/32', '2a06:98c0::/29', '2c0f:f248::/32',
+	);
+
+	private static function in_cidr( $ip, $cidr ) {
+		list( $net, $bits ) = explode( '/', $cidr );
+		$a = @inet_pton( $ip );
+		$b = @inet_pton( $net );
+		if ( false === $a || false === $b || strlen( $a ) !== strlen( $b ) ) {
+			return false;
+		}
+		$bits  = (int) $bits;
+		$bytes = intdiv( $bits, 8 );
+		if ( substr( $a, 0, $bytes ) !== substr( $b, 0, $bytes ) ) {
+			return false;
+		}
+		$rem = $bits % 8;
+		if ( ! $rem ) {
+			return true;
+		}
+		$mask = chr( ( 0xff << ( 8 - $rem ) ) & 0xff );
+		return ( $a[ $bytes ] & $mask ) === ( $b[ $bytes ] & $mask );
+	}
+
+	/**
+	 * Visitor IP for rate limiting. Trusts CF-Connecting-IP only when the request really comes from Cloudflare,
+	 * so the header cannot be spoofed by clients that bypass Cloudflare. Filter: pm_client_ip.
+	 */
+	public static function client_ip() {
+		$remote = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
+		$ip     = $remote;
+		if ( $remote && isset( $_SERVER['HTTP_CF_CONNECTING_IP'] ) ) {
+			$cf = sanitize_text_field( wp_unslash( $_SERVER['HTTP_CF_CONNECTING_IP'] ) );
+			if ( filter_var( $cf, FILTER_VALIDATE_IP ) ) {
+				foreach ( self::CLOUDFLARE as $range ) {
+					if ( self::in_cidr( $remote, $range ) ) {
+						$ip = $cf;
+						break;
+					}
+				}
+			}
+		}
+		return (string) apply_filters( 'pm_client_ip', $ip ? $ip : 'unknown', $remote );
+	}
+
 	/** Guest/customer tracking: requires order number AND billing email. Rate limited per IP. */
 	public static function track( WP_REST_Request $r ) {
-		$ip  = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : 'unknown';
+		$ip  = self::client_ip();
 		$key = 'pm_track_' . md5( $ip );
 		$n   = (int) get_transient( $key );
 		if ( $n >= 10 ) {

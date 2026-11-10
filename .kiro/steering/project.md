@@ -3,6 +3,14 @@ inclusion: always
 ---
 # Perfumarathi & Fixnote – project rules
 
+## LIVE SITE IS OFF-LIMITS (owner's instruction)
+- **Never change the live site** (https://perfumarathi.com, hosted on cPanel; Cloudflare also used by the owner). No deploys, uploads, plugin
+  installs/activation, database writes, setting changes, cache purges, or DNS/Cloudflare changes, unless the owner explicitly asks for that specific action.
+- Allowed against live: read-only public HTTP requests (page/HEAD fetches, public read APIs). Nothing that logs in or writes.
+- All work happens in this GitHub repo and local/CI Docker staging. Merging a PR must not deploy: do not add deploy workflows,
+  `.cpanel.yml`, FTP/SSH/rsync steps, or Cloudflare/wrangler config.
+- When giving the owner commands to run on the server, only give read-only ones (e.g. `wp db export`, `zip`, `wp option get`) and say so.
+
 ## Stack (do not change without asking)
 - Existing **WordPress + Elementor + WooCommerce** site (theme `skt-fragrance`). Extend WooCommerce; never create parallel product/cart/order/customer tables, and no Laravel/React backend.
 - Custom code lives in `wp-content/plugins/perfumarathi-shop/` (PHP 7.4+, vanilla JS, no build step).

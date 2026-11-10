@@ -1,0 +1,102 @@
+name: cPanel staging installer
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: ['server/**','wp-content/**','dev/seed-staging.php','.github/workflows/staging-script.yml']
+permissions:
+  contents: read
+jobs:
+  installer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DBP: ci-Perfume-db-1   # throwaway CI-only password
+      BRANCH: ${{ github.head_ref || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: '8.2', extensions: mysqli, tools: none }
+      - name: Fake cPanel home (MySQL db + user, empty domain folder, a "live" folder)
+        run: |
+          sudo systemctl start mysql
+          sudo mysql -uroot -proot -e "CREATE DATABASE uddjzwrz_perfume; CREATE USER 'uddjzwrz_perfume'@'localhost' IDENTIFIED BY '$DBP'; GRANT ALL ON uddjzwrz_perfume.* TO 'uddjzwrz_perfume'@'localhost';"
+          mkdir -p "$HOME/perfume.nokkoo.in/.well-known" "$HOME/perfumarathi.com"
+          echo "LIVE" > "$HOME/perfumarathi.com/index.php"
+      - name: Refuses to run against the live site folder
+        run: |
+          if printf '%s\nx@example.test\n' "$DBP" | DOCROOT="$HOME/perfumarathi.com" bash server/install-staging.sh; then echo "should have refused"; exit 1; fi
+          test "$(cat "$HOME/perfumarathi.com/index.php")" = "LIVE"
+          test "$(ls -A "$HOME/perfumarathi.com")" = "index.php"
+      - name: Refuses a wrong database password and leaves the folder clean
+        run: |
+          if printf 'wrong-pass\nx@example.test\n' | bash server/install-staging.sh; then echo "should have failed"; exit 1; fi
+          test "$(ls -A "$HOME/perfume.nokkoo.in")" = ".well-known"
+      - name: Install staging
+        run: printf '%s\nstaging-inbox@example.test\n' "$DBP" | bash server/install-staging.sh | tee /tmp/install.log
+      - name: Refuses to run twice (folder not empty)
+        run: |
+          if printf '%s\nx@example.test\n' "$DBP" | bash server/install-staging.sh; then echo "should have refused"; exit 1; fi
+      - name: Refuses a database that already has tables
+        run: |
+          mkdir -p "$HOME/second"
+          if printf '%s\nx@example.test\n' "$DBP" | DOCROOT="$HOME/second" bash server/install-staging.sh; then echo "should have refused"; exit 1; fi
+          test -z "$(ls -A "$HOME/second")"
+      - name: Verify the installed staging site
+        run: |
+          W="php $HOME/.wp-cli/wp-cli.phar --path=$HOME/perfume.nokkoo.in"
+          command -v wp >/dev/null && W="wp --path=$HOME/perfume.nokkoo.in"
+          $W eval-file - <<'PHP'
+          <?php
+          $fail = function ( $m ) { WP_CLI::error( $m ); };
+          if ( 'staging' !== wp_get_environment_type() ) $fail( 'environment not staging' );
+          if ( 'pmstg_' !== $GLOBALS['wpdb']->prefix ) $fail( 'prefix' );
+          if ( 'https://perfume.nokkoo.in' !== home_url() ) $fail( 'home url ' . home_url() );
+          if ( '0' !== (string) get_option( 'blog_public' ) ) $fail( 'indexable' );
+          foreach ( array( 'woocommerce/woocommerce.php', 'perfumarathi-shop/perfumarathi-shop.php' ) as $p ) if ( ! is_plugin_active( $p ) ) $fail( "$p inactive" );
+          if ( ! function_exists( 'pm_gate_token' ) ) $fail( 'staging guard mu-plugin not loaded' );
+          if ( strlen( (string) get_option( 'pm_staging_gate_key' ) ) < 20 ) $fail( 'gate key' );
+          if ( 'no' !== get_option( 'woocommerce_coming_soon' ) ) $fail( 'coming soon on' );
+          $n = (int) wp_count_posts( 'product' )->publish; if ( 2 !== $n ) $fail( "expected 2 [TEST] products, got $n" );
+          foreach ( array( 'shop-perfumarathi', 'shop-fixnote', 'track-order', 'wishlist', 'staging-home' ) as $slug ) if ( ! get_page_by_path( $slug ) ) $fail( "page $slug" );
+          if ( ! term_exists( 'perfumarathi', 'pm_brand' ) || ! term_exists( 'fixnote', 'pm_brand' ) ) $fail( 'brands' );
+          // Mail redirect: real recipient + CC replaced by the staging inbox.
+          $m = apply_filters( 'wp_mail', array( 'to' => 'customer@example.com', 'subject' => 'Your order', 'message' => 'x', 'headers' => "Cc: boss@example.com\r\nContent-Type: text/html", 'attachments' => array() ) );
+          if ( 'staging-inbox@example.test' !== $m['to'] ) $fail( 'mail not redirected: ' . $m['to'] );
+          if ( false === strpos( $m['subject'], '[STAGING to customer@example.com]' ) ) $fail( 'subject marker' );
+          if ( preg_grep( '/^\s*cc:/i', $m['headers'] ) ) $fail( 'CC kept' );
+          // Cloudflare client IP: trusted only from Cloudflare ranges.
+          $_SERVER['HTTP_CF_CONNECTING_IP'] = '203.0.113.9';
+          $_SERVER['REMOTE_ADDR'] = '172.70.1.2';           if ( '203.0.113.9' !== PM_REST::client_ip() ) $fail( 'CF v4 not trusted' );
+          $_SERVER['REMOTE_ADDR'] = '2a06:98c1::5';         if ( '203.0.113.9' !== PM_REST::client_ip() ) $fail( 'CF v6 not trusted' );
+          $_SERVER['REMOTE_ADDR'] = '198.51.100.7';         if ( '198.51.100.7' !== PM_REST::client_ip() ) $fail( 'spoofed header trusted' );
+          $_SERVER['REMOTE_ADDR'] = '172.80.0.1';           if ( '172.80.0.1' !== PM_REST::client_ip() ) $fail( 'outside /13 trusted' );
+          $_SERVER['HTTP_CF_CONNECTING_IP'] = 'not-an-ip'; $_SERVER['REMOTE_ADDR'] = '172.70.1.2';
+          if ( '172.70.1.2' !== PM_REST::client_ip() ) $fail( 'invalid header accepted' );
+          WP_CLI::success( 'Staging install verified' );
+          PHP
+      - name: Verify the staging gate over HTTP
+        run: |
+          KEY=$(grep -oE 'Staging key \(visitors\):\s+[0-9a-f]+' /tmp/install.log | awk '{print $NF}')
+          test -n "$KEY"
+          cat > /tmp/router.php <<'PHP'
+          <?php
+          $f = $_SERVER['DOCUMENT_ROOT'] . parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH );
+          if ( is_file( $f ) ) { return false; }
+          require $_SERVER['DOCUMENT_ROOT'] . '/index.php';
+          PHP
+          php -S 127.0.0.1:8090 -t "$HOME/perfume.nokkoo.in" /tmp/router.php >/tmp/php.log 2>&1 &
+          sleep 2
+          H=(-H 'Host: perfume.nokkoo.in' -H 'X-Forwarded-Proto: https')
+          test "$(curl -s -o /dev/null -w '%{http_code}' "${H[@]}" http://127.0.0.1:8090/)" = 401
+          test "$(curl -s -o /dev/null -w '%{http_code}' "${H[@]}" http://127.0.0.1:8090/wp-json/pm/v1/products)" = 401
+          test "$(curl -s -o /dev/null -w '%{http_code}' "${H[@]}" -H "X-PM-Gate: wrong" http://127.0.0.1:8090/)" = 401
+          code=$(curl -s -o /tmp/home.html -w '%{http_code}' "${H[@]}" -H "X-PM-Gate: $KEY" http://127.0.0.1:8090/)
+          test "$code" = 200 && grep -q 'pm-home' /tmp/home.html && grep -q 'noindex' /tmp/home.html
+          curl -s "${H[@]}" -H "X-PM-Gate: $KEY" "http://127.0.0.1:8090/wp-json/pm/v1/products?brand=fixnote" | grep -q '\[TEST\] Fixnote'
+          if grep -iE "PHP (Fatal|Parse|Warning|Notice|Deprecated).*(perfumarathi-shop|pm-staging-guard)" /tmp/php.log; then exit 1; fi
+          echo "Gate verified"
+      - name: Secrets were not written to disk outside wp-config.php
+        run: |
+          grep -rl --exclude=wp-config.php "$DBP" "$HOME/perfume.nokkoo.in" && { echo "DB password leaked into files"; exit 1; } || true
+          test "$(stat -c %a "$HOME/perfume.nokkoo.in/wp-config.php")" = 600
+          if grep -q "$DBP" /tmp/install.log; then echo "password printed in output"; exit 1; fi

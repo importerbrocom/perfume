@@ -205,7 +205,7 @@ class PM_Frontend {
 			wp_safe_redirect( add_query_arg( 'pm_sub', 'err', $back ) );
 			exit;
 		}
-		$ip  = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
+		$ip  = PM_REST::client_ip();
 		$key = 'pm_nl_' . md5( $ip );
 		if ( (int) get_transient( $key ) >= 5 ) {
 			wp_safe_redirect( add_query_arg( 'pm_sub', 'err', $back ) );

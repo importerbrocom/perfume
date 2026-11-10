@@ -5,7 +5,12 @@ module.exports = defineConfig({
   testDir: '.',
   timeout: 60000,
   retries: 0,
-  use: { baseURL: process.env.BASE_URL || 'http://localhost:8080', trace: 'retain-on-failure' },
+  use: {
+    baseURL: process.env.BASE_URL || 'http://localhost:8080',
+    trace: 'retain-on-failure',
+    // cPanel staging (perfume.nokkoo.in) is behind a staging key gate: send it on every request.
+    extraHTTPHeaders: process.env.PM_GATE ? { 'X-PM-Gate': process.env.PM_GATE } : {},
+  },
   projects: [
     { name: 'desktop', use: { ...devices['Desktop Chrome'] }, testMatch: /shopping\.spec\.js/ },
     { name: 'mobile', use: { ...devices['Pixel 7'] }, testMatch: /shopping\.spec\.js/ },
