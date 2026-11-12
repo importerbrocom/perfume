@@ -28,8 +28,10 @@ class PM_Frontend {
 	}
 
 	public static function assets() {
-		wp_register_style( 'pm-shop', PM_SHOP_URL . 'assets/pm-shop.css', array(), PM_SHOP_VERSION );
-		wp_register_script( 'pm-shop', PM_SHOP_URL . 'assets/pm-shop.js', array(), PM_SHOP_VERSION, true );
+		// Version = file time, so browsers and Cloudflare fetch the new file after every update.
+		$ver = function ( $f ) { $t = @filemtime( PM_SHOP_DIR . 'assets/' . $f ); return $t ? PM_SHOP_VERSION . '.' . $t : PM_SHOP_VERSION; };
+		wp_register_style( 'pm-shop', PM_SHOP_URL . 'assets/pm-shop.css', array(), $ver( 'pm-shop.css' ) );
+		wp_register_script( 'pm-shop', PM_SHOP_URL . 'assets/pm-shop.js', array(), $ver( 'pm-shop.js' ), true );
 		// Loaded sitewide so the bag counter and drawer work on every page.
 		wp_enqueue_style( 'pm-shop' );
 		wp_enqueue_script( 'pm-shop' );
@@ -41,6 +43,7 @@ class PM_Frontend {
 			'shopUrl'  => esc_url_raw( wc_get_page_permalink( 'shop' ) ),
 			'currency' => get_woocommerce_currency(),
 			'loggedIn' => is_user_logged_in(),
+			'wa'       => '971528209716',
 			'userId'   => get_current_user_id(),
 			'wpNonce'  => wp_create_nonce( 'wp_rest' ),
 			'terms'    => array(

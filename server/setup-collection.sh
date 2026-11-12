@@ -2,7 +2,7 @@
 # STAGING ONLY (perfume.nokkoo.in). Never changes perfumarathi.com: it only READS the public collection page.
 #   1. Updates perfumarathi-shop and installs the Perfumarathi theme (header/footer on every shop page).
 #   2. Imports the 12 perfumes + 3 combos from perfumarathi.com/pm-page-new (images, notes, feedback; no prices).
-#   3. Turns /shop-perfumarathi/ and /shop-fixnote/ into collection pages.
+#   3. Makes /shop-perfumarathi/ and /shop-fixnote/ plain product lists (search, sort, Add to Cart, Buy Now).
 # Run in cPanel > Terminal:  bash ~/setup-collection.sh        (safe to run again)
 set -euo pipefail
 DOCROOT=${DOCROOT:-$HOME/perfume.nokkoo.in}
@@ -49,15 +49,15 @@ say "2/3 Importing the Perfumarathi collection (reads perfumarathi.com/pm-page-n
 cp "$SRC/server/import-collection.php" "$SRC/server/collection-data.php" "$TMP/"
 PM_IMPORT_DIR="$TMP" wp eval-file "$TMP/import-collection.php"
 
-say "3/3 Collection pages"
+say "3/3 Brand shop pages"
 wp eval-file - <<'PHP'
 <?php
 foreach ( array( 'perfumarathi' => 'Shop Perfumarathi', 'fixnote' => 'Shop Fixnote' ) as $brand => $title ) {
 	$slug = 'shop-' . $brand;
 	$page = get_page_by_path( $slug );
-	$data = array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => $title, 'post_content' => '[pm_collection brand="' . $brand . '"]' );
+	$data = array( 'post_type' => 'page', 'post_status' => 'publish', 'post_title' => $title, 'post_content' => '[pm_shop brand="' . $brand . '"]' );
 	if ( $page ) { $data['ID'] = $page->ID; wp_update_post( $data ); } else { $data['post_name'] = $slug; wp_insert_post( $data ); }
-	WP_CLI::log( "  /$slug/ is a collection page" );
+	WP_CLI::log( "  /$slug/ is a product list" );
 }
 PHP
 wp rewrite flush --quiet
@@ -67,9 +67,10 @@ cat <<EOF
 
 =====================================================================
  Done. On https://perfume.nokkoo.in (after the staging key):
-   /shop-perfumarathi/   collection page (hero, feedback, offers, combos, perfumes)
-   each perfume / combo  its own product page with the brand header and footer
+   /shop-perfumarathi/   product list: search, sort, Add to Cart, Buy Now
+   each perfume / combo  its own page with size, quantity, Add to Cart and Buy Now
+   wp-admin > Store Manager   orders, Stock & Prices, add products, customers
  Prices are empty ("Price on request" + WhatsApp). Set prices in
- wp-admin > Products to turn on Add to Cart. perfumarathi.com was NOT changed.
+ wp-admin > Store Manager > Stock & Prices to turn on Add to Cart. perfumarathi.com was NOT changed.
 =====================================================================
 EOF

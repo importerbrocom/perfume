@@ -72,3 +72,23 @@ bash ~/setup-collection.sh
   `php ~/.wp-cli/pm-staging-wp-cli.phar --path=~/perfume.nokkoo.in option update pm_offer_url_uae https://perfume.nokkoo.in/...`
   (also `pm_offer_url_india`, `pm_offer_url_international`).
 - `[TEST]` products are moved to draft. Safe to run again (existing products are not changed).
+
+## Running the store (wp-admin > Store Manager)
+| Task | Where |
+|---|---|
+| Sales overview, low stock, recent orders, CSV report | Store Manager > Dashboard |
+| See and process orders (status: Processing, Confirmed, Packed, Shipped, Out for Delivery, Delivered; tracking number; invoice; WhatsApp notify) | Store Manager > Orders > open an order |
+| Set prices and stock for every product and size on one screen | Store Manager > Stock & Prices |
+| Add a perfume (images, brand, category, notes, sizes) | Store Manager > Add Product |
+| Customers and their orders | Store Manager > Customers |
+| Coupons, shipping zones/rates, payments (COD) | Store Manager > Coupons / Shipping & Payments |
+
+**Stock & Prices:** empty *Regular price* = "Price on request" (no Add to Cart). Fill *Stock qty* to count stock
+(0 = out of stock, sales reduce it automatically); leave it empty to set In/Out of stock by hand. Sale price must be
+lower than the regular price. Untick *Visible* to hide a product from the shop.
+
+**Customers track orders** at `/track-order/` (order number + billing email), in My Account > Orders, and from the
+order-received page and the status emails.
+
+**Shop pages:** `/shop-perfumarathi/` and `/shop-fixnote/` are product lists (search, category, sort, Add to Cart, Buy Now,
+quick view, wishlist). Each product opens its own page with size, quantity, **Add to Cart** and **Buy Now**.
