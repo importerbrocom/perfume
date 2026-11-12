@@ -92,3 +92,20 @@ order-received page and the status emails.
 
 **Shop pages:** `/shop-perfumarathi/` and `/shop-fixnote/` are product lists (search, category, sort, Add to Cart, Buy Now,
 quick view, wishlist). Each product opens its own page with size, quantity, **Add to Cart** and **Buy Now**.
+
+## Payments on staging
+```
+curl -fsSL https://raw.githubusercontent.com/importerbrocom/perfume/main/server/setup-payments.sh -o ~/setup-payments.sh
+bash ~/setup-payments.sh
+```
+- **Cash on Delivery**: on.
+- **Cards, Apple Pay, Google Pay**: installs the official *WooCommerce Stripe Payment Gateway* (by WooCommerce) in **test mode**.
+  Paste your Stripe **test** keys when asked (Stripe Dashboard > Developers > API keys, Test mode), or press Enter and
+  connect later in wp-admin > Store Manager > Payments > Stripe. **Live keys are refused on staging.**
+- Webhook: add `https://perfume.nokkoo.in/?wc-api=wc_stripe` in Stripe > Developers > Webhooks and paste the signing
+  secret (`whsec_…`) into the Stripe settings. The staging lock lets only this URL through; the plugin checks its signature.
+- Test cards: `4242 4242 4242 4242` (success), `4000 0000 0000 0002` (declined), any future date and CVC.
+- Prefer another provider (Telr, Network International, PayTabs)? Tell Kiro which one your merchant account uses.
+
+**Add to Cart / Buy Now** only appear on products with a price. Products without one show "Price on request".
+Set prices in wp-admin > Store Manager > Stock & Prices.

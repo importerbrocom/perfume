@@ -42,6 +42,13 @@ add_action( 'init', function () {
 	if ( 0 === strpos( $uri, '/wp-login.php' ) || 0 === strpos( $uri, '/wp-cron.php' ) ) {
 		return;
 	}
+	// Payment-provider webhooks (e.g. Stripe -> /?wc-api=wc_stripe) cannot send the staging key.
+	// The gateway plugin verifies each call's signature itself; only these named endpoints are let through.
+	$hooks = (array) apply_filters( 'pm_staging_gate_webhooks', array( 'wc_stripe' ) );
+	// phpcs:ignore WordPress.Security.NonceVerification -- endpoint name only, compared against an allow-list.
+	if ( isset( $_GET['wc-api'] ) && in_array( sanitize_key( wp_unslash( $_GET['wc-api'] ) ), array_map( 'sanitize_key', $hooks ), true ) ) {
+		return;
+	}
 	$cookie = isset( $_COOKIE['pm_gate'] ) ? (string) $_COOKIE['pm_gate'] : '';
 	$header = isset( $_SERVER['HTTP_X_PM_GATE'] ) ? (string) wp_unslash( $_SERVER['HTTP_X_PM_GATE'] ) : '';
 	if ( ( $cookie && hash_equals( pm_gate_token(), $cookie ) ) || ( $header && hash_equals( $key, $header ) ) ) {

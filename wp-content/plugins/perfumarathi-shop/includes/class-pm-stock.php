@@ -30,7 +30,8 @@ class PM_Stock {
 		add_submenu_page( self::SLUG, 'All Products', 'All Products', 'edit_products', 'edit.php?post_type=product' );
 		add_submenu_page( self::SLUG, 'Customers', 'Customers', 'list_users', 'users.php?role=customer' );
 		add_submenu_page( self::SLUG, 'Coupons', 'Coupons', 'manage_woocommerce', 'edit.php?post_type=shop_coupon' );
-		add_submenu_page( self::SLUG, 'Shipping & Payments', 'Shipping & Payments', 'manage_woocommerce', 'admin.php?page=wc-settings&tab=shipping' );
+		add_submenu_page( self::SLUG, 'Payments', 'Payments', 'manage_woocommerce', 'admin.php?page=wc-settings&tab=checkout' );
+		add_submenu_page( self::SLUG, 'Shipping', 'Shipping', 'manage_woocommerce', 'admin.php?page=wc-settings&tab=shipping' );
 	}
 
 	/** Rows: simple products and each size (variation) of variable products. */

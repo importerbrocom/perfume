@@ -280,6 +280,44 @@ jobs:
           if grep -q 'pmt-brand-main' /tmp/front2.html; then echo "brand homepage got the theme header"; exit 1; fi
           for l in /tmp/php4.log; do if grep -iE "PHP (Fatal|Parse|Warning|Notice|Deprecated).*(perfumarathi)" "$l"; then exit 1; fi; done
           echo "Collection shop verified"
+      - name: Payments (COD on, Stripe in TEST mode, live keys refused, webhook through the staging lock)
+        run: |
+          set -o pipefail
+          D="$HOME/perfume.nokkoo.in"
+          W="php $HOME/.wp-cli/pm-staging-wp-cli.phar --path=$D"
+          export GUARD_URL="file://$GITHUB_WORKSPACE/server/mu-plugins/pm-staging-guard.php"
+          if DOCROOT=/tmp bash server/setup-payments.sh < /dev/null; then echo "should refuse non-staging"; exit 1; fi
+          if printf 'pk_live_abc\nsk_live_def\n' | bash server/setup-payments.sh > /tmp/pay0.log 2>&1; then echo "live keys accepted"; exit 1; fi
+          grep -q "LIVE key" /tmp/pay0.log
+          printf '\n' | bash server/setup-payments.sh | tee /tmp/pay1.log
+          $W eval-file - <<'PHP'
+          <?php
+          $f = function ( $m ) { WP_CLI::error( $m ); };
+          if ( ! is_plugin_active( 'woocommerce-gateway-stripe/woocommerce-gateway-stripe.php' ) ) $f( 'Stripe plugin not active' );
+          $s = get_option( 'woocommerce_stripe_settings' );
+          if ( 'yes' !== ( $s['testmode'] ?? '' ) ) $f( 'Stripe not in test mode' );
+          if ( 'yes' === ( $s['enabled'] ?? '' ) ) $f( 'Stripe enabled without keys' );
+          foreach ( (array) $s as $v ) if ( is_string( $v ) && false !== strpos( $v, '_live_' ) ) $f( 'live key stored' );
+          $gw = WC()->payment_gateways()->payment_gateways();
+          if ( empty( $gw['stripe'] ) ) $f( 'stripe gateway not registered' );
+          if ( 'yes' !== $gw['cod']->enabled ) $f( 'COD off' );
+          WP_CLI::success( 'Payments without keys verified' );
+          PHP
+          printf 'pk_test_ci123\nsk_test_ci456\n' | bash server/setup-payments.sh > /tmp/pay2.log 2>&1
+          if grep -q 'sk_test_ci456' /tmp/pay2.log; then echo "secret key printed"; exit 1; fi
+          grep -q 'already installed' /tmp/pay2.log
+          $W eval 'WC()->payment_gateways(); $s = get_option( "woocommerce_stripe_settings" ); exit( ( "yes" === $s["enabled"] && "pk_test_ci123" === $s["test_publishable_key"] && "sk_test_ci456" === $s["test_secret_key"] && "yes" === $s["testmode"] ) ? 0 : 1 );'
+          if printf 'pk_test_ok\nsk_bad\n' | bash server/setup-payments.sh > /dev/null 2>&1; then echo "bad secret key accepted"; exit 1; fi
+          grep -q 'pm_staging_gate_webhooks' "$D/wp-content/mu-plugins/pm-staging-guard.php"
+          php -S 127.0.0.1:8098 -t "$D" /tmp/router.php >/tmp/php5.log 2>&1 &
+          sleep 2
+          H=(-H 'Host: perfume.nokkoo.in' -H 'X-Forwarded-Proto: https')
+          code=$(curl -s -o /dev/null -w '%{http_code}' "${H[@]}" -X POST -d '{}' 'http://127.0.0.1:8098/?wc-api=wc_stripe')
+          test "$code" != 401 || { echo "Stripe webhook blocked by the staging lock"; exit 1; }
+          test "$(curl -s -o /dev/null -w '%{http_code}' "${H[@]}" 'http://127.0.0.1:8098/?wc-api=something_else')" = 401
+          test "$(curl -s -o /dev/null -w '%{http_code}' "${H[@]}" 'http://127.0.0.1:8098/')" = 401
+          if grep -iE "PHP (Fatal|Parse|Warning|Notice|Deprecated).*(perfumarathi|pm-staging-guard)" /tmp/php5.log; then exit 1; fi
+          echo "Payments verified"
       - name: Rotate secrets (wrong DB password refused, then new key, admin password and DB password)
         run: |
           set -o pipefail
