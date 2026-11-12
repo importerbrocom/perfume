@@ -72,8 +72,3 @@ bash ~/setup-collection.sh
   `php ~/.wp-cli/pm-staging-wp-cli.phar --path=~/perfume.nokkoo.in option update pm_offer_url_uae https://perfume.nokkoo.in/...`
   (also `pm_offer_url_india`, `pm_offer_url_international`).
 - `[TEST]` products are moved to draft. Safe to run again (existing products are not changed).
-
-### Shop page hero
-The main Shop page (`/shop/`) starts with the hero from the collection page (PERFUMARATHI wordmark, signature portrait,
-"Find Your Perfumarathi", WhatsApp button), then the product grid. Use `[pm_shop_hero]` to place it on any other page.
-To update staging after a change, run `bash ~/setup-collection.sh` again (it keeps existing products).
