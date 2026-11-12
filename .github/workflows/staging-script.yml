@@ -256,7 +256,8 @@ jobs:
           if ( '' !== wc_get_product( $id( 'ayrin' ) )->get_regular_price() ) $f( 'row with bad stock saved' );
           $z = wc_get_product( $id( 'zayrah' ) );
           if ( '110' !== $z->get_regular_price() || '' !== $z->get_sale_price() || 'outofstock' !== $z->get_stock_status() ) $f( 'Zayrah: sale >= regular must be dropped, status saved' );
-          if ( 2 !== $n || 3 !== count( $err ) ) $f( "expected 2 updated / 3 errors, got $n / " . count( $err ) . ': ' . implode( ' | ', $err ) );
+          // Ruh: bad price; Ayrin: sale >= regular AND bad stock (both reported, row not saved); Zayrah: sale >= regular.
+          if ( 2 !== $n || 4 !== count( $err ) ) $f( "expected 2 updated / 4 errors, got $n / " . count( $err ) . ': ' . implode( ' | ', $err ) );
           list( $n2 ) = PM_Stock::apply_rows( array( $id( 'mahar' ) => array( 'regular' => '120', 'sale' => '99.50', 'qty' => '5', 'status' => 'instock' ) ) );
           if ( 0 !== $n2 ) $f( 'unchanged row counted as update' );
           PM_Stock::apply_rows( array( $id( 'mahar' ) => array( 'regular' => '120', 'sale' => '99.50', 'qty' => '0', 'status' => 'instock' ) ) );
