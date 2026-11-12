@@ -1,5 +1,7 @@
 # Payment gateway setup
 
+**Staging:** `server/setup-payments.sh` installs Stripe (official WooCommerce plugin) in test mode and keeps Cash on Delivery on. See docs/STAGING-CPANEL.md.
+
 No gateway is hard-coded. The store is UAE-based, so choose a provider whose **merchant account you are approved for**
 (commonly Stripe UAE, Telr, PayTabs, Network International/N-Genius, Checkout.com; Tabby/Tamara for instalments).
 Check current fees, supported cards, AED settlement and onboarding requirements with each provider yourself.
