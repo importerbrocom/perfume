@@ -136,7 +136,7 @@ jobs:
           sleep 2
           curl -s -H 'Host: perfume.nokkoo.in' -H 'X-Forwarded-Proto: https' -H "X-PM-Gate: $KEY" http://127.0.0.1:8092/ > /tmp/front.html
           for want in 'id="pf-brand-home"' 'THE ART OF FRAGRANCE' 'uploads/pm-brand/IMG_2654.mp4' 'uploads/pm-brand/IMG_2610.png' \
-                      'uploads/pm-brand/IMG_2609.jpg' 'ENTER PERFUMARATHI' 'SHOP FIXNOTE' '/shop-perfumarathi/' '/shop-fixnote/' \
+                      'uploads/pm-brand/IMG_2609.jpg' 'SHOP PERFUMARATHI' 'SHOP FIXNOTE' '/shop-perfumarathi/' '/shop-fixnote/' \
                       'class="pm-home"' 'data-pm-rail' 'FOLLOW PERFUMARATHI' 'wa.me/971528209716' 'data-pm-open-cart' 'pm-canvas' 'noindex'; do
             grep -qF "$want" /tmp/front.html || { echo "missing on homepage: $want"; exit 1; }
           done
@@ -145,6 +145,13 @@ jobs:
           test "$a" -lt "$b"
           if grep -qE '<div class="wp-site-blocks"|<header class="wp-block-template-part|<footer class="wp-block-template-part' /tmp/front.html; then echo "theme header/footer rendered"; exit 1; fi
           if grep -q 'perfumarathi.com/?page_id' /tmp/front.html; then echo "links point at live site"; exit 1; fi
+          # Exactly one button per brand: SHOP PERFUMARATHI and SHOP FIXNOTE (no ENTER buttons, no extra button row).
+          for bad in 'ENTER PERFUMARATHI' 'ENTER FIXNOTE' 'pm-home__cta' 'pf-shop'; do
+            if grep -qF "$bad" /tmp/front.html; then echo "homepage still has: $bad"; exit 1; fi
+          done
+          test "$(grep -o 'aria-label="Shop Perfumarathi"' /tmp/front.html | wc -l)" = 1
+          test "$(grep -o 'aria-label="Shop Fixnote"' /tmp/front.html | wc -l)" = 1
+          test "$(grep -o 'class="pf-enter"' /tmp/front.html | wc -l)" = 2
           if grep -iE "PHP (Fatal|Parse|Warning|Notice|Deprecated).*(perfumarathi-shop|pm-staging-guard)" /tmp/php3.log; then exit 1; fi
           echo "Brand homepage verified"
       - name: Collection shop (theme header/footer, 15 products from the page, product pages, prices)

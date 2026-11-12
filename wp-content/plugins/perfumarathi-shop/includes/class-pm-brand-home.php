@@ -56,8 +56,6 @@ class PM_Brand_Home {
 			'{{LOGO_PERF}}'  => esc_url( self::asset( 'logo_perf' ) ),
 			'{{LOGO_FIX}}'   => esc_url( self::asset( 'logo_fix' ) ),
 			'{{VIDEO}}'      => esc_url( self::asset( 'video' ) ),
-			'{{ENTER_PERF}}' => esc_url( $perf ),
-			'{{ENTER_FIX}}'  => esc_url( $fix ),
 			'{{SHOP_PERF}}'  => esc_url( $perf ),
 			'{{SHOP_FIX}}'   => esc_url( $fix ),
 			'{{HOME_SHOP}}'  => PM_Frontend::sc_home(), // escaped internally.
