@@ -228,12 +228,11 @@ jobs:
           # Buy Now (form posts pm_buy_now only, like the button): goes to checkout with 2 x Kausar in the cart.
           H=(-H 'Host: perfume.nokkoo.in' -H 'X-Forwarded-Proto: https' -H "X-PM-Gate: $KEY")
           rm -f /tmp/jar
-          loc=$(curl -s -o /dev/null -w '%{redirect_url}' -c /tmp/jar -b /tmp/jar "${H[@]}" -d "pm_buy_now=$KID&quantity=2" http://127.0.0.1:8097/product/kausar/)
+          # The site thinks it is HTTPS (X-Forwarded-Proto), so the cart cookie is Secure. curl only keeps Secure cookies from
+          # secure origins, and treats http://localhost as one (127.0.0.1 is not), so these two requests use localhost.
+          loc=$(curl -s -o /dev/null -w '%{redirect_url}' -c /tmp/jar -b /tmp/jar "${H[@]}" -d "pm_buy_now=$KID&quantity=2" http://localhost:8097/product/kausar/)
           case "$loc" in */checkout/*) ;; *) echo "Buy Now redirected to '$loc', expected checkout"; exit 1;; esac
-          # The site thinks it is HTTPS (X-Forwarded-Proto), so the cart cookie is Secure; curl would not send it back over
-          # this plain-HTTP test server. Test-only: clear the Secure column in the cookie jar.
-          awk -F'\t' 'BEGIN{OFS="\t"} NF>=7 {$4="FALSE"} {print}' /tmp/jar > /tmp/jar2 && mv /tmp/jar2 /tmp/jar
-          curl -s -D /tmp/checkout.hdr -c /tmp/jar -b /tmp/jar "${H[@]}" http://127.0.0.1:8097/checkout/ > /tmp/checkout.html
+          curl -s -D /tmp/checkout.hdr -c /tmp/jar -b /tmp/jar "${H[@]}" http://localhost:8097/checkout/ > /tmp/checkout.html
           if ! grep -q 'billing_first_name' /tmp/checkout.html; then
             echo "--- cookie jar"; sed -E 's/(\t[^\t]{12})[^\t]*$/\1.../' /tmp/jar; echo "--- checkout headers"; cat /tmp/checkout.hdr
             echo "--- checkout body"; head -c 1500 /tmp/checkout.html; exit 1
