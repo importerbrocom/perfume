@@ -20,8 +20,11 @@ wp core install --url=http://localhost:8080 --title="Perfumarathi Staging" \
 wp plugin install woocommerce --activate
 wp plugin activate perfumarathi-shop
 # Newer WooCommerce gives its pages a page template the classic theme rejects ("Invalid page template"),
-# which makes `wp post update` fail. Clear it first; the theme decides the layout.
-setpage() { wp post meta delete "$1" _wp_page_template >/dev/null 2>&1 || true; wp post update "$1" --post_content="$2" --quiet; }
+# which makes `wp post update` fail. Update through wp_update_post with the default template instead.
+setpage() {
+  wp eval '$r = wp_update_post( array( "ID" => (int) $args[0], "post_content" => $args[1], "page_template" => "default" ), true );
+    if ( is_wp_error( $r ) ) { WP_CLI::error( "Page " . $args[0] . ": " . $r->get_error_message() ); }' "$1" "$2"
+}
 # Flush WooCommerce's post-install background jobs now (one of them turns on "Coming soon" mode mid-test otherwise).
 wp action-scheduler run --batches=5 >/dev/null 2>&1 || true
 wp cron event run --due-now >/dev/null 2>&1 || true
