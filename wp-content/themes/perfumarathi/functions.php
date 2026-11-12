@@ -22,8 +22,9 @@ add_action( 'after_setup_theme', function () {
 } );
 
 add_action( 'wp_enqueue_scripts', function () {
-	wp_enqueue_style( 'perfumarathi', get_stylesheet_uri(), array(), PMT_VERSION );
-	wp_enqueue_script( 'perfumarathi-nav', get_template_directory_uri() . '/assets/nav.js', array(), PMT_VERSION, true );
+	$dir = get_template_directory();
+	wp_enqueue_style( 'perfumarathi', get_stylesheet_uri(), array(), PMT_VERSION . '.' . (int) @filemtime( $dir . '/style.css' ) );
+	wp_enqueue_script( 'perfumarathi-nav', get_template_directory_uri() . '/assets/nav.js', array(), PMT_VERSION . '.' . (int) @filemtime( $dir . '/assets/nav.js' ), true );
 } );
 
 /** WhatsApp link with a prefilled message. */

@@ -33,6 +33,21 @@ test('product page: choose size, add to cart, drawer quantity, remove', async ({
   await expect(page.locator('#pm-drawer .pm-empty')).toContainText('Your bag is empty');
 });
 
+test('product page: Buy Now goes straight to checkout with the chosen size and quantity', async ({ page }) => {
+  await page.goto(P.perfumarathi);
+  await page.locator('.pm-card:not(.pm-skel) h3 a', { hasText: '[TEST]' }).first().click();
+  const buy = page.locator('button.pm-buy-now');
+  await expect(buy).toBeDisabled(); // until a size is chosen
+  await page.selectOption('select[name="attribute_size"]', '100ml');
+  await expect(buy).toBeEnabled({ timeout: 15000 });
+  await page.fill('input.qty', '2');
+  await Promise.all([page.waitForURL(/\/checkout\//, { timeout: 30000 }), buy.click()]);
+  const review = page.locator('.woocommerce-checkout-review-order-table');
+  await expect(review).toContainText('[TEST]');
+  await expect(review).toContainText('100ml');
+  await expect(review.locator('.product-quantity')).toContainText('2');
+});
+
 test('invalid coupon is rejected by the server', async ({ page }) => {
   await addTestProduct(page);
   await page.goto(P.perfumarathi);
@@ -45,6 +60,9 @@ test('invalid coupon is rejected by the server', async ({ page }) => {
 test.describe.serial('checkout then tracking', () => {
 test('guest checkout with cash on delivery creates an order', async ({ page }) => {
   orderNumber = await placeCodOrder(page, EMAIL);
+  // Order-received page shows the progress timeline and how to track the order.
+  await expect(page.locator('.pm-thankyou-track .pm-timeline')).toBeVisible();
+  await expect(page.locator('.pm-thankyou-track')).toContainText(orderNumber);
 });
 
 test('tracking: correct email shows timeline, wrong email is rejected', async ({ page }) => {

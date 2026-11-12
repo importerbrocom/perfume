@@ -19,6 +19,15 @@ wp core install --url=http://localhost:8080 --title="Perfumarathi Staging" \
   --admin_user=admin --admin_password="$ADMIN_PASSWORD" --admin_email=admin@example.test --skip-email
 wp plugin install woocommerce --activate
 wp plugin activate perfumarathi-shop
+# Newer WooCommerce gives its pages a page template the classic theme rejects ("Invalid page template"),
+# which makes `wp post update` fail. Update through wp_update_post with the default template instead.
+setpage() {
+  wp eval-file - "$1" "$2" <<'PHP'
+<?php
+$r = wp_update_post( array( 'ID' => (int) $args[0], 'post_content' => $args[1], 'page_template' => 'default' ), true );
+if ( is_wp_error( $r ) ) { WP_CLI::error( 'Page ' . $args[0] . ': ' . $r->get_error_message() ); }
+PHP
+}
 # Flush WooCommerce's post-install background jobs now (one of them turns on "Coming soon" mode mid-test otherwise).
 wp action-scheduler run --batches=5 >/dev/null 2>&1 || true
 wp cron event run --due-now >/dev/null 2>&1 || true
@@ -31,9 +40,9 @@ wp option update woocommerce_currency AED
 wp option update woocommerce_default_country AE:DU
 wp option update woocommerce_cod_settings '{"enabled":"yes","title":"Cash on delivery"}' --format=json
 # Classic shortcode cart/checkout (matches the classic skt-fragrance theme on the live site).
-wp post update "$(wp option get woocommerce_checkout_page_id)" --post_content="[woocommerce_checkout]"
-wp post update "$(wp option get woocommerce_cart_page_id)" --post_content="[woocommerce_cart]"
-wp post update "$(wp option get woocommerce_shop_page_id)" --post_content="[pm_shop]"
+setpage "$(wp option get woocommerce_checkout_page_id)" "[woocommerce_checkout]"
+setpage "$(wp option get woocommerce_cart_page_id)" "[woocommerce_cart]"
+setpage "$(wp option get woocommerce_shop_page_id)" "[pm_shop]"
 wp post create --post_type=page --post_status=publish --post_title="Staging Home" --post_content='[pm_cart_icon] [pm_home_shop]'
 ./test-pages.sh
 echo "Done. Site: http://localhost:8080  Admin: http://localhost:8080/wp-admin (user: admin)"

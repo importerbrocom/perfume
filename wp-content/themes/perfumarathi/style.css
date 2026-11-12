@@ -96,3 +96,11 @@ a{color:var(--brown)}
 .pm-price-on-request{display:block;color:#75665c;font-weight:700;margin:6px 0}
 
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+
+/* Buy Now next to Add to Cart on product pages */
+.woocommerce div.product form.cart .pm-buy-now{background:var(--orange)!important;border-color:var(--orange)!important;margin-left:8px}
+.woocommerce div.product form.cart .pm-buy-now:hover{background:var(--orange-d)!important}
+.woocommerce div.product form.cart .pm-buy-now:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:600px){.woocommerce div.product form.cart .pm-buy-now{margin:10px 0 0;width:100%}.woocommerce div.product form.cart .single_add_to_cart_button{width:100%}}
+.pm-thankyou-track{margin:28px 0;padding:20px;background:#fff;border:1px solid var(--line);border-radius:18px}
+.pm-thankyou-track h2{font-family:Georgia,serif;margin:0 0 6px}

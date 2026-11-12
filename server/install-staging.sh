@@ -169,6 +169,15 @@ fi
 say "Activating WooCommerce and perfumarathi-shop"
 wp plugin activate woocommerce --quiet
 wp plugin activate perfumarathi-shop --quiet
+# Newer WooCommerce gives its pages a page template the classic theme rejects ("Invalid page template"),
+# which makes `wp post update` fail. Update through wp_update_post with the default template instead.
+setpage() {
+  wp eval-file - "$1" "$2" <<'PHP'
+<?php
+$r = wp_update_post( array( 'ID' => (int) $args[0], 'post_content' => $args[1], 'page_template' => 'default' ), true );
+if ( is_wp_error( $r ) ) { WP_CLI::error( 'Page ' . $args[0] . ': ' . $r->get_error_message() ); }
+PHP
+}
 
 # ---------- Store settings (staging) ----------
 say "Configuring the store"
@@ -181,9 +190,9 @@ wp option update woocommerce_enable_myaccount_registration yes --quiet
 wp option update woocommerce_email_from_address "wordpress@$DOMAIN" --quiet
 wp option update woocommerce_email_from_name "Perfumarathi STAGING" --quiet
 wp option update woocommerce_cod_settings '{"enabled":"yes","title":"Cash on delivery"}' --format=json --quiet
-wp post update "$(wp option get woocommerce_checkout_page_id)" --post_content="[woocommerce_checkout]" --quiet
-wp post update "$(wp option get woocommerce_cart_page_id)" --post_content="[woocommerce_cart]" --quiet
-wp post update "$(wp option get woocommerce_shop_page_id)" --post_content="[pm_shop]" --quiet
+setpage "$(wp option get woocommerce_checkout_page_id)" "[woocommerce_checkout]"
+setpage "$(wp option get woocommerce_cart_page_id)" "[woocommerce_cart]"
+setpage "$(wp option get woocommerce_shop_page_id)" "[pm_shop]"
 mkpage() { wp post create --post_type=page --post_status=publish --post_name="$1" --post_title="$2" --post_content="$3" --porcelain; }
 mkpage shop-perfumarathi "Shop Perfumarathi" '[pm_shop brand="perfumarathi"]' >/dev/null
 mkpage shop-fixnote "Shop Fixnote" '[pm_shop brand="fixnote"]' >/dev/null

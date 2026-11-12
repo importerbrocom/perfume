@@ -125,11 +125,18 @@
 
   function card(p) {
     var w = wish.indexOf(p.id) > -1;
-    var buy = p.purchasable
-      ? (p.simple
-        ? '<button class="pm-btn pm-btn--sm" data-add="' + p.id + '">Add to Cart</button><button class="pm-btn pm-btn--sm pm-btn--ghost" data-buy="' + p.id + '">Buy Now</button>'
-        : '<a class="pm-btn pm-btn--sm" href="' + esc(p.url) + '">Choose Size</a>')
-      : '<button class="pm-btn pm-btn--sm" disabled>Out of stock</button>';
+    var buy;
+    if (!p.in_stock) {
+      buy = '<button class="pm-btn pm-btn--sm" disabled>Out of stock</button>';
+    } else if (!p.priced) {
+      // No price set yet in wp-admin: not "out of stock", just price on request.
+      buy = '<a class="pm-btn pm-btn--sm pm-btn--ghost" href="' + esc(p.url) + '">View Details</a>' +
+        '<a class="pm-btn pm-btn--sm pm-btn--wa" href="https://wa.me/' + esc(C.wa || '') + '?text=' + encodeURIComponent('Hi Perfumarathi, I\'d like to know the price of ' + p.name + '.') + '" target="_blank" rel="noopener noreferrer">Enquire</a>';
+    } else if (p.purchasable && p.simple) {
+      buy = '<button class="pm-btn pm-btn--sm" data-add="' + p.id + '">Add to Cart</button><button class="pm-btn pm-btn--sm pm-btn--ghost" data-buy="' + p.id + '">Buy Now</button>';
+    } else {
+      buy = '<a class="pm-btn pm-btn--sm" href="' + esc(p.url) + '">Choose Size</a>';
+    }
     return '<article class="pm-card" data-id="' + p.id + '">' +
       '<div class="pm-card__media"><a href="' + esc(p.url) + '"><img src="' + esc(p.image) + '" alt="' + esc(p.name) + '" loading="lazy" width="300" height="300"></a>' +
       (p.on_sale ? '<span class="pm-badge">Sale</span>' : '') +
@@ -138,7 +145,7 @@
       '<div class="pm-card__body"><span class="pm-card__brand">' + esc(p.brand) + '</span>' +
       '<h3><a href="' + esc(p.url) + '">' + esc(p.name) + '</a></h3>' +
       (p.reviews ? '<div class="pm-card__rating">' + stars(p.rating) + ' <small>(' + p.reviews + ')</small></div>' : '') +
-      '<div class="pm-card__price">' + priceHtml(p.price_html) + '</div>' +
+      '<div class="pm-card__price">' + (p.priced ? priceHtml(p.price_html) : '<span class="pm-card__req">Price on request</span>') + '</div>' +
       '<small class="pm-stock ' + (p.in_stock ? 'in' : 'out') + '">' + esc(p.stock_label) + '</small>' +
       '<div class="pm-card__actions">' + buy + '</div></div></article>';
   }

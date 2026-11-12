@@ -81,3 +81,28 @@ test('admin dashboard loads and CSV report contains the order', async ({ page })
   expect(body.split('\n')[0]).toContain('Order,Date,Status');
   expect(body).toContain(EMAIL);
 });
+
+test('admin Store Manager > Stock & Prices: change stock, see it in the shop', async ({ page, request }) => {
+  await page.goto('/wp-login.php');
+  await page.fill('#user_login', ADMIN_USER);
+  await page.fill('#user_pass', ADMIN_PASSWORD);
+  await page.click('#wp-submit');
+  await page.goto('/wp-admin/');
+  // Menu entry for the owner.
+  const menu = page.locator('#adminmenu a', { hasText: 'Stock & Prices' });
+  await expect(menu).toHaveCount(1);
+  await expect(menu).toHaveAttribute('href', /page=pm-stock/);
+  await page.goto('/wp-admin/admin.php?page=pm-stock'); // the entry sits in a hover fly-out
+  await expect(page.locator('h1')).toContainText('Stock & Prices');
+  // Only the Fixnote test product is changed: the parallel shopping tests buy the Perfumarathi one.
+  const fixRow = (size) => page.locator('tr.is-parent', { hasText: 'Fixnote' })
+    .locator(`xpath=following-sibling::tr[not(contains(@class,"is-parent"))][contains(., "${size}")][1]`);
+  await fixRow('100ml').locator('input.qty').fill('0');
+  await page.click('#submit');
+  await expect(page.locator('.notice-success')).toContainText('updated');
+  await expect(fixRow('100ml').locator('select')).toHaveValue('outofstock');
+  // Bad input is reported, not saved.
+  await fixRow('30ml').locator('input[name$="[regular]"]').fill('abc');
+  await page.click('#submit');
+  await expect(page.locator('.notice-error')).toContainText('not a valid amount');
+});

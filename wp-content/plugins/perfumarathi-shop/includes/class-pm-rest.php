@@ -60,6 +60,7 @@ class PM_REST {
 			'stock_label'  => $p->is_in_stock() ? ( $p->is_on_backorder() ? 'On backorder' : 'In stock' ) : 'Out of stock',
 			'type'         => $p->get_type(),
 			'purchasable'  => $p->is_purchasable() && $p->is_in_stock(),
+			'priced'       => '' !== (string) $p->get_price(),
 			'simple'       => $p->is_type( 'simple' ),
 		);
 	}

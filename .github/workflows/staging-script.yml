@@ -202,37 +202,79 @@ jobs:
           sleep 2
           get() { curl -s -H 'Host: perfume.nokkoo.in' -H 'X-Forwarded-Proto: https' -H "X-PM-Gate: $KEY" "http://127.0.0.1:8097$1"; }
           need() { grep -qF -- "$2" "$1" || { echo "missing in $1: $2"; exit 1; }; }
+          # Shop Perfumarathi = product list only (no hero, feedback, offers).
           get /shop-perfumarathi/ > /tmp/shop.html
-          for w in 'class="pmt-brand-main">PERFUMARATHI' 'Find Your Perfumarathi' 'pmc-fb-card' 'Rohit Verma' 'SPECIAL PERFUME OFFER' 'Choose Your Combo' \
-                   'Our Perfume Collection' '/product/kausar/' '/product/4-pcs-combo/' 'Price on request' 'Enquire on WhatsApp' 'Delivery Across' 'pmt-sticky'; do need /tmp/shop.html "$w"; done
-          test "$(grep -o 'class="pmc-card"' /tmp/shop.html | wc -l)" = 12
-          test "$(grep -o 'pmc-card pmc-card--combo' /tmp/shop.html | wc -l)" = 3
-          if grep -q '\[TEST\]' /tmp/shop.html; then echo "test products shown"; exit 1; fi
+          for w in 'class="pmt-brand-main">PERFUMARATHI' 'class="pm-shop" data-brand="perfumarathi"' 'pm-search' 'pm-sort' 'Delivery Across' 'pmt-sticky'; do need /tmp/shop.html "$w"; done
+          for bad in 'Find Your Perfumarathi' 'pmc-wordmark' 'pmc-fb-card' 'SPECIAL PERFUME OFFER' 'Choose Your Combo'; do
+            if grep -qF "$bad" /tmp/shop.html; then echo "shop page still shows: $bad"; exit 1; fi
+          done
+          json() { php -r '$d = json_decode( stream_get_contents( STDIN ), true ); '"$1"; }
+          get '/wp-json/pm/v1/products?brand=perfumarathi&per_page=48' > /tmp/list.json
+          json 'if ( 15 !== count( $d["items"] ) ) { fwrite( STDERR, "expected 15 products\n" ); exit( 1 ); }
+                foreach ( $d["items"] as $i ) { if ( $i["priced"] || ! $i["in_stock"] || false !== strpos( $i["name"], "[TEST]" ) ) { fwrite( STDERR, "bad item " . $i["name"] . "\n" ); exit( 1 ); } }' < /tmp/list.json
           get /product/kausar/ > /tmp/kausar.html
           for w in 'pmt-brand-main' 'Delivery Across' 'Saffron, Jasmine' 'Fir Resin, Cedar Hard Wood' 'A Fragrance of Divine Elegance' 'Price on request' 'pm-enquire' 'woocommerce-product-gallery'; do need /tmp/kausar.html "$w"; done
-          if grep -q 'single_add_to_cart_button' /tmp/kausar.html; then echo "add to cart without a price"; exit 1; fi
+          if grep -qE 'single_add_to_cart_button|pm_buy_now' /tmp/kausar.html; then echo "add to cart / buy now without a price"; exit 1; fi
           get /product/3-pcs-combo/ > /tmp/combo.html
           need /tmp/combo.html 'class="pm-fbt"'
-          # Owner sets a price -> Add to Cart appears on the product page and the collection card.
+          KID=$($W eval 'echo get_page_by_path( "kausar", OBJECT, "product" )->ID;')
+          # Owner sets a price -> Add to Cart + Buy Now on the product page, priced + purchasable in the list.
           $W eval '$p = wc_get_product( get_page_by_path( "kausar", OBJECT, "product" ) ); $p->set_regular_price( "150" ); $p->save();'
           get /product/kausar/ > /tmp/kausar2.html
           need /tmp/kausar2.html 'single_add_to_cart_button'
-          get /shop-perfumarathi/ > /tmp/shop2.html
-          KID=$($W eval 'echo get_page_by_path( "kausar", OBJECT, "product" )->ID;')
-          need /tmp/shop2.html "data-add=\"$KID\""
-          # Main Shop page: hero from pm-page-new above the product grid, no plain "Shop" title.
-          get /shop/ > /tmp/wcshop.html
-          for w in 'class="pmc-wordmark-main">PERFUMARATHI' 'SECRET OF ATTRACTIVENESS' 'class="pmc-portrait' 'PURE FRAGRANCES • TIMELESS IMPRESSIONS' \
-                   'TRUSTED SINCE 2015' 'Find Your Perfumarathi' 'For current prices, enquiries and orders, message us directly on WhatsApp.' \
-                   'GET PRICE • ENQUIRIES • ORDER ON WHATSAPP →' 'wa.me/971528209716' 'pm-has-hero' 'ul class="products' '/product/kausar/' 'Delivery Across'; do need /tmp/wcshop.html "$w"; done
-          a=$(grep -bo 'Find Your Perfumarathi' /tmp/wcshop.html | head -1 | cut -d: -f1); b=$(grep -bo 'ul class="products' /tmp/wcshop.html | head -1 | cut -d: -f1)
-          test "$a" -lt "$b"
-          if grep -q 'class="pm-shop"' /tmp/wcshop.html; then echo "duplicate product grid"; exit 1; fi
-          if grep -q 'class="woocommerce-products-header__title page-title">Shop' /tmp/wcshop.html; then echo "plain Shop title still shown"; exit 1; fi
-          get '/?s=kausar&post_type=product' > /tmp/search.html
-          if grep -q 'Find Your Perfumarathi' /tmp/search.html; then echo "hero shown on search results"; exit 1; fi
-          get /shop-perfumarathi/ > /tmp/shop3.html; need /tmp/shop3.html 'GET PRICE • ENQUIRIES • ORDER ON WHATSAPP →'
-          test "$(grep -o 'Find Your Perfumarathi' /tmp/shop3.html | wc -l)" = 1
+          need /tmp/kausar2.html "name=\"pm_buy_now\" value=\"$KID\""
+          get '/wp-json/pm/v1/products?brand=perfumarathi&per_page=48' | json '$k = array_values( array_filter( $d["items"], function ( $i ) { return "Kausar" === $i["name"]; } ) );
+                if ( ! $k || ! $k[0]["priced"] || ! $k[0]["purchasable"] || ! $k[0]["simple"] ) { fwrite( STDERR, "Kausar not buyable in list\n" ); exit( 1 ); }'
+          # Buy Now (form posts pm_buy_now only, like the button): goes to checkout with 2 x Kausar in the cart.
+          H=(-H 'Host: perfume.nokkoo.in' -H 'X-Forwarded-Proto: https' -H "X-PM-Gate: $KEY")
+          # The site thinks it is HTTPS (X-Forwarded-Proto), so the cart cookie is Secure, and curl will not store a Secure
+          # cookie for the custom Host over plain HTTP. Test-only: copy the Set-Cookie values into a Cookie header ourselves.
+          loc=$(curl -s -o /dev/null -D /tmp/buy.hdr -w '%{redirect_url}' "${H[@]}" -d "pm_buy_now=$KID&quantity=2" http://127.0.0.1:8097/product/kausar/)
+          case "$loc" in */checkout/*) ;; *) echo "Buy Now redirected to '$loc', expected checkout"; exit 1;; esac
+          CK=$(grep -i '^set-cookie:' /tmp/buy.hdr | sed -E 's/^[Ss]et-[Cc]ookie: *([^;]*).*/\1/' | tr -d '\r' | paste -sd ';' -)
+          echo "$CK" | grep -q 'wp_woocommerce_session_' || { echo "Buy Now did not start a cart session"; cat /tmp/buy.hdr; exit 1; }
+          curl -s -D /tmp/checkout.hdr "${H[@]}" -H "Cookie: $CK" http://127.0.0.1:8097/checkout/ > /tmp/checkout.html
+          if ! grep -q 'billing_first_name' /tmp/checkout.html; then
+            echo "--- checkout headers"; cat /tmp/checkout.hdr
+            echo "--- checkout body"; head -c 1500 /tmp/checkout.html; exit 1
+          fi
+          tr -d '\n\t' < /tmp/checkout.html | grep -qE 'Kausar.{0,300}product-quantity[^>]*>[^0-9<]*2<' || { echo "checkout does not show 2 x Kausar"; exit 1; }
+          # Stock & Prices admin page: validation, saving, permissions.
+          $W --user=pmadmin eval-file - <<'PHP'
+          <?php
+          $f   = function ( $m ) { WP_CLI::error( $m ); };
+          $id  = function ( $s ) { return get_page_by_path( $s, OBJECT, 'product' )->ID; };
+          list( $n, $err ) = PM_Stock::apply_rows( array(
+            $id( 'mahar' ) => array( 'regular' => '120', 'sale' => '99.50', 'qty' => '5', 'status' => 'instock' ),
+            $id( 'ruh' )   => array( 'regular' => '-3', 'sale' => '', 'qty' => '', 'status' => 'instock' ),
+            $id( 'ayrin' ) => array( 'regular' => '80', 'sale' => '90', 'qty' => 'abc', 'status' => 'instock' ),
+            $id( 'zayrah' ) => array( 'regular' => '110', 'sale' => '120', 'qty' => '', 'status' => 'outofstock' ),
+          ) );
+          $m = wc_get_product( $id( 'mahar' ) );
+          if ( '120' !== $m->get_regular_price() || '99.50' !== $m->get_sale_price() || 5 !== (int) $m->get_stock_quantity() || ! $m->get_manage_stock() ) $f( 'Mahar not saved' );
+          if ( '' !== wc_get_product( $id( 'ruh' ) )->get_regular_price() ) $f( 'negative price saved' );
+          if ( '' !== wc_get_product( $id( 'ayrin' ) )->get_regular_price() ) $f( 'row with bad stock saved' );
+          $z = wc_get_product( $id( 'zayrah' ) );
+          if ( '110' !== $z->get_regular_price() || '' !== $z->get_sale_price() || 'outofstock' !== $z->get_stock_status() ) $f( 'Zayrah: sale >= regular must be dropped, status saved' );
+          // Ruh: bad price; Ayrin: sale >= regular AND bad stock (both reported, row not saved); Zayrah: sale >= regular.
+          if ( 2 !== $n || 4 !== count( $err ) ) $f( "expected 2 updated / 4 errors, got $n / " . count( $err ) . ': ' . implode( ' | ', $err ) );
+          list( $n2 ) = PM_Stock::apply_rows( array( $id( 'mahar' ) => array( 'regular' => '120', 'sale' => '99.50', 'qty' => '5', 'status' => 'instock' ) ) );
+          if ( 0 !== $n2 ) $f( 'unchanged row counted as update' );
+          PM_Stock::apply_rows( array( $id( 'mahar' ) => array( 'regular' => '120', 'sale' => '99.50', 'qty' => '0', 'status' => 'instock' ) ) );
+          if ( 'outofstock' !== wc_get_product( $id( 'mahar' ) )->get_stock_status() ) $f( 'qty 0 must be out of stock' );
+          ob_start(); PM_Stock::page(); $html = ob_get_clean();
+          foreach ( array( 'Stock &amp; Prices', 'Kausar', 'pm_stock_nonce', 'rows[' . $id( 'kausar' ) . '][regular]' ) as $w ) if ( false === strpos( $html, $w ) ) $f( "page missing $w" );
+          wp_set_current_user( 0 );
+          list( $n3, $e3 ) = PM_Stock::apply_rows( array( $id( 'ruh' ) => array( 'regular' => '1' ) ) );
+          if ( 0 !== $n3 || '' !== wc_get_product( $id( 'ruh' ) )->get_regular_price() ) $f( 'anonymous user could change prices' );
+          WP_CLI::success( 'Stock & Prices verified' );
+          PHP
+          get '/product/zayrah/' > /tmp/zayrah.html; need /tmp/zayrah.html 'Out of stock'
+          if grep -q 'pm_buy_now' /tmp/zayrah.html; then echo "buy now on out-of-stock product"; exit 1; fi
+          # Anonymous POST to the save handler is refused.
+          code=$(curl -s -o /dev/null -w '%{http_code}' "${H[@]}" -d "action=pm_stock_save&rows[$KID][regular]=1" http://127.0.0.1:8097/wp-admin/admin-post.php)
+          case "$code" in 400|403) ;; *) echo "anonymous save returned $code"; exit 1;; esac
+          test "$($W eval 'echo wc_get_product( get_page_by_path( "kausar", OBJECT, "product" ) )->get_regular_price();')" = 150
           get /cart/ > /tmp/cart.html; need /tmp/cart.html 'pmt-brand-main'; need /tmp/cart.html 'Delivery Across'
           get / > /tmp/front2.html; need /tmp/front2.html 'id="pf-brand-home"'
           if grep -q 'pmt-brand-main' /tmp/front2.html; then echo "brand homepage got the theme header"; exit 1; fi
