@@ -22,8 +22,11 @@ wp plugin activate perfumarathi-shop
 # Newer WooCommerce gives its pages a page template the classic theme rejects ("Invalid page template"),
 # which makes `wp post update` fail. Update through wp_update_post with the default template instead.
 setpage() {
-  wp eval '$r = wp_update_post( array( "ID" => (int) $args[0], "post_content" => $args[1], "page_template" => "default" ), true );
-    if ( is_wp_error( $r ) ) { WP_CLI::error( "Page " . $args[0] . ": " . $r->get_error_message() ); }' "$1" "$2"
+  wp eval-file - "$1" "$2" <<'PHP'
+<?php
+$r = wp_update_post( array( 'ID' => (int) $args[0], 'post_content' => $args[1], 'page_template' => 'default' ), true );
+if ( is_wp_error( $r ) ) { WP_CLI::error( 'Page ' . $args[0] . ': ' . $r->get_error_message() ); }
+PHP
 }
 # Flush WooCommerce's post-install background jobs now (one of them turns on "Coming soon" mode mid-test otherwise).
 wp action-scheduler run --batches=5 >/dev/null 2>&1 || true
