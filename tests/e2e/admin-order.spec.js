@@ -91,7 +91,8 @@ test('admin Store Manager > Stock & Prices: change stock, see it in the shop', a
   // Menu entry for the owner.
   const menu = page.locator('#adminmenu a', { hasText: 'Stock & Prices' });
   await expect(menu).toHaveCount(1);
-  await menu.click();
+  await expect(menu).toHaveAttribute('href', /page=pm-stock/);
+  await page.goto('/wp-admin/admin.php?page=pm-stock'); // the entry sits in a hover fly-out
   await expect(page.locator('h1')).toContainText('Stock & Prices');
   // Only the Fixnote test product is changed: the parallel shopping tests buy the Perfumarathi one.
   const fixRow = (size) => page.locator('tr.is-parent', { hasText: 'Fixnote' })

@@ -230,6 +230,9 @@ jobs:
           rm -f /tmp/jar
           loc=$(curl -s -o /dev/null -w '%{redirect_url}' -c /tmp/jar -b /tmp/jar "${H[@]}" -d "pm_buy_now=$KID&quantity=2" http://127.0.0.1:8097/product/kausar/)
           case "$loc" in */checkout/*) ;; *) echo "Buy Now redirected to '$loc', expected checkout"; exit 1;; esac
+          # The site thinks it is HTTPS (X-Forwarded-Proto), so the cart cookie is Secure; curl would not send it back over
+          # this plain-HTTP test server. Test-only: clear the Secure column in the cookie jar.
+          awk -F'\t' 'BEGIN{OFS="\t"} NF>=7 {$4="FALSE"} {print}' /tmp/jar > /tmp/jar2 && mv /tmp/jar2 /tmp/jar
           curl -s -c /tmp/jar -b /tmp/jar "${H[@]}" http://127.0.0.1:8097/checkout/ > /tmp/checkout.html
           need /tmp/checkout.html 'billing_first_name'
           tr -d '\n\t' < /tmp/checkout.html | grep -qE 'Kausar.{0,300}product-quantity[^>]*>[^0-9<]*2<' || { echo "checkout does not show 2 x Kausar"; exit 1; }
