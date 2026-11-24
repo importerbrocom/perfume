@@ -23,6 +23,10 @@ class StoreController extends Controller
         $s = array_intersect_key(Setting::allValues(), array_flip(Setting::PUBLIC_KEYS));
         $s['logo_url'] = Present::url($s['logo_path'] ?? null);
         unset($s['logo_path']);
+        foreach (Setting::MEDIA_FALLBACK as $key => $fallback) {
+            $s[str_replace('_path', '_url', $key)] = ! empty($s[$key]) ? Present::url($s[$key]) : $fallback;
+            unset($s[$key]);
+        }
         foreach (['return_policy', 'privacy_policy', 'terms', 'about_us'] as $k) {
             $s['has_'.$k] = ! empty($s[$k]);
             unset($s[$k]);

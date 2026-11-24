@@ -25,3 +25,6 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+/public/assets
+/resources/spa
+/storage/e2e.sqlite

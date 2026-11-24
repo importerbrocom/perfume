@@ -20,7 +20,7 @@ class ProductController extends Controller
             ->withCount(['reviews' => fn ($r) => $r->where('is_approved', true)]);
     }
 
-    /** GET /api/products?brand=&category=&search=&sort=&flag=&page=&per_page= */
+    /** GET /api/products?ids=1,2&brand=&category=&search=&sort=&flag=&page=&per_page= */
     public function index(Request $request): JsonResponse
     {
         $v = $request->validate([
@@ -30,10 +30,14 @@ class ProductController extends Controller
             'sort' => 'nullable|in:featured,latest,price_asc,price_desc,popular,name',
             'flag' => 'nullable|in:featured,new,best,sale,combo',
             'in_stock' => 'nullable|boolean',
+            'ids' => ['nullable', 'string', 'max:2000', 'regex:/^\d+(,\d+)*$/'],
             'page' => 'nullable|integer|min:1',
             'per_page' => 'nullable|integer|min:1|max:48',
         ]);
         $q = $this->base();
+        if (! empty($v['ids'])) {
+            $q->whereIn('products.id', array_slice(array_map('intval', explode(',', $v['ids'])), 0, 200));
+        }
         if (! empty($v['brand'])) {
             $q->whereHas('brand', fn ($b) => $b->where('slug', $v['brand']));
         }

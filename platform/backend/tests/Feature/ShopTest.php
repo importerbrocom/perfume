@@ -45,6 +45,17 @@ class ShopTest extends TestCase
         $this->getJson('/api/products/visible')->assertOk()->assertJsonPath('product.variants.0.current_price', 150);
     }
 
+    public function test_product_list_filters_by_ids_for_the_wishlist(): void
+    {
+        $a = $this->product(['name' => 'Wish A', 'slug' => 'wish-a']);
+        $this->product(['name' => 'Wish B', 'slug' => 'wish-b']);
+        $hidden = $this->product(['name' => 'Wish C', 'slug' => 'wish-c', 'is_active' => false]);
+
+        $slugs = collect($this->getJson("/api/products?ids={$a->id},{$hidden->id}")->assertOk()->json('data'))->pluck('slug');
+        $this->assertSame(['wish-a'], $slugs->all());
+        $this->getJson('/api/products?ids=1;drop')->assertStatus(422);
+    }
+
     public function test_quote_is_computed_on_the_server(): void
     {
         $p = $this->product([], ['price' => 200, 'sale_price' => 150]);
