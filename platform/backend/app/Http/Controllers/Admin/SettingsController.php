@@ -14,6 +14,7 @@ use App\Support\Present;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
@@ -27,7 +28,12 @@ class SettingsController extends Controller
     {
         $s = Setting::allValues();
 
-        return response()->json($s + ['logo_url' => Present::url($s['logo_path'] ?? null)]);
+        $media = [];
+        foreach (Setting::MEDIA_FALLBACK as $key => $fallback) {
+            $media[str_replace('_path', '_url', $key)] = ! empty($s[$key]) ? Present::url($s[$key]) : $fallback;
+        }
+
+        return response()->json($s + $media + ['logo_url' => Present::url($s['logo_path'] ?? null)]);
     }
 
     public function updateSettings(Request $request): JsonResponse
@@ -52,7 +58,27 @@ class SettingsController extends Controller
             'order_notification_email' => 'nullable|email|max:150',
             'apple_pay_domain_association' => 'nullable|string|max:20000',
             'logo' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:4096',
+            'home_title' => 'nullable|string|max:100', 'home_caption' => 'nullable|string|max:150',
+            'perfumarathi_eyebrow' => 'nullable|string|max:100', 'perfumarathi_subtitle' => 'nullable|string|max:200', 'perfumarathi_foot' => 'nullable|string|max:200',
+            'fixnote_eyebrow' => 'nullable|string|max:100', 'fixnote_subtitle' => 'nullable|string|max:200', 'fixnote_foot' => 'nullable|string|max:200',
+            'presence_text' => 'nullable|string|max:200', 'trust_line' => 'nullable|string|max:200',
+            'home_video' => 'nullable|file|mimetypes:video/mp4,video/webm|max:102400',
+            'home_poster' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:8192',
+            'perfumarathi_logo' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:8192',
+            'fixnote_logo' => 'nullable|file|mimes:jpg,jpeg,png,webp|max:8192',
         ]);
+        foreach (['home_poster', 'perfumarathi_logo', 'fixnote_logo'] as $f) {
+            if ($request->hasFile($f)) {
+                $this->images->delete(Setting::get($f.'_path'));
+                $v[$f.'_path'] = $this->images->store($request->file($f), 'branding')['path'];
+            }
+            unset($v[$f]);
+        }
+        if ($request->hasFile('home_video')) {
+            $this->images->delete(Setting::get('home_video_path'));
+            $v['home_video_path'] = $request->file('home_video')->storeAs('branding', Str::random(24).'.'.($request->file('home_video')->getMimeType() === 'video/webm' ? 'webm' : 'mp4'), 'public');
+        }
+        unset($v['home_video']);
         if (isset($v['currency'])) {
             $v['currency'] = strtoupper($v['currency']);
         }

@@ -46,6 +46,29 @@ class Setting extends Model
         'card_payment_timeout_minutes' => 60,
         'order_notification_email' => null,
         'apple_pay_domain_association' => null,
+        // Homepage (brand page). Empty media = the original files from the brand page.
+        'home_title' => 'THE ART OF FRAGRANCE',
+        'home_caption' => 'Experience the scent',
+        'home_video_path' => null,
+        'home_poster_path' => null,
+        'perfumarathi_logo_path' => null,
+        'fixnote_logo_path' => null,
+        'perfumarathi_eyebrow' => 'The Art of Fragrance',
+        'perfumarathi_subtitle' => 'Pure Fragrances · Timeless Impressions',
+        'perfumarathi_foot' => 'Retail · Wholesale · Special Offers',
+        'fixnote_eyebrow' => 'Notes, Reimagined',
+        'fixnote_subtitle' => 'Inspired Fragrances by Perfumarathi',
+        'fixnote_foot' => 'Inspired Fragrance Collection',
+        'presence_text' => 'UAE · GCC · Kerala · India · International',
+        'trust_line' => '12–24H LASTING  •  HIGH PROJECTION  •  TRUSTED SINCE 2015',
+    ];
+
+    /** Homepage media used when nothing has been uploaded (files from the original brand page). */
+    public const MEDIA_FALLBACK = [
+        'home_video_path' => 'https://perfumarathi.com/wp-content/uploads/2026/10/IMG_2654.mp4',
+        'home_poster_path' => 'https://perfumarathi.com/wp-content/uploads/2026/10/IMG_2610.png',
+        'perfumarathi_logo_path' => 'https://perfumarathi.com/wp-content/uploads/2026/10/IMG_2610.png',
+        'fixnote_logo_path' => 'https://perfumarathi.com/wp-content/uploads/2026/10/IMG_2609.jpg',
     ];
 
     /** Keys safe to send to the public website. */
@@ -53,6 +76,9 @@ class Setting extends Model
         'store_name', 'store_tagline', 'logo_path', 'currency', 'contact_phone', 'whatsapp_number', 'contact_email',
         'store_address', 'social_instagram', 'social_facebook', 'social_tiktok', 'social_youtube', 'shipping_flat_rate',
         'free_shipping_over', 'shipping_countries', 'shipping_info', 'return_policy', 'privacy_policy', 'terms', 'about_us',
+        'home_title', 'home_caption', 'home_video_path', 'home_poster_path', 'perfumarathi_logo_path', 'fixnote_logo_path',
+        'perfumarathi_eyebrow', 'perfumarathi_subtitle', 'perfumarathi_foot', 'fixnote_eyebrow', 'fixnote_subtitle', 'fixnote_foot',
+        'presence_text', 'trust_line',
     ];
 
     public static function get(string $key, mixed $default = null): mixed

@@ -1,0 +1,56 @@
+/* Copied unchanged from the live brand homepage (Elementor HTML widget / H.HTML). */
+#pf-brand-home,#pf-brand-home *{box-sizing:border-box}
+#pf-brand-home{position:relative;isolation:isolate;width:100%;overflow:hidden;font-family:Arial,Helvetica,sans-serif;color:#333;background:#fff}
+#pf-brand-home .pf-video-section{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 18px 32px;background:radial-gradient(ellipse at center,#482719 0%,#23140f 70%,#170f0c 100%);color:#fff;text-align:center}
+#pf-brand-home .pf-video-title{margin:0 0 8px;font-size:clamp(19px,3vw,34px);letter-spacing:3px;color:#ffb46c;font-weight:800}
+#pf-brand-home .pf-video-caption{margin:0 0 22px;font-size:12px;letter-spacing:2px;color:#f5d9c1;text-transform:uppercase}
+#pf-brand-home .pf-video-frame{position:relative;width:min(100%,410px);aspect-ratio:9/16;max-height:72svh;overflow:hidden;border-radius:18px;background:#100e0c;box-shadow:0 16px 45px rgba(0,0,0,.4)}
+#pf-brand-home .pf-video{display:block;width:100%;height:100%;object-fit:cover}
+#pf-brand-home .pf-sound{position:absolute;right:12px;bottom:12px;z-index:2;display:inline-flex;align-items:center;gap:7px;min-height:42px;padding:10px 15px;border:1px solid rgba(255,255,255,.5);border-radius:999px;background:rgba(0,0,0,.7);color:#fff;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation}
+#pf-brand-home .pf-sound:focus-visible,#pf-brand-home .pf-enter:focus-visible,#pf-brand-home .pf-social:focus-visible,#pf-brand-home .pf-contact:focus-visible{outline:3px solid #ffad60;outline-offset:3px}
+#pf-brand-home .pf-brand-section{background:linear-gradient(90deg,#fff 0%,#fff 16%,#fff9f1 30%,#ffdfb5 41%,#ff9b34 50%,#ffdfb5 59%,#fff9f1 70%,#fff 84%,#fff 100%)}
+#pf-brand-home .pf-halves{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));min-height:72vh;width:100%}
+#pf-brand-home .pf-half{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:56px clamp(18px,3vw,64px);background:transparent}
+#pf-brand-home .pf-inner{width:100%;max-width:650px;min-height:430px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#pf-brand-home .pf-eyebrow{font-size:11px;letter-spacing:3px;font-weight:700;text-transform:uppercase;color:#b8773c;margin:0 0 34px}
+#pf-brand-home .pf-logo-wrap{height:170px;width:100%;display:flex;align-items:center;justify-content:center}
+#pf-brand-home .pf-logo{display:block;max-width:100%;object-fit:contain;mix-blend-mode:multiply}
+#pf-brand-home .pf-logo-perf{width:min(96%,590px);max-height:155px}
+#pf-brand-home .pf-logo-fix{width:min(94%,540px);max-height:165px;transform:scale(1.38);transform-origin:center}
+#pf-brand-home .pf-subtitle{font-size:14px;color:#6b625c;margin:27px 0 24px;line-height:1.6}
+#pf-brand-home .pf-enter{display:inline-flex;justify-content:center;align-items:center;gap:12px;min-height:49px;padding:12px 28px;border-radius:999px;background:#ec7d28;color:#fff!important;font-size:12px;font-weight:800;letter-spacing:.7px;text-decoration:none!important;box-shadow:0 8px 24px rgba(192,89,20,.22);transition:transform .2s,background .2s}
+#pf-brand-home .pf-enter:hover{background:#d96513;transform:translateY(-2px)}
+#pf-brand-home .pf-shop{margin-top:12px;background:transparent;color:#b64f12!important;border:1px solid #ec7d28}
+#pf-brand-home .pf-shop:hover{background:#ffe7d2}
+#pf-brand-home .pf-bag-fixed{position:fixed;top:14px;right:14px;z-index:9990}
+#pf-brand-home .pf-foot{font-size:10px;letter-spacing:1.6px;color:#98847a;margin:17px 0 0;text-transform:uppercase}
+#pf-brand-home .pf-social-section{padding:42px 18px 24px;background:#fff;text-align:center}
+#pf-brand-home .pf-social-title{margin:0 0 8px;font-size:22px;letter-spacing:1px;color:#3e2a21}
+#pf-brand-home .pf-social-sub{margin:0 0 24px;font-size:13px;color:#79695f}
+#pf-brand-home .pf-socials{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px;max-width:760px;margin:auto}
+#pf-brand-home .pf-social{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-width:118px;padding:13px 17px;border:1px solid #f2d4bc;border-radius:999px;color:#4a3226!important;text-decoration:none!important;background:#fff8f2;font-size:13px;font-weight:700;transition:background .2s,transform .2s}
+#pf-brand-home .pf-social:hover{background:#ffe7d2;transform:translateY(-2px)}
+#pf-brand-home .pf-social svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+#pf-brand-home .pf-social .pf-icon-fill{fill:currentColor;stroke:none}
+#pf-brand-home .pf-contact{display:inline-block;margin:24px 0 0;padding:10px 15px;color:#b64f12!important;text-decoration:none!important;font-size:17px;font-weight:800}
+#pf-brand-home .pf-bottom{padding:22px 18px 28px;background:#fff8f2;border-top:1px solid #f5e0d0;text-align:center}
+#pf-brand-home .pf-presence{margin:0 0 10px;font-size:12px;letter-spacing:1.2px;color:#865c44}
+#pf-brand-home .pf-copyright{margin:0;font-size:11px;color:#9b8070}
+@media(max-width:767px){
+ #pf-brand-home .pf-video-section{padding:24px 12px 26px}
+ #pf-brand-home .pf-video-frame{width:min(100%,340px);max-height:66svh}
+ #pf-brand-home .pf-video-title{font-size:19px;letter-spacing:1.5px}
+ #pf-brand-home .pf-video-caption{font-size:10px;letter-spacing:1px}
+ #pf-brand-home .pf-brand-section{background:linear-gradient(180deg,#fff 0%,#fff8f0 25%,#ffd9a8 44%,#ffab50 50%,#ffd9a8 56%,#fff8f0 75%,#fff 100%)}
+ #pf-brand-home .pf-halves{grid-template-columns:1fr;min-height:100svh}
+ #pf-brand-home .pf-half{min-height:50svh;padding:36px 18px}
+ #pf-brand-home .pf-inner{min-height:300px}
+ #pf-brand-home .pf-eyebrow{margin-bottom:18px;font-size:9px}
+ #pf-brand-home .pf-logo-wrap{height:105px}
+ #pf-brand-home .pf-logo-perf{max-height:100px}
+ #pf-brand-home .pf-logo-fix{max-height:115px;transform:scale(1.25)}
+ #pf-brand-home .pf-subtitle{font-size:12px;margin:15px 0 16px}
+ #pf-brand-home .pf-foot{font-size:9px}
+ #pf-brand-home .pf-social{min-width:calc(50% - 8px);padding:12px 9px;font-size:12px}
+}
+@media(prefers-reduced-motion:reduce){#pf-brand-home .pf-enter,#pf-brand-home .pf-social{transition:none}}
