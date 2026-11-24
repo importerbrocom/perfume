@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
-        with: { php-version: '8.2', extensions: 'mysqli, gd', tools: none }
+        with: { php-version: '8.3', extensions: 'mysqli, gd, pdo_sqlite, intl, zip', tools: 'composer:v2' }
       - name: Fake cPanel home (MySQL db + user, empty domain folder, a "live" folder)
         run: |
           sudo systemctl start mysql
@@ -319,6 +319,46 @@ jobs:
           test "$(curl -s -o /dev/null -w '%{http_code}' "${H[@]}" 'http://127.0.0.1:8098/')" = 401
           if grep -iE "PHP (Fatal|Parse|Warning|Notice|Deprecated).*(perfumarathi|pm-staging-guard)" /tmp/php5.log; then exit 1; fi
           echo "Payments verified"
+      - name: WordPress export -> Laravel import (migration of the real staging catalogue)
+        run: |
+          set -o pipefail
+          D="$HOME/perfume.nokkoo.in"
+          W="php $HOME/.wp-cli/pm-staging-wp-cli.phar --path=$D"
+          before=$(md5sum <(cd "$D" && $W db export - --skip-plugins --skip-themes 2>/dev/null | grep -v '^-- Dump completed'))
+          PM_EXPORT_DIR=/tmp/wpexport $W eval-file server/export-wp.php | tee /tmp/export.log
+          after=$(md5sum <(cd "$D" && $W db export - --skip-plugins --skip-themes 2>/dev/null | grep -v '^-- Dump completed'))
+          test "$before" = "$after" || { echo "export changed the WordPress database"; exit 1; }
+          php -r '$d = json_decode(file_get_contents("/tmp/wpexport/catalog.json"), true); echo count($d["products"]), " products exported\n"; exit(count($d["products"]) === 15 ? 0 : 1);'
+          cd platform/backend
+          composer install --no-interaction --no-progress --prefer-dist -q
+          cp .env.example .env && php artisan key:generate -q
+          touch /tmp/pm.sqlite
+          export DB_CONNECTION=sqlite DB_DATABASE=/tmp/pm.sqlite
+          php artisan migrate --force --seed -q
+          php artisan storage:link -q
+          php artisan shop:import-wp /tmp/wpexport | tee /tmp/import.log
+          grep -q "15 created" /tmp/import.log
+          php artisan shop:import-wp /tmp/wpexport | grep -q "0 created, 0 updated, 15 already there"
+          php -r '
+            require "vendor/autoload.php"; $app = require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+            $f = function ($m) { fwrite(STDERR, "FAIL: $m\n"); exit(1); };
+            $k = App\Models\Product::where("slug", "kausar")->with(["variants", "images", "related", "brand", "categories", "reviews"])->first() ?: $f("no Kausar");
+            if ("Saffron, Jasmine" !== $k->notes_top) $f("notes");
+            if (150.0 !== (float) $k->variants[0]->price) $f("Kausar price from WooCommerce (150) not imported: " . var_export($k->variants[0]->price, true));
+            if ($k->images->isEmpty() || ! Illuminate\Support\Facades\Storage::disk("public")->exists($k->images[0]->path)) $f("image");
+            if ("Perfumarathi" !== $k->brand?->name) $f("brand");
+            if (! $k->categories->contains("slug", "mens-perfumes") && ! $k->categories->contains("slug", "perfumarathi-collection")) $f("categories");
+            $c = App\Models\Product::where("slug", "4-pcs-combo")->with("related")->first();
+            if (! $c->is_combo || 4 !== $c->related->count()) $f("combo contents");
+            $m = App\Models\Product::where("slug", "mahar")->with("variants")->first();
+            // Set earlier in this job on the WordPress "Stock & Prices" page: price 120, sale 99.50, stock 0.
+            $mv = $m->variants[0];
+            if (120.0 !== (float) $mv->price || 99.5 !== (float) $mv->sale_price || ! $mv->track_stock || 0 !== $mv->stock_quantity || $mv->inStock()) $f("Mahar price/stock: " . json_encode($mv->only(["price", "sale_price", "track_stock", "stock_quantity"])));
+            $z = App\Models\Product::where("slug", "zayrah")->with("variants")->first()->variants[0];
+            if (110.0 !== (float) $z->price || null !== $z->sale_price || $z->inStock()) $f("Zayrah: " . json_encode($z->only(["price", "sale_price", "stock_status"])));
+            if (App\Models\Product::where("name", "like", "[TEST]%")->exists()) $f("test products imported");
+            if (App\Models\ProductReview::count() < 1) $f("reviews");
+            echo "Migration checks passed: ", App\Models\Product::count(), " products, ", App\Models\ProductImage::count(), " images, ", App\Models\ProductReview::count(), " reviews\n";'
       - name: Rotate secrets (wrong DB password refused, then new key, admin password and DB password)
         run: |
           set -o pipefail

@@ -1,0 +1,75 @@
+name: Platform (Laravel API)
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: ['platform/**', 'server/export-wp.php', '.github/workflows/platform.yml']
+  push:
+    branches: [main]
+    paths: ['platform/**']
+permissions:
+  contents: read
+jobs:
+  tests:
+    name: Tests (${{ matrix.db }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        db: [sqlite, mysql, mariadb]
+    services:
+      mysql:
+        image: ${{ matrix.db == 'mariadb' && 'mariadb:10.11' || 'mysql:8.0' }}
+        env:
+          MYSQL_ROOT_PASSWORD: ci-root
+          MARIADB_ROOT_PASSWORD: ci-root
+          MYSQL_DATABASE: pmshop
+          MARIADB_DATABASE: pmshop
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -pci-root || mariadb-admin ping -h 127.0.0.1 -pci-root"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    defaults:
+      run:
+        working-directory: platform/backend
+    env:
+      DB_CONNECTION: ${{ matrix.db == 'sqlite' && 'sqlite' || (matrix.db == 'mariadb' && 'mariadb' || 'mysql') }}
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: ${{ matrix.db == 'sqlite' && ':memory:' || 'pmshop' }}
+      DB_USERNAME: root
+      DB_PASSWORD: ci-root
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_mysql, pdo_sqlite, gd, intl, bcmath, curl, zip
+          tools: composer:v2
+      - name: Install
+        run: composer install --no-interaction --no-progress --prefer-dist
+      - name: Prepare
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+      - name: Tests
+        # phpunit.xml only fills in env vars that are not set, so the job's DB_* settings pick the database.
+        run: php artisan test
+      - name: Migrations run on a real server database and can roll back
+        if: matrix.db != 'sqlite'
+        run: |
+          php artisan migrate --force
+          php artisan db:seed --force
+          php artisan db:seed --force   # seeding twice must be safe
+          php artisan migrate:rollback --force
+          php artisan migrate --force --seed
+      - name: Concurrent checkouts never oversell
+        if: matrix.db != 'sqlite'
+        run: |
+          php artisan migrate:fresh --seed --force
+          PHP_CLI_SERVER_WORKERS=8 php -S 127.0.0.1:8099 -t public vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php > /tmp/server.log 2>&1 &
+          sleep 2
+          php tests/ci/concurrency.php http://127.0.0.1:8099
+      - name: Code style (Pint)
+        if: matrix.db == 'sqlite'
+        run: vendor/bin/pint --test
