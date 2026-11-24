@@ -324,10 +324,12 @@ jobs:
           set -o pipefail
           D="$HOME/perfume.nokkoo.in"
           W="php $HOME/.wp-cli/pm-staging-wp-cli.phar --path=$D"
-          before=$(md5sum <(cd "$D" && $W db export - --skip-plugins --skip-themes 2>/dev/null | grep -v '^-- Dump completed'))
+          # Catalogue tables only: loading WordPress itself updates options / cron / Action Scheduler rows.
+          sums() { $W db query "CHECKSUM TABLE pmstg_posts, pmstg_postmeta, pmstg_terms, pmstg_term_taxonomy, pmstg_term_relationships, pmstg_comments, pmstg_commentmeta, pmstg_wc_product_meta_lookup" --skip-column-names --skip-plugins --skip-themes; }
+          before=$(sums)
           PM_EXPORT_DIR=/tmp/wpexport $W eval-file server/export-wp.php | tee /tmp/export.log
-          after=$(md5sum <(cd "$D" && $W db export - --skip-plugins --skip-themes 2>/dev/null | grep -v '^-- Dump completed'))
-          test "$before" = "$after" || { echo "export changed the WordPress database"; exit 1; }
+          after=$(sums)
+          test -n "$before" && test "$before" = "$after" || { echo "export changed the WordPress catalogue"; echo "$before"; echo "$after"; exit 1; }
           php -r '$d = json_decode(file_get_contents("/tmp/wpexport/catalog.json"), true); echo count($d["products"]), " products exported\n"; exit(count($d["products"]) === 15 ? 0 : 1);'
           cd platform/backend
           composer install --no-interaction --no-progress --prefer-dist -q
