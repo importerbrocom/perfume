@@ -478,7 +478,8 @@ jobs:
           IMG=$(curl -s -H "X-Shop-Gate: $KEY" $U/api/products/kausar | php -r '$d = json_decode(stream_get_contents(STDIN), true); echo parse_url($d["product"]["images"][0]["url"] ?? "", PHP_URL_PATH);')
           test -n "$IMG" && test "$(code "$U$IMG")" = 200           # uploaded photos served through the storage link
           ASSET=$(ls "$D/assets" | grep -m1 '^index-.*\.js$'); test "$(code "$U/assets/$ASSET")" = 200
-          for p in /.env /.htaccess; do test "$(code -H "X-Shop-Gate: $KEY" $U$p)" = 403; done
+          for p in /.env /.htaccess /.git/config; do c=$(code -H "X-Shop-Gate: $KEY" $U$p); echo "$p -> $c"; case "$c" in 403|404) ;; *) exit 1;; esac; done
+          if curl -s -H "X-Shop-Gate: $KEY" $U/.htaccess | grep -q RewriteRule; then echo ".htaccess readable"; exit 1; fi
           if curl -s -H "X-Shop-Gate: $KEY" $U/vendor/autoload.php | grep -q '<?php'; then echo "code readable"; exit 1; fi
           test "$(code $U/admin)" = 200                             # admin login page is outside the lock
           # Admin login (Sanctum session + CSRF) with the printed password
@@ -538,4 +539,8 @@ jobs:
           crontab -l | grep -q pmshop-scheduler
           test "$(cat "$HOME/perfumarathi.com/index.php")" = "LIVE"
           echo "Shop installer verified"
-
+      - name: Shop logs on failure
+        if: failure()
+        run: |
+          tail -40 /tmp/shop-server.log 2>/dev/null || true
+          tail -60 "$HOME"/pmshop/shared/storage/logs/*.log 2>/dev/null || true
