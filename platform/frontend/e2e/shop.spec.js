@@ -14,7 +14,8 @@ test('homepage shows exactly one SHOP button per brand', async ({ page }) => {
   await expectNoHorizontalOverflow(page);
   await page.getByRole('link', { name: 'Shop Fixnote' }).click();
   await expect(page).toHaveURL(/\/shop-fixnote$/);
-  await expect(page.getByTestId('product-card')).toHaveCount(2);
+  await expect(page.getByTestId('product-card').filter({ hasText: 'Fixnote Aqua' })).toHaveCount(1);
+  await expect(page.getByTestId('product-card').filter({ hasNotText: 'Fixnote' })).toHaveCount(0); // brand shop: only Fixnote
 });
 
 test('brand shop lists only that brand and search filters it', async ({ page }) => {
@@ -54,7 +55,7 @@ test('product page: choose size, add to cart, buy now, place COD order, view and
   await page.getByLabel('Mobile number').fill('+971 50 123 4567');
   await page.getByLabel('City').fill('Dubai');
   await page.getByLabel(/Complete address/).fill('Villa 12, Al Barsha 1');
-  await page.getByRole('radio', { name: /Cash on Delivery/ }).check();
+  await page.getByRole('radio', { name: /cash on delivery/i }).check();
   await page.getByRole('checkbox').check();
   await expectNoHorizontalOverflow(page);
   await page.getByTestId('place-order').click();
