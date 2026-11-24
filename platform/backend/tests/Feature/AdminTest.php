@@ -50,6 +50,25 @@ class AdminTest extends TestCase
         $this->getJson('/api/admin/staff')->assertForbidden();
     }
 
+    public function test_admin_product_list_filters_by_ids_and_saving_without_stock_keeps_live_stock(): void
+    {
+        $this->actingAs($this->admin(), 'sanctum');
+        $a = $this->product(['name' => 'Pick A', 'slug' => 'pick-a']);
+        $this->product(['name' => 'Pick B', 'slug' => 'pick-b']);
+        $names = collect($this->getJson("/api/admin/products?ids={$a->id}")->assertOk()->json('data'))->pluck('name');
+        $this->assertSame(['Pick A'], $names->all());
+        $this->getJson('/api/admin/products?ids=x')->assertStatus(422);
+
+        // The editor sends stock_quantity = null for sizes whose stock the user did not touch.
+        $v = $this->variant($a);
+        $v->update(['stock_quantity' => 2]); // e.g. orders came in while the form was open
+        $this->putJson("/api/admin/products/{$a->id}", ['name' => 'Pick A', 'variants' => [
+            ['id' => $v->id, 'name' => '100 ml', 'price' => 160, 'track_stock' => true, 'stock_quantity' => null, 'is_active' => true],
+        ]])->assertOk();
+        $this->assertSame(2, $v->refresh()->stock_quantity);
+        $this->assertEquals(160, $v->price);
+    }
+
     public function test_create_edit_and_delete_a_product_with_sizes(): void
     {
         $this->actingAs($this->admin(), 'sanctum');
