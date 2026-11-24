@@ -30,8 +30,9 @@ class CheckoutController extends Controller
             'coupon_code' => 'nullable|string|max:50',
             'country' => 'nullable|string|size:2',
             'payment_method' => 'nullable|string|max:30',
+            'region' => 'nullable|string|in:INDIA,SAUDI',
         ]);
-        $q = $pricing->quote($v['items'], $v['coupon_code'] ?? null, $v['country'] ?? null, $v['payment_method'] ?? null);
+        $q = $pricing->quote($v['items'], $v['coupon_code'] ?? null, $v['country'] ?? null, $v['payment_method'] ?? null, null, $v['region'] ?? null);
         unset($q['quantities'], $q['coupon']['id']);
 
         return response()->json($q);
@@ -52,6 +53,7 @@ class CheckoutController extends Controller
             'note' => 'nullable|string|max:1000',
             'coupon_code' => 'nullable|string|max:50',
             'payment_method' => 'required|string|max:30',
+            'region' => 'nullable|string|in:INDIA,SAUDI',
             'accept_terms' => 'accepted',
         ]);
         foreach (['name', 'city', 'state', 'address', 'note'] as $k) {
@@ -65,7 +67,7 @@ class CheckoutController extends Controller
             'number' => $order->number,
             'token' => $order->access_token,
             'payment_method' => $order->payment_method,
-            'requires_payment' => $order->payment_method !== 'cod',
+            'requires_payment' => ! $order->isOffline(),
             'total' => (float) $order->total,
             'currency' => $order->currency,
         ], 201);
@@ -83,7 +85,7 @@ class CheckoutController extends Controller
     public function pay(Request $request, string $number, StripeGateway $stripe): JsonResponse
     {
         $order = $this->findOrder($number, (string) $request->input('token'));
-        abort_if($order->payment_method === 'cod', 422, 'This order is Cash on Delivery.');
+        abort_if($order->isOffline(), 422, 'This order is not paid by card.');
         if ($order->payment_status === 'paid') {
             return response()->json(['status' => 'paid']);
         }
@@ -135,7 +137,7 @@ class CheckoutController extends Controller
     public function show(Request $request, string $number, OrderService $orders, StripeGateway $stripe): JsonResponse
     {
         $order = $this->findOrder($number, (string) $request->query('token'));
-        if ($order->payment_method !== 'cod' && in_array($order->payment_status, ['pending', 'failed'], true)) {
+        if (! $order->isOffline() && in_array($order->payment_status, ['pending', 'failed'], true)) {
             $ref = $order->payments()->whereNotNull('provider_reference')->latest('id')->value('provider_reference');
             if ($ref) {
                 try {

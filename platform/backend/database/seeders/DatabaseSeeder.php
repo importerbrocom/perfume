@@ -36,6 +36,8 @@ class DatabaseSeeder extends Seeder
             'is_enabled' => false, 'sort_order' => 2, 'fee' => 0, 'options' => ['mode' => 'test'],
         ]);
 
+        PaymentMethod::query()->firstOrCreate(['code' => 'transfer'], PaymentMethod::TRANSFER_DEFAULTS);
+
         if (HomeSection::query()->doesntExist()) {
             foreach ([['Featured Perfumes', 'featured'], ['Best Sellers', 'best_sellers'], ['New Arrivals', 'new_arrivals'], ['Special Offers', 'on_sale']] as $i => [$title, $source]) {
                 HomeSection::create(['title' => $title, 'source' => $source, 'limit' => 8, 'sort_order' => $i]);

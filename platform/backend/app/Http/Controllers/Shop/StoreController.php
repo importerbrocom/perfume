@@ -37,7 +37,8 @@ class StoreController extends Controller
             'announcements' => Announcement::query()->live()->get(['id', 'text', 'link_url']),
             'brands' => Brand::query()->where('is_active', true)->orderBy('sort_order')->get(['id', 'name', 'slug', 'tagline']),
             'categories' => Category::query()->where('is_active', true)->orderBy('sort_order')->orderBy('name')->get(['id', 'name', 'slug', 'kind', 'parent_id']),
-            'payment_methods' => PaymentMethod::query()->where('is_enabled', true)->orderBy('sort_order')->get()
+            // "Pay after confirmation" is only offered at checkout for Fixnote India / Saudi bags.
+            'payment_methods' => PaymentMethod::query()->where('is_enabled', true)->where('code', '!=', 'transfer')->orderBy('sort_order')->get()
                 ->filter(fn ($m) => $m->isConfigured())
                 ->map(fn ($m) => ['code' => $m->code, 'title' => $m->title, 'description' => $m->description, 'fee' => (float) $m->fee])->values(),
         ])->header('Cache-Control', 'public, max-age=60');

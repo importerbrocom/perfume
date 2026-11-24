@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Order;
 use App\Models\Product;
 use App\Services\Fixnote;
+use App\Services\OrderService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -60,7 +61,8 @@ class FixnoteTest extends TestCase
         $this->assertSame('Louis Vuitton', $r->json('groups.0'));
         $this->assertCount(28, $r->json('groups'));
         $this->assertSame('A PERFUMARATHI PRODUCTION', $r->json('page.hero_eyebrow'));
-        $this->assertEquals(['currency' => 'INR', 'prices' => ['30 ML' => 1199, '50 ML' => 1499, '100 ML' => 1999]], $r->json('regions.INDIA'));
+        $this->assertEquals(['30 ML' => 1199, '50 ML' => 1499, '100 ML' => 1999], $r->json('regions.INDIA.prices'));
+        $this->assertSame(['INR', 'IN', true, false], [$r->json('regions.INDIA.currency'), $r->json('regions.INDIA.country'), $r->json('regions.INDIA.cod'), $r->json('regions.SAUDI.cod')]);
         $this->assertSame('100 ML', $r->json('items.0.variants.2.size'));
     }
 
@@ -90,19 +92,61 @@ class FixnoteTest extends TestCase
         $this->assertSame(25.0, (float) $q['shipping']);
     }
 
-    public function test_india_and_saudi_cannot_order_fixnote_online(): void
+    public function test_india_and_saudi_order_fixnote_online_in_their_own_currency(): void
     {
         $this->fixnote()->import();
-        $id = $this->sizes()['100 ML'];
-        foreach (['IN', 'SA'] as $country) {
-            $q = $this->quote([['variant_id' => $id, 'quantity' => 1]], $country);
-            $this->assertStringContainsString('taken on WhatsApp', $q['issues'][0]['message']);
-            $this->postJson('/api/checkout', $this->checkoutData($id, 1, 'cod', ['country' => $country]))->assertStatus(422)->assertJsonValidationErrors('items');
-        }
-        // Other brands still ship to India
+        $s = $this->sizes();
         $other = $this->variant($this->product());
+
+        // At UAE prices, Fixnote cannot be sent to India / Saudi
+        $q = $this->quote([['variant_id' => $s['100 ML'], 'quantity' => 1]], 'IN');
+        $this->assertStringContainsString('choosing your region', $q['issues'][0]['message']);
+
+        // India bag: INR prices, India delivery (30 ML 14, 50 ML 9, 100 ML 0), COD + pay after confirmation, no card
+        $this->enableCards();
+        $india = fn (array $items, array $extra = []) => $this->postJson('/api/cart/quote', ['items' => $items, 'country' => 'IN', 'region' => 'INDIA'] + $extra)->assertOk()->json();
+        $q = $india([['variant_id' => $s['30 ML'], 'quantity' => 2], ['variant_id' => $s['100 ML'], 'quantity' => 1]]);
+        $this->assertSame(['INR', 'INDIA', []], [$q['currency'], $q['region'], $q['issues']]);
+        $this->assertEquals([1199 * 2 + 1999, 14, 1199 * 2 + 1999 + 14], [$q['subtotal'], $q['shipping'], $q['total']]);
+        $this->assertSame(['cod', 'transfer'], array_column($q['payment_methods'], 'code'));
+        $q = $india([['variant_id' => $s['100 ML'], 'quantity' => 4]], ['coupon_code' => 'ANY']);
+        $this->assertEquals([7996, 0], [$q['total'], $q['shipping']]);
+        $this->assertStringContainsString('Coupons cannot be used', $q['coupon_message']);
+        $q = $india([['variant_id' => $other->id, 'quantity' => 1]]);
+        $this->assertStringContainsString('Only Fixnote perfumes', $q['issues'][0]['message']);
+        $q = $this->postJson('/api/cart/quote', ['items' => [['variant_id' => $s['30 ML'], 'quantity' => 1]], 'country' => 'AE', 'region' => 'INDIA'])->json();
+        $this->assertFalse($q['ships_to_country']);
+
+        // Saudi: SAR, no cash on delivery
+        $q = $this->postJson('/api/cart/quote', ['items' => [['variant_id' => $s['50 ML'], 'quantity' => 1]], 'country' => 'SA', 'region' => 'SAUDI'])->json();
+        $this->assertEquals(['SAR', 39], [$q['currency'], $q['total']]);
+        $this->assertSame(['transfer'], array_column($q['payment_methods'], 'code'));
+        $this->postJson('/api/checkout', $this->checkoutData($s['50 ML'], 1, 'cod', ['country' => 'SA', 'region' => 'SAUDI']))->assertStatus(422)->assertJsonValidationErrors('payment_method');
+
+        // Order placed in INR, pay after confirmation; admin marks it paid, then it can ship
+        $r = $this->postJson('/api/checkout', $this->checkoutData($s['50 ML'], 2, 'transfer', ['country' => 'IN', 'region' => 'INDIA']))->assertCreated()
+            ->assertJsonPath('currency', 'INR')->assertJsonPath('requires_payment', false);
+        $order = Order::query()->where('number', $r->json('number'))->firstOrFail();
+        $this->assertEquals([2998 + 9, 'pending', 'transfer'], [$order->total, $order->payment_status, $order->payment_method]);
+        $this->getJson("/api/orders/{$order->number}?token={$order->access_token}")->assertOk()->assertJsonPath('items.0.unit_price', 1499);
+
+        $this->actingAs($this->admin(), 'sanctum');
+        $this->putJson("/api/admin/orders/{$order->id}/status", ['status' => 'confirmed'])->assertOk();
+        $this->putJson("/api/admin/orders/{$order->id}/status", ['status' => 'shipped'])->assertStatus(422)->assertJsonValidationErrors('status');
+        $this->postJson("/api/admin/orders/{$order->id}/paid", ['note' => 'UPI ref 123'])->assertOk()->assertJsonPath('payment_status', 'paid');
+        $this->putJson("/api/admin/orders/{$order->id}/status", ['status' => 'shipped'])->assertOk();
+        $this->assertSame(0.0, (float) $this->getJson('/api/admin/dashboard')->json('sales_total')); // INR is not added to AED sales
+
+        // Unpaid transfer orders are not cancelled by the card-payment timeout
+        $late = $this->postJson('/api/checkout', $this->checkoutData($s['30 ML'], 1, 'transfer', ['country' => 'IN', 'region' => 'INDIA']))->assertCreated()->json('number');
+        Order::query()->where('number', $late)->update(['created_at' => now()->subDays(2)]);
+        app(OrderService::class)->expireUnpaidCardOrders();
+        $this->assertSame('pending', Order::query()->where('number', $late)->value('status'));
+
+        // Other brands still ship to India at store prices; UAE Fixnote still works
         $this->postJson('/api/checkout', $this->checkoutData($other->id, 1, 'cod', ['country' => 'IN']))->assertCreated();
-        $this->postJson('/api/checkout', $this->checkoutData($id))->assertCreated(); // UAE
+        $this->postJson('/api/checkout', $this->checkoutData($s['100 ML']))->assertCreated()->assertJsonPath('currency', 'AED');
+        $this->postJson('/api/checkout', $this->checkoutData($s['100 ML'], 1, 'transfer'))->assertStatus(422); // UAE: no transfer
     }
 
     public function test_admin_sets_prices_for_all_sizes_and_adds_a_perfume(): void

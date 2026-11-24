@@ -41,7 +41,7 @@ class FixnoteController extends Controller
         ]);
     }
 
-    /** PUT /api/admin/fixnote: page texts, UAE delivery rule and the India / Saudi WhatsApp price lists. */
+    /** PUT /api/admin/fixnote: page texts, UAE delivery rule, India / Saudi prices, delivery and cash on delivery. */
     public function update(Request $request): JsonResponse
     {
         $sizes = Fixnote::SIZES;
@@ -55,10 +55,13 @@ class FixnoteController extends Controller
         foreach ($sizes as $s) {
             $rules["delivery.fees.$s"] = 'nullable|numeric|min:0|max:100000';
         }
-        foreach (array_keys(Fixnote::WHATSAPP_REGIONS) as $r) {
+        foreach (array_keys(Fixnote::PRICE_REGIONS) as $r) {
             $rules["regions.$r.currency"] = 'required|string|size:3|alpha';
+            $rules["regions.$r.cod"] = 'boolean';
+            $rules["regions.$r.delivery.free_from_pieces"] = 'nullable|integer|min:1|max:1000';
             foreach ($sizes as $s) {
                 $rules["regions.$r.prices.$s"] = 'nullable|numeric|min:0|max:10000000';
+                $rules["regions.$r.delivery.fees.$s"] = 'nullable|numeric|min:0|max:10000000';
             }
         }
         $v = $request->validate($rules);
@@ -68,11 +71,19 @@ class FixnoteController extends Controller
             $fees[$s] = (float) ($v['delivery']['fees'][$s] ?? 0);
         }
         $regions = [];
-        foreach (array_keys(Fixnote::WHATSAPP_REGIONS) as $r) {
-            $regions[$r] = ['currency' => strtoupper($v['regions'][$r]['currency']), 'prices' => []];
+        foreach (array_keys(Fixnote::PRICE_REGIONS) as $r) {
+            $in = $v['regions'][$r];
+            $old = $this->fixnote->regions()[$r];
+            $regions[$r] = [
+                'currency' => strtoupper($in['currency']),
+                'prices' => [],
+                'delivery' => ['fees' => [], 'free_from_pieces' => array_key_exists('delivery', $in) ? ($in['delivery']['free_from_pieces'] ?? null) : $old['delivery']['free_from_pieces']],
+                'cod' => array_key_exists('cod', $in) ? (bool) $in['cod'] : $old['cod'],
+            ];
             foreach ($sizes as $s) {
-                $p = $v['regions'][$r]['prices'][$s] ?? null;
+                $p = $in['prices'][$s] ?? null;
                 $regions[$r]['prices'][$s] = $p === null || $p === '' ? null : (float) $p;
+                $regions[$r]['delivery']['fees'][$s] = array_key_exists('delivery', $in) ? (float) ($in['delivery']['fees'][$s] ?? 0) : $old['delivery']['fees'][$s];
             }
         }
         Setting::put([

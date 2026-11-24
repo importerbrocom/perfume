@@ -64,7 +64,7 @@ export default function QuickView({ slug, onClose }) {
                 )}
                 <div className="pm-card__actions">
                   {v?.purchasable && (
-                    <button className="pm-btn" onClick={() => { add(v.id, 1, { name: data.name, image: data.image, slug: data.slug, variant: v.name }); toast('Added to your bag'); onClose(); setDrawerOpen(true); }}>Add to Cart</button>
+                    <button className="pm-btn" onClick={() => { if (!add(v.id, 1, { name: data.name, image: data.image, slug: data.slug, variant: v.name })) return; toast('Added to your bag'); onClose(); setDrawerOpen(true); }}>Add to Cart</button>
                   )}
                   <Link className="pm-btn pm-btn--ghost" to={`/product/${data.slug}`} onClick={onClose}>Full Details</Link>
                 </div>

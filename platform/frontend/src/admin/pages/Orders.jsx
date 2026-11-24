@@ -59,6 +59,7 @@ export default function Orders({ brand }) {
           <option value="">Any method</option>
           <option value="cod">Cash on delivery</option>
           <option value="card">Card / Apple Pay / Google Pay</option>
+          <option value="transfer">Pay after confirmation</option>
         </select>
         <label className="ad-inline">From <input type="date" value={f.from} onChange={(e) => set('from', e.target.value)} /></label>
         <label className="ad-inline">To <input type="date" value={f.to} onChange={(e) => set('to', e.target.value)} /></label>
@@ -76,7 +77,7 @@ export default function Orders({ brand }) {
                   <td data-label="Customer">{o.customer_name}<small className="ad-block ad-muted">{o.customer_phone}</small></td>
                   <td data-label="Ship to">{o.ship_city}, {countryName(o.ship_country)}</td>
                   <td data-label="Status"><StatusPill status={o.status} /></td>
-                  <td data-label="Payment"><PayPill status={o.payment_status} /> <small className="ad-muted">{o.payment_method === 'cod' ? 'COD' : 'Card'}</small></td>
+                  <td data-label="Payment"><PayPill status={o.payment_status} /> <small className="ad-muted">{{ cod: 'COD', transfer: 'UPI / transfer' }[o.payment_method] || 'Card'}</small></td>
                   <td data-label="Total" className="num"><b>{money(o.total, o.currency)}</b></td>
                 </tr>
               ))}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { money, statusLabel, waLink } from '../../lib/format';
+import { methodLabel, money, statusLabel, waLink } from '../../lib/format';
 import { countryName } from '../../lib/countries';
 import { useAuth } from '../AdminApp';
 import { adminApi, fieldErrors, fmtDateTime, useLoad } from '../lib';
@@ -127,6 +127,16 @@ export default function OrderDetail() {
     }
   };
   const card = o.payments?.find((p) => p.details?.last4);
+  const canMarkPaid = o.payment_method === 'transfer' && !['paid', 'refunded'].includes(o.payment_status) && !['cancelled', 'returned'].includes(o.status);
+  const markPaid = async () => {
+    if (!(await confirm(`Did you receive ${money(o.total, c)} for order ${o.number} (UPI / Google Pay / bank transfer)?`, { ok: 'Yes, payment received' }))) return;
+    try {
+      setData(await adminApi(`orders/${o.id}/paid`, { method: 'POST', body: {} }));
+      notify('Payment marked as received. The customer gets an email.');
+    } catch (e) {
+      notify(e.message, 'error');
+    }
+  };
   return (
     <>
       <PageHead title={`Order ${o.number}`} sub={`Placed ${fmtDateTime(o.created_at)}`}>
@@ -134,8 +144,10 @@ export default function OrderDetail() {
       </PageHead>
       <div className="ad-pills-row" data-testid="admin-order-status">
         <StatusPill status={o.status} /> <PayPill status={o.payment_status} />
-        <span className="ad-muted">{o.payment_method === 'cod' ? 'Cash on delivery' : 'Card / Apple Pay / Google Pay'}{card ? ` · ${card.details.brand || ''} •••• ${card.details.last4}` : ''}</span>
+        <span className="ad-muted">{methodLabel(o.payment_method)}{card ? ` · ${card.details.brand || ''} •••• ${card.details.last4}` : ''}</span>
+        {canMarkPaid && <button type="button" className="ad-btn ad-btn--sm" onClick={markPaid} data-testid="mark-paid">Payment received</button>}
       </div>
+      {canMarkPaid && <p className="ad-alert">Send the customer your UPI / Google Pay / bank details on WhatsApp. When the money arrives, press <b>Payment received</b>; then you can ship the order.</p>}
 
       <div className="ad-grid2 ad-grid2--detail">
         <div className="ad-stack">

@@ -91,6 +91,7 @@ Route::prefix('admin')->group(function () {
         Route::put('orders/{id}/status', [OrderController::class, 'status'])->whereNumber('id');
         Route::put('orders/{id}/tracking', [OrderController::class, 'tracking'])->whereNumber('id');
         Route::post('orders/{id}/notes', [OrderController::class, 'note'])->whereNumber('id');
+        Route::post('orders/{id}/paid', [OrderController::class, 'paid'])->whereNumber('id');
         Route::get('customers', [CatalogController::class, 'customers']);
         Route::get('customers/{id}', [CatalogController::class, 'customer'])->whereNumber('id');
         Route::put('customers/{id}', [CatalogController::class, 'updateCustomer'])->whereNumber('id');

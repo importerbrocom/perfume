@@ -7,6 +7,7 @@ import { useSeo } from '../lib/seo';
 import { money } from '../lib/format';
 import { COUNTRIES, countryName } from '../lib/countries';
 import { CouponForm, Totals } from '../components/CartDrawer';
+import { PRICE_REGIONS } from '../lib/cart';
 import StripePay from '../components/StripePay';
 
 const SAVED = 'pm_checkout_contact';
@@ -28,8 +29,9 @@ function Field({ label, name, form, setForm, errors, type = 'text', required = t
 }
 
 export default function Checkout() {
-  const { items, quote, loading, clear, setCountry, method, setMethod, coupon } = useCart();
-  const { store, currency } = useStore();
+  const { items, quote, loading, clear, setCountry, method, setMethod, coupon, region } = useCart();
+  const { store, currency: storeCurrency } = useStore();
+  const currency = quote?.currency || storeCurrency;
   const navigate = useNavigate();
   const [form, setForm] = useState(() => {
     try {
@@ -47,7 +49,8 @@ export default function Checkout() {
   useSeo({ title: 'Checkout', noindex: true });
 
   const s = store?.settings || {};
-  const allowed = s.shipping_countries?.length ? s.shipping_countries : Object.keys(COUNTRIES);
+  // A Fixnote India / Saudi bag is delivered to that country only.
+  const allowed = region ? [PRICE_REGIONS[region].country] : s.shipping_countries?.length ? s.shipping_countries : Object.keys(COUNTRIES);
   useEffect(() => {
     if (!allowed.includes(form.country)) setForm((f) => ({ ...f, country: allowed[0] || 'AE' }));
   }, [allowed.join()]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -93,7 +96,7 @@ export default function Checkout() {
     try {
       const res = await api('checkout', {
         method: 'POST',
-        body: { ...form, items: items.map(({ variant_id, quantity }) => ({ variant_id, quantity })), coupon_code: coupon || null, payment_method: method, accept_terms: true },
+        body: { ...form, items: items.map(({ variant_id, quantity }) => ({ variant_id, quantity })), coupon_code: region ? null : coupon || null, payment_method: method, region, accept_terms: true },
       });
       const { note, ...contact } = form; // eslint-disable-line no-unused-vars
       localStorage.setItem(SAVED, JSON.stringify(contact));

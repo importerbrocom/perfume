@@ -69,8 +69,10 @@ class Setting extends Model
         ],
         'fixnote_delivery' => ['enabled' => true, 'countries' => ['AE'], 'fees' => ['30 ML' => 14, '50 ML' => 9, '100 ML' => 4], 'free_from_pieces' => 5],
         'fixnote_regions' => [
-            'INDIA' => ['currency' => 'INR', 'prices' => ['30 ML' => 1199, '50 ML' => 1499, '100 ML' => 1999]],
-            'SAUDI' => ['currency' => 'SAR', 'prices' => ['30 ML' => 29, '50 ML' => 39, '100 ML' => 59]],
+            'INDIA' => ['currency' => 'INR', 'prices' => ['30 ML' => 1199, '50 ML' => 1499, '100 ML' => 1999],
+                'delivery' => ['fees' => ['30 ML' => 14, '50 ML' => 9, '100 ML' => 0], 'free_from_pieces' => null], 'cod' => true],
+            'SAUDI' => ['currency' => 'SAR', 'prices' => ['30 ML' => 29, '50 ML' => 39, '100 ML' => 59],
+                'delivery' => ['fees' => ['30 ML' => 0, '50 ML' => 0, '100 ML' => 0], 'free_from_pieces' => null], 'cod' => false],
         ],
         'fixnote_page' => null,
         'fixnote_page_logo_path' => null,

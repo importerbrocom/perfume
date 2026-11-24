@@ -17,7 +17,8 @@ class DashboardController extends Controller
 {
     public function __invoke(): JsonResponse
     {
-        $paid = fn () => Order::query()->where('payment_status', 'paid');
+        // Sales in the store currency only (Fixnote India / Saudi orders are in INR / SAR).
+        $paid = fn () => Order::query()->where('payment_status', 'paid')->where('currency', Setting::get('currency', 'AED'));
         $threshold = (int) Setting::get('low_stock_threshold', 3);
         $activeVariants = ProductVariant::query()->where('is_active', true)->whereHas('product', fn ($p) => $p->where('is_active', true));
 

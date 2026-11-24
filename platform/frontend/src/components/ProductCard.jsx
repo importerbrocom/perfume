@@ -40,8 +40,8 @@ export default function ProductCard({ p, onQuickView }) {
   } else if (p.purchasable && p.single_variant_id) {
     actions = (
       <>
-        <button className="pm-btn pm-btn--sm" onClick={() => { add(p.single_variant_id, 1, snap); toast('Added to your bag'); setDrawerOpen(true); }}>Add to Cart</button>
-        <button className="pm-btn pm-btn--sm pm-btn--ghost" onClick={() => { add(p.single_variant_id, 1, snap); navigate('/checkout'); }}>Buy Now</button>
+        <button className="pm-btn pm-btn--sm" onClick={() => { if (!add(p.single_variant_id, 1, snap)) return; toast('Added to your bag'); setDrawerOpen(true); }}>Add to Cart</button>
+        <button className="pm-btn pm-btn--sm pm-btn--ghost" onClick={() => { if (add(p.single_variant_id, 1, snap)) navigate('/checkout'); }}>Buy Now</button>
       </>
     );
   } else {

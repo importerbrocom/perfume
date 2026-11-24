@@ -111,6 +111,15 @@ class OrderController extends Controller
         return $this->show($o->id);
     }
 
+    /** POST /api/admin/orders/{id}/paid: payment received for a "pay after confirmation" order. */
+    public function paid(Request $request, int $id): JsonResponse
+    {
+        $v = $request->validate(['note' => 'nullable|string|max:200']);
+        $this->orders->markReceived(Order::findOrFail($id), $request->user(), isset($v['note']) ? strip_tags($v['note']) : null);
+
+        return $this->show($id);
+    }
+
     /** Full refund through Stripe (admin role only). The webhook confirms it as well. */
     public function refund(Request $request, int $id, StripeGateway $stripe): JsonResponse
     {
