@@ -46,7 +46,7 @@ class OrderService
                 $quantities[(int) $it['variant_id']] = min(99, ($quantities[(int) $it['variant_id']] ?? 0) + (int) $it['quantity']);
             }
             $variants = $this->stock->lockAndCheck($quantities);
-            $q = $this->pricing->quote($data['items'], $data['coupon_code'] ?? null, $data['country'], $data['payment_method'], $variants);
+            $q = $this->pricing->quote($data['items'], $data['coupon_code'] ?? null, $data['country'], $data['payment_method'], $variants, $data['region'] ?? null);
 
             if ($q['issues']) {
                 throw ValidationException::withMessages(['items' => collect($q['issues'])->pluck('message')->unique()->implode(' ')]);
@@ -85,7 +85,7 @@ class OrderService
                 throw ValidationException::withMessages(['email' => 'We cannot accept online orders for this account. Please contact us.']);
             }
 
-            $isCod = $method->code === 'cod';
+            $isCod = $method->code === 'cod'; // "transfer" orders wait for the admin to confirm the payment
             $order = Order::create([
                 'number' => 'TMP-'.Str::random(12),
                 'access_token' => Str::random(48),
@@ -167,7 +167,9 @@ class OrderService
             throw ValidationException::withMessages(['status' => "An order that is '$from' cannot be changed to '$to'."]);
         }
         if (in_array($to, ['shipped', 'delivered'], true) && $order->payment_method !== 'cod' && $order->payment_status !== 'paid') {
-            throw ValidationException::withMessages(['status' => 'This card order is not paid yet, so it cannot be shipped.']);
+            throw ValidationException::withMessages(['status' => $order->payment_method === 'transfer'
+                ? 'Mark the payment as received first (UPI / Google Pay / bank transfer), then ship the order.'
+                : 'This card order is not paid yet, so it cannot be shipped.']);
         }
 
         DB::transaction(function () use ($order, $to, $from, $user, $note) {
@@ -193,6 +195,33 @@ class OrderService
         }
 
         return $order->refresh();
+    }
+
+    /** Admin: the customer paid a "pay after confirmation" order (UPI / Google Pay / bank transfer). */
+    public function markReceived(Order $order, ?User $user, ?string $note = null): Order
+    {
+        if ($order->payment_method !== 'transfer') {
+            throw ValidationException::withMessages(['payment' => 'Only "pay after confirmation" orders are marked as paid here.']);
+        }
+        if (in_array($order->payment_status, ['paid', 'refunded'], true) || in_array($order->status, ['cancelled', 'returned'], true)) {
+            throw ValidationException::withMessages(['payment' => 'This order cannot be marked as paid.']);
+        }
+        DB::transaction(function () use ($order, $user, $note) {
+            $from = $order->payment_status;
+            $order->payment_status = 'paid';
+            $order->paid_at = now();
+            if ($order->status === 'pending') {
+                $order->status = 'confirmed';
+                $this->event($order, 'status', 'pending', 'confirmed', 'Payment received.', true, $user);
+            }
+            $order->save();
+            $order->payments()->where('status', 'pending')->update(['status' => 'paid']);
+            $this->event($order, 'payment', $from, 'paid', $note ? 'Payment received: '.mb_substr($note, 0, 200) : 'Payment received.', false, $user);
+            $this->refreshCustomerTotals($order);
+        });
+        $this->mailCustomer($order->refresh(), 'paid');
+
+        return $order;
     }
 
     /** Called from the verified webhook / verification endpoint. Idempotent. */
@@ -265,7 +294,7 @@ class OrderService
     {
         $minutes = max(15, (int) Setting::get('card_payment_timeout_minutes', 60));
         $orders = Order::query()
-            ->where('payment_method', '!=', 'cod')
+            ->whereNotIn('payment_method', Order::OFFLINE_METHODS)
             ->whereIn('payment_status', ['pending', 'failed'])
             ->where('status', 'pending')
             ->whereNotNull('stock_reserved_at')->whereNull('stock_released_at')

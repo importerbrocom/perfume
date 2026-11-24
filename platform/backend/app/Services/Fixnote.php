@@ -26,8 +26,13 @@ class Fixnote
 
     public const REGIONS = ['UAE', 'GCC', 'INDIA', 'SAUDI'];
 
-    /** Regions ordered on WhatsApp, with the country checkout refuses for Fixnote items. */
-    public const WHATSAPP_REGIONS = ['INDIA' => 'IN', 'SAUDI' => 'SA'];
+    /**
+     * Regions with their own Fixnote prices and currency, and the country they deliver to.
+     * Their bag is priced in that currency (Fixnote perfumes only); card payment is not offered.
+     */
+    public const PRICE_REGIONS = ['INDIA' => 'IN', 'SAUDI' => 'SA'];
+
+    public const REGION_LABELS = ['INDIA' => 'India / Kerala', 'SAUDI' => 'Saudi Arabia'];
 
     public const CONCENTRATION = 'Extrait Perfume';
 
@@ -180,20 +185,39 @@ class Fixnote
         ];
     }
 
-    /** India / Saudi WhatsApp price lists. */
+    /** India / Saudi: currency, prices, delivery charges and cash on delivery. */
     public function regions(): array
     {
         $r = (array) (Setting::get('fixnote_regions') ?? Setting::DEFAULTS['fixnote_regions']);
         $out = [];
-        foreach (array_keys(self::WHATSAPP_REGIONS) as $region) {
-            $out[$region] = ['currency' => strtoupper((string) ($r[$region]['currency'] ?? 'AED')), 'prices' => []];
+        foreach (self::PRICE_REGIONS as $region => $country) {
+            $def = Setting::DEFAULTS['fixnote_regions'][$region];
+            $row = (array) ($r[$region] ?? []) + $def;
+            $delivery = (array) ($row['delivery'] ?? []) + $def['delivery'];
+            $out[$region] = [
+                'label' => self::REGION_LABELS[$region],
+                'country' => $country,
+                'currency' => strtoupper((string) ($row['currency'] ?: $def['currency'])),
+                'prices' => [],
+                'delivery' => ['fees' => [], 'free_from_pieces' => isset($delivery['free_from_pieces']) && $delivery['free_from_pieces'] !== '' ? (int) $delivery['free_from_pieces'] : null],
+                'cod' => (bool) $row['cod'],
+            ];
             foreach (self::SIZES as $s) {
-                $p = $r[$region]['prices'][$s] ?? null;
+                $p = $row['prices'][$s] ?? null;
                 $out[$region]['prices'][$s] = $p !== null && $p !== '' ? (float) $p : null;
+                $out[$region]['delivery']['fees'][$s] = (float) ($delivery['fees'][$s] ?? 0);
             }
         }
 
         return $out;
+    }
+
+    /** null, or one of PRICE_REGIONS (case-insensitive). */
+    public static function priceRegion(?string $region): ?string
+    {
+        $r = $region ? strtoupper($region) : null;
+
+        return $r && isset(self::PRICE_REGIONS[$r]) ? $r : null;
     }
 
     public function page(): array
@@ -490,14 +514,34 @@ class Fixnote
         return $v->product?->brand?->slug === self::BRAND;
     }
 
-    /** Why a Fixnote item cannot be ordered online for this country (India / Saudi order on WhatsApp). */
+    /** Why a Fixnote item at UAE prices cannot be sent to this country (India / Saudi have their own prices). */
     public static function blockedFor(?string $country): ?string
     {
-        if ($country && in_array(strtoupper($country), self::WHATSAPP_REGIONS, true)) {
-            return 'Fixnote orders for India and Saudi Arabia are taken on WhatsApp. Open the Fixnote page, choose your region and send your selection.';
+        if ($country && in_array(strtoupper($country), self::PRICE_REGIONS, true)) {
+            return 'For India and Saudi Arabia, add Fixnote perfumes from the Fixnote page after choosing your region (prices in INR / SAR).';
         }
 
         return null;
+    }
+
+    /** Charge for a region's delivery rule (highest size charge, free from N pieces). */
+    public static function charge(array $pieces, array $fees, ?int $freeFrom): ?array
+    {
+        $total = array_sum($pieces);
+        if ($total <= 0) {
+            return null;
+        }
+        $fee = 0.0;
+        foreach ($pieces as $size => $qty) {
+            if ($qty > 0) {
+                $fee = max($fee, (float) ($fees[$size] ?? max($fees ?: [0])));
+            }
+        }
+        if ($freeFrom !== null && $total >= $freeFrom) {
+            $fee = 0.0;
+        }
+
+        return ['fee' => round($fee, 2), 'pieces' => $total, 'free_from' => $freeFrom];
     }
 
     /**
@@ -508,21 +552,11 @@ class Fixnote
      */
     public function deliveryFor(array $pieces, ?string $country): ?array
     {
-        $total = array_sum($pieces);
         $d = $this->delivery();
-        if ($total <= 0 || ! $d['enabled'] || ! in_array(strtoupper($country ?: 'AE'), $d['countries'], true)) {
+        if (! $d['enabled'] || ! in_array(strtoupper($country ?: 'AE'), $d['countries'], true)) {
             return null;
         }
-        $fee = 0.0;
-        foreach ($pieces as $size => $qty) {
-            if ($qty > 0) {
-                $fee = max($fee, (float) ($d['fees'][$size] ?? max($d['fees'] ?: [0])));
-            }
-        }
-        if ($d['free_from_pieces'] !== null && $total >= $d['free_from_pieces']) {
-            $fee = 0.0;
-        }
 
-        return ['fee' => round($fee, 2), 'pieces' => $total, 'free_from' => $d['free_from_pieces']];
+        return self::charge($pieces, $d['fees'], $d['free_from_pieces']);
     }
 }

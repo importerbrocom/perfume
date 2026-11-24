@@ -12,6 +12,14 @@ class Order extends Model
 
     public const PAYMENT_STATUSES = ['pending', 'paid', 'failed', 'refunded', 'cod_pending'];
 
+    /** Methods paid outside the website: cash on delivery, and "pay after confirmation" (UPI / Google Pay / bank transfer). */
+    public const OFFLINE_METHODS = ['cod', 'transfer'];
+
+    public function isOffline(): bool
+    {
+        return in_array($this->payment_method, self::OFFLINE_METHODS, true);
+    }
+
     /** Customer-facing progress (cancelled / returned are shown separately). */
     public const TIMELINE = ['pending', 'confirmed', 'processing', 'shipped', 'delivered'];
 

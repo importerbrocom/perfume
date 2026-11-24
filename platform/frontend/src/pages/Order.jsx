@@ -30,7 +30,8 @@ export default function Order() {
   }, [load]);
 
   // The webhook may land a few seconds after Stripe returns the customer; check again a few times.
-  const awaitingPayment = order && order.payment_method !== 'cod' && order.payment_status !== 'paid' && order.status === 'pending';
+  const offline = order && ['cod', 'transfer'].includes(order.payment_method);
+  const awaitingPayment = order && !offline && order.payment_status !== 'paid' && order.status === 'pending';
   useEffect(() => {
     if (!awaitingPayment || redirect === 'failed' || polls.current >= (redirect === 'succeeded' ? 8 : 0)) return undefined;
     const t = setTimeout(() => {
@@ -63,7 +64,13 @@ export default function Order() {
       <div className="pm-order__thanks">
         {order.ended ? (
           <h1 className="pmt-page-title">Order {order.number}</h1>
-        ) : paid || order.payment_method === 'cod' ? (
+        ) : order.payment_method === 'transfer' && !paid ? (
+          <>
+            <h1 className="pmt-page-title">Thank you, {order.customer_name?.split(' ')[0] || 'friend'}!</h1>
+            <p>We received your order. We will confirm it on WhatsApp and send you the UPI / Google Pay / bank details. We ship as soon as the payment arrives.</p>
+            {wa && <p><a className="pm-btn" href={waLink(s.whatsapp_number, `Hello, I placed order ${order.number} and would like the payment details.`)} target="_blank" rel="noopener noreferrer">WhatsApp us about payment</a></p>}
+          </>
+        ) : paid || offline ? (
           <>
             <h1 className="pmt-page-title">Thank you, {order.customer_name?.split(' ')[0] || 'friend'}!</h1>
             <p>Your order is confirmed. We will message you when it ships.{order.payment_method === 'cod' ? ' Please keep the amount ready for the courier.' : ''}</p>

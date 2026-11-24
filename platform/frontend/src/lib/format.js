@@ -20,6 +20,10 @@ export const statusLabel = (s) =>
 export const paymentLabel = (s) =>
   ({ pending: 'Awaiting payment', paid: 'Paid', failed: 'Payment failed', refunded: 'Refunded', cod_pending: 'Pay on delivery' })[s] || s;
 
+/** Payment method code -> label (orders, admin). */
+export const methodLabel = (code) =>
+  ({ cod: 'Cash on delivery', card: 'Card / Apple Pay / Google Pay', transfer: 'Pay after confirmation (UPI / Google Pay / bank transfer)' })[code] || code;
+
 export function waLink(number, text) {
   const n = String(number || '').replace(/\D/g, '');
   return n ? `https://wa.me/${n}${text ? '?text=' + encodeURIComponent(text) : ''}` : null;

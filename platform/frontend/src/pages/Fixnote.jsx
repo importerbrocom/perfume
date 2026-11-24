@@ -11,9 +11,10 @@ import defaultHero from '../assets/fixnote/hero.webp';
 import defaultBottle from '../assets/fixnote/bottle.webp';
 import '../styles/fixnote.css';
 
-/** URL part -> region. UAE and Other GCC order online; India and Saudi send the selection on WhatsApp. */
+/** URL part -> region. Every region orders online; India and Saudi in their own currency. */
 export const REGIONS = { uae: 'UAE', india: 'INDIA', saudi: 'SAUDI', gcc: 'GCC' };
-const ONLINE = new Set(['UAE', 'GCC']);
+/** Regions with their own prices and currency (the bag is priced in it); UAE and GCC use the store prices. */
+const PRICE_REGION = { INDIA: 'INDIA', SAUDI: 'SAUDI' };
 const DEFAULT_SIZE = '100 ML';
 const label = (it, sep = ' ') => (it.code ? `${it.code}${sep}${it.name}` : it.name);
 
@@ -135,93 +136,59 @@ function FxHome({ data, img }) {
 
 function FxShop({ data, region, img }) {
   const p = data.page;
-  const online = ONLINE.has(region);
+  const priceRegion = PRICE_REGION[region] || null; // INDIA / SAUDI: own currency; UAE / GCC: store prices
   const navigate = useNavigate();
   const toast = useToast();
-  const { items: cartItems, add, remove, replace, quote, setCountry } = useCart();
+  const { items: cartItems, add, quote, setCountry, setDrawerOpen, region: bagRegion } = useCart();
   const [term, setTerm] = useState('');
   const [group, setGroup] = useState('');
-  const [picked, setPicked] = useState({}); // WhatsApp regions: product id -> variant id
+  const [size, setSize] = useState({}); // product id -> chosen variant id
   const q = useDeferredValue(term.trim().toLowerCase());
-  const regionPrices = data.regions?.[region]?.prices || {};
-  const currency = online ? data.currency : data.regions?.[region]?.currency || data.currency;
+  const regionPrices = priceRegion ? data.regions?.[priceRegion]?.prices || {} : {};
+  const currency = priceRegion ? data.regions?.[priceRegion]?.currency || data.currency : data.currency;
 
   useEffect(() => {
-    if (region === 'UAE') setCountry('AE');
-  }, [region, setCountry]);
+    if (region === 'UAE' && !bagRegion) setCountry('AE');
+  }, [region, bagRegion, setCountry]);
 
   const byVariant = useMemo(() => {
     const m = new Map();
     for (const it of data.items) for (const v of it.variants) m.set(v.id, it);
     return m;
   }, [data.items]);
-  /** product id -> cart lines of that perfume */
-  const lines = useMemo(() => {
-    const m = new Map();
-    for (const l of cartItems) {
-      const it = byVariant.get(l.variant_id);
-      if (it) m.set(it.id, [...(m.get(it.id) || []), l]);
-    }
-    return m;
-  }, [cartItems, byVariant]);
   const hay = useMemo(() => new Map(data.items.map((it) => [it.id, `${it.name} ${it.code || ''} ${it.inspired_by} ${it.notes || ''}`.toLowerCase()])), [data.items]);
 
-  // Sizes a customer can choose here, with the price for this region.
-  const options = (it) => (online
-    ? it.variants.map((v) => ({ v, price: v.current_price, regular: v.on_sale ? v.price : null, ok: v.purchasable }))
-    : it.variants.filter((v) => v.size && regionPrices[v.size] != null).map((v) => ({ v, price: regionPrices[v.size], regular: null, ok: v.in_stock })));
-  const firstChoice = (opts) => opts.find((o) => o.ok && o.v.size === DEFAULT_SIZE) || opts.find((o) => o.ok);
-  const snap = (it, v) => ({ name: it.name, image: it.image || img.bottle, slug: it.slug, variant: v.name });
+  // Sizes a customer can choose here, with this region's price.
+  const options = (it) => (priceRegion
+    ? it.variants.filter((v) => v.size && regionPrices[v.size] != null).map((v) => ({ v, price: regionPrices[v.size], regular: null, ok: v.in_stock }))
+    : it.variants.map((v) => ({ v, price: v.current_price, regular: v.on_sale ? v.price : null, ok: v.purchasable })));
+  const chosen = (it, opts) => opts.find((o) => o.v.id === size[it.id] && o.ok) || opts.find((o) => o.ok && o.v.size === DEFAULT_SIZE) || opts.find((o) => o.ok) || null;
 
-  const toggle = (it, on) => {
-    if (online) {
-      if (!on) return (lines.get(it.id) || []).forEach((l) => remove(l.variant_id));
-      const o = firstChoice(options(it));
-      if (o) add(o.v.id, 1, snap(it, o.v)); // the bar at the bottom shows the count
-      return undefined;
-    }
-    setPicked((x) => {
-      const next = { ...x };
-      if (on) next[it.id] = firstChoice(options(it))?.v.id;
-      else delete next[it.id];
-      return next;
-    });
-    return undefined;
-  };
-  const changeSize = (it, variantId) => {
-    const v = it.variants.find((x) => x.id === variantId);
-    if (!v) return;
-    if (online) {
-      const l = (lines.get(it.id) || [])[0];
-      if (l && l.variant_id !== v.id) replace(l.variant_id, v.id, snap(it, v));
-    } else {
-      setPicked((x) => ({ ...x, [it.id]: v.id }));
-    }
-  };
+  // This region's Fixnote items in the bag
+  const sameBag = (bagRegion || null) === priceRegion;
+  const inBag = sameBag ? cartItems.filter((l) => byVariant.has(l.variant_id)) : [];
+  const qtyOf = (it) => inBag.filter((l) => byVariant.get(l.variant_id).id === it.id).reduce((n, l) => n + l.quantity, 0);
+  const count = inBag.reduce((n, l) => n + l.quantity, 0);
 
-  // Selection = Fixnote lines in the bag (online) or the ticked perfumes (WhatsApp regions).
-  const selection = online
-    ? cartItems.filter((l) => byVariant.has(l.variant_id)).map((l) => {
-        const it = byVariant.get(l.variant_id);
-        const v = it.variants.find((x) => x.id === l.variant_id);
-        return { it, v, qty: l.quantity, price: v.current_price };
-      })
-    : Object.entries(picked).map(([id, vid]) => {
-        const it = data.items.find((x) => x.id === Number(id));
-        const v = it?.variants.find((x) => x.id === vid);
-        return it && v ? { it, v, qty: 1, price: regionPrices[v.size] } : null;
-      }).filter(Boolean);
-  const count = selection.reduce((n, s) => n + s.qty, 0);
+  const put = (it, o, buyNow) => {
+    if (!o) return;
+    if (!add(o.v.id, 1, { name: label(it), image: it.image || img.bottle, slug: it.slug, variant: o.v.name }, priceRegion)) return;
+    if (buyNow) navigate('/checkout');
+    else toast(`${label(it)} (${o.v.name}) added to your bag`);
+  };
 
   const sendWa = () => {
-    if (!selection.length) {
-      toast('Please select at least one fragrance.');
+    if (!inBag.length) {
+      toast('Add at least one fragrance to your bag first.');
       return;
     }
     let total = 0;
-    const rows = selection.map(({ it, v, qty, price }) => {
-      total += (price || 0) * qty;
-      return `${label(it, ' – ')} – ${p.product_type || 'Extrait Perfume'} – ${v.name}${qty > 1 ? ` × ${qty}` : ''} – ${fxPrice((price || 0) * qty, currency)}`;
+    const rows = inBag.map((l) => {
+      const it = byVariant.get(l.variant_id);
+      const o = options(it).find((x) => x.v.id === l.variant_id);
+      const line = (o?.price || 0) * l.quantity;
+      total += line;
+      return `${label(it, ' – ')} – ${p.product_type || 'Extrait Perfume'} – ${o?.v.name || ''}${l.quantity > 1 ? ` × ${l.quantity}` : ''} – ${fxPrice(line, currency)}`;
     });
     const msg = `Hi Perfumarathi, I selected these FIXNOT fragrances:\n\n${rows.join('\n')}\n\nRegion: ${region}\nTotal: ${fxPrice(total, currency)}\n\nPlease confirm my order.`;
     const href = waLink(p.whatsapp_number, msg);
@@ -230,18 +197,20 @@ function FxShop({ data, region, img }) {
 
   const shown = data.items.filter((it) => (!group || it.inspired_by === group) && (!q || hay.get(it.id).includes(q)));
   const groups = data.groups.filter((g) => shown.some((it) => it.inspired_by === g));
-  const sizeRows = ['30 ML', '50 ML', '100 ML'].map((s) => (online
-    ? { s, price: data.prices?.[s]?.sale_price ?? data.prices?.[s]?.price, regular: data.prices?.[s]?.sale_price != null ? data.prices[s].price : null }
-    : { s, price: regionPrices[s], regular: null })).filter((r) => r.price != null);
+  const sizeRows = ['30 ML', '50 ML', '100 ML'].map((s) => (priceRegion
+    ? { s, price: regionPrices[s], regular: null }
+    : { s, price: data.prices?.[s]?.sale_price ?? data.prices?.[s]?.price, regular: data.prices?.[s]?.sale_price != null ? data.prices[s].price : null })).filter((r) => r.price != null);
 
-  const fd = region === 'UAE' && count > 0 ? quote?.fixnote_delivery : null;
+  // Delivery hint from the live bag quote (UAE rule, or the India / Saudi rule)
+  const fd = count > 0 && sameBag && (priceRegion ? quote?.region === priceRegion : region === 'UAE') ? quote?.fixnote_delivery : null;
+  const qc = quote?.currency || currency;
   let hint = null;
   if (fd) {
     if (fd.fee <= 0) hint = <p className="fx-bar__hint is-free" data-testid="fx-delivery">FREE DELIVERY on this order</p>;
     else if (fd.free_from && fd.pieces < fd.free_from) {
       const more = fd.free_from - fd.pieces;
-      hint = <p className="fx-bar__hint" data-testid="fx-delivery">Delivery {fxPrice(fd.fee, currency)} • add {more} more piece{more === 1 ? '' : 's'} for FREE delivery</p>;
-    } else hint = <p className="fx-bar__hint" data-testid="fx-delivery">Delivery {fxPrice(fd.fee, currency)}</p>;
+      hint = <p className="fx-bar__hint" data-testid="fx-delivery">Delivery {fxPrice(fd.fee, qc)} • add {more} more piece{more === 1 ? '' : 's'} for FREE delivery</p>;
+    } else hint = <p className="fx-bar__hint" data-testid="fx-delivery">Delivery {fxPrice(fd.fee, qc)}</p>;
   }
 
   return (
@@ -257,7 +226,7 @@ function FxShop({ data, region, img }) {
         {p.shop_parent && <div className="fx-parent">{p.shop_parent}</div>}
         <div className="fx-region-now">
           REGION: {p.region_cards?.[region]?.title || region} · <Link to="/shop-fixnote#fx-regions">Change</Link>
-          {!online && ' · Orders are confirmed on WhatsApp'}
+          {priceRegion && ` · Prices in ${currency}`}
         </div>
         {sizeRows.length > 0 && (
           <div className="fx-quick" data-testid="fx-quick">
@@ -284,43 +253,35 @@ function FxShop({ data, region, img }) {
             <div className="fx-grid">
               {shown.filter((it) => it.inspired_by === g).map((it) => {
                 const opts = options(it);
-                const avail = opts.some((o) => o.ok);
-                const mine = online ? lines.get(it.id) || [] : [];
-                const selId = online ? mine[0]?.variant_id : picked[it.id];
-                const sel = selId ? opts.find((o) => o.v.id === selId) : null;
-                const on = !!selId;
-                const qty = mine.reduce((n, l) => n + l.quantity, 0);
+                const sel = chosen(it, opts);
+                const n = qtyOf(it);
                 return (
-                  <div key={it.id} className={'fx-card' + (on ? ' is-on' : '') + (!avail ? ' is-out' : '')} data-testid={`fx-card-${it.code || it.id}`}>
+                  <div key={it.id} className={'fx-card' + (n ? ' is-on' : '') + (!sel ? ' is-out' : '')} data-testid={`fx-card-${it.code || it.id}`}>
                     <img src={it.image || img.bottle} alt="" loading="lazy" decoding="async" />
-                    <div>
+                    <div className="fx-card__info">
                       {it.code && <div className="fx-code">{it.code}</div>}
                       <div className="fx-name">{it.name}</div>
                       {it.notes && <div className="fx-notes">{it.notes}</div>}
                     </div>
-                    <input
-                      className="fx-check" type="checkbox" checked={on} disabled={!avail && !on}
-                      aria-label={`Select ${label(it)}`} onChange={(e) => toggle(it, e.target.checked)}
-                    />
-                    {!avail && !on && <div className="fx-out">{online ? 'Out of stock' : 'Not available in this region'}</div>}
-                    {on && (
+                    {sel ? (
                       <div className="fx-opts">
-                        <div className="fx-opts__type">{p.product_type}</div>
-                        <select aria-label={`Size for ${label(it)}`} value={selId} onChange={(e) => changeSize(it, Number(e.target.value))}>
+                        <div className="fx-opts__row">
+                          <span className="fx-opts__type">{p.product_type}</span>
+                          <span className="fx-price">{sel.regular != null && <del>{fxPrice(sel.regular, currency)}</del>}{fxPrice(sel.price, currency)}</span>
+                        </div>
+                        <select aria-label={`Size for ${label(it)}`} value={sel.v.id} onChange={(e) => setSize((x) => ({ ...x, [it.id]: Number(e.target.value) }))}>
                           {opts.map((o) => (
-                            <option key={o.v.id} value={o.v.id} disabled={!o.ok && o.v.id !== selId}>
-                              {o.v.name} - {fxPrice(o.price, currency)}{!o.ok ? ' (out of stock)' : ''}
-                            </option>
+                            <option key={o.v.id} value={o.v.id} disabled={!o.ok}>{o.v.name} - {fxPrice(o.price, currency)}{!o.ok ? ' (out of stock)' : ''}</option>
                           ))}
                         </select>
-                        {sel && (
-                          <div className="fx-price">
-                            {sel.regular != null && <del>{fxPrice(sel.regular, currency)}</del>}
-                            {fxPrice(sel.price, currency)}
-                            {online && qty > 1 && <span className="fx-qty"> · {qty} in your bag</span>}
-                          </div>
-                        )}
+                        <div className="fx-actions">
+                          <button type="button" className="fx-btn fx-btn--orange" onClick={() => put(it, sel, false)} aria-label={`Add ${label(it)} to cart`}>ADD TO CART</button>
+                          <button type="button" className="fx-btn fx-btn--dark" onClick={() => put(it, sel, true)} aria-label={`Buy ${label(it)} now`}>BUY NOW</button>
+                        </div>
+                        {n > 0 && <div className="fx-qty" data-testid="fx-in-bag">✓ {n} in your bag</div>}
                       </div>
+                    ) : (
+                      <div className="fx-out">{priceRegion ? 'Not available in this region' : 'Out of stock'}</div>
                     )}
                   </div>
                 );
@@ -343,15 +304,9 @@ function FxShop({ data, region, img }) {
       <div className="fx-bar">
         {hint}
         <div className="fx-bar__row">
-          <span className="fx-bar__count"><span data-testid="fx-count">{count}</span> selected</span>
-          {online ? (
-            <>
-              <button type="button" className="fx-btn fx-btn--orange" disabled={!count} onClick={() => navigate('/checkout')}>CHECKOUT</button>
-              <button type="button" className="fx-btn fx-btn--wa" onClick={sendWa} aria-label="Send my selection on WhatsApp">WHATSAPP</button>
-            </>
-          ) : (
-            <button type="button" className="fx-btn" onClick={sendWa}>SEND MY SELECTION ON WHATSAPP</button>
-          )}
+          <button type="button" className="fx-bar__count" onClick={() => setDrawerOpen(true)} aria-label="Open your bag"><span data-testid="fx-count">{count}</span> in bag</button>
+          <button type="button" className="fx-btn fx-btn--orange" disabled={!count} onClick={() => navigate('/checkout')}>CHECKOUT</button>
+          <button type="button" className="fx-btn fx-btn--wa" onClick={sendWa} aria-label="Send my selection on WhatsApp">WHATSAPP</button>
         </div>
       </div>
     </div>
@@ -380,7 +335,7 @@ export default function Fixnote() {
   }, [attempt]);
   useSeo({
     title: region ? `FIXNOT Fragrances – ${region === 'GCC' ? 'GCC & other countries' : region}` : 'FIXNOT Fragrances',
-    description: 'FIXNOT by Perfumarathi: inspired extrait perfumes in 30, 50 and 100 ML. Long lasting, high projection. Order online in the UAE and GCC.',
+    description: 'FIXNOT by Perfumarathi: inspired extrait perfumes in 30, 50 and 100 ML. Long lasting, high projection. Order online in the UAE, GCC, India and Saudi Arabia.',
   });
 
   if (slug && !region) return <Navigate to="/shop-fixnote" replace />;

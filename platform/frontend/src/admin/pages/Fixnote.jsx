@@ -205,7 +205,12 @@ export default function FixnoteAdmin() {
       const body = {
         page: f.page,
         delivery: { ...f.delivery, free_from_pieces: num(f.delivery.free_from_pieces), fees: Object.fromEntries(data.sizes.map((s) => [s, num(f.delivery.fees[s]) ?? 0])) },
-        regions: Object.fromEntries(WA_REGIONS.map(([r]) => [r, { currency: f.regions[r].currency, prices: Object.fromEntries(data.sizes.map((s) => [s, num(f.regions[r].prices[s])])) }])),
+        regions: Object.fromEntries(WA_REGIONS.map(([r]) => [r, {
+          currency: f.regions[r].currency,
+          cod: !!f.regions[r].cod,
+          prices: Object.fromEntries(data.sizes.map((s) => [s, num(f.regions[r].prices[s])])),
+          delivery: { free_from_pieces: num(f.regions[r].delivery?.free_from_pieces), fees: Object.fromEntries(data.sizes.map((s) => [s, num(f.regions[r].delivery?.fees?.[s]) ?? 0])) },
+        }])),
       };
       const saved = await adminApi('fixnote', { method: 'PUT', body });
       setData(saved);
@@ -241,7 +246,7 @@ export default function FixnoteAdmin() {
         <Link className="ad-btn ad-btn--ghost" to="/admin/fixnote/orders">Fixnote orders ({data.counts.orders})</Link>
       </div>
       {data.brand && !data.brand.is_active && <p className="ad-alert ad-alert--error">The Fixnote brand is hidden (Catalogue › Brands), so the page shows no perfumes.</p>}
-      <Tabs value={tab} onChange={setTab} items={[['prices', 'Prices & UAE delivery'], ['regions', 'India & Saudi (WhatsApp)'], ['page', 'Page texts'], ['offers', 'Offer banners'], ['images', 'Pictures']]} />
+      <Tabs value={tab} onChange={setTab} items={[['prices', 'Prices & UAE delivery'], ['regions', 'India & Saudi'], ['page', 'Page texts'], ['offers', 'Offer banners'], ['images', 'Pictures']]} />
 
       {tab === 'prices' && (
         <>
@@ -264,7 +269,7 @@ export default function FixnoteAdmin() {
       {tab === 'regions' && (
         <>
           <Card title="India & Saudi prices">
-            <p className="ad-help">Customers in these regions tick their perfumes and send the list on WhatsApp with these prices. Online checkout does not accept Fixnote perfumes for India or Saudi Arabia.</p>
+            <p className="ad-help">Customers in these regions add perfumes to their bag at these prices and check out in this currency (Fixnote perfumes only, delivery to that country only, no coupons). Payment: cash on delivery if switched on, or "Pay after confirmation" (UPI / Google Pay / bank transfer: you send the details on WhatsApp, then press Payment received on the order). Card payment is UAE / GCC only.</p>
             {WA_REGIONS.map(([r, label]) => (
               <div key={r} className="ad-variant">
                 <strong>{label}</strong>
@@ -273,6 +278,11 @@ export default function FixnoteAdmin() {
                   {data.sizes.map((s) => (
                     <Num key={s} label={s} value={f.regions[r].prices[s]} onChange={(v) => setRegion(r, { prices: { ...f.regions[r].prices, [s]: v } })} error={errors[`regions.${r}.prices.${s}`]} />
                   ))}
+                  {data.sizes.map((s) => (
+                    <Num key={`d${s}`} label={`Delivery with ${s}`} value={f.regions[r].delivery?.fees?.[s]} onChange={(v) => setRegion(r, { delivery: { ...f.regions[r].delivery, fees: { ...f.regions[r].delivery?.fees, [s]: v } } })} error={errors[`regions.${r}.delivery.fees.${s}`]} />
+                  ))}
+                  <Num label="Free delivery from (pieces)" step={1} min={1} value={f.regions[r].delivery?.free_from_pieces} onChange={(v) => setRegion(r, { delivery: { ...f.regions[r].delivery, free_from_pieces: v } })} error={errors[`regions.${r}.delivery.free_from_pieces`]} help="Empty = never free." />
+                  <Toggle label="Cash on delivery" checked={!!f.regions[r].cod} onChange={(v) => setRegion(r, { cod: v })} />
                 </div>
               </div>
             ))}

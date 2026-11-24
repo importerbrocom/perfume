@@ -16,9 +16,12 @@ class CartPricing
     /**
      * @param  array<int,array{variant_id:int,quantity:int}>  $items
      * @param  array<int,ProductVariant>|null  $lockedVariants  use these (already locked) instead of loading
+     * @param  string|null  $region  INDIA / SAUDI: a Fixnote bag priced in that region's currency (see Fixnote::PRICE_REGIONS)
      */
-    public function quote(array $items, ?string $couponCode, ?string $country, ?string $paymentCode, ?array $lockedVariants = null): array
+    public function quote(array $items, ?string $couponCode, ?string $country, ?string $paymentCode, ?array $lockedVariants = null, ?string $region = null): array
     {
+        $region = Fixnote::priceRegion($region);
+        $regional = $region ? app(Fixnote::class)->regions()[$region] : null;
         $quantities = [];
         foreach ($items as $it) {
             $id = (int) ($it['variant_id'] ?? 0);
@@ -32,7 +35,7 @@ class CartPricing
             ->with(['product.images', 'product.brand'])->get()->keyBy('id')->all();
 
         $country = $country ? strtoupper($country) : null;
-        $fixnoteBlocked = Fixnote::blockedFor($country);
+        $fixnoteBlocked = $regional ? null : Fixnote::blockedFor($country);
         $fixnotePieces = []; // size => quantity, Fixnote items that can be ordered
         $otherItems = false;
 
@@ -46,17 +49,26 @@ class CartPricing
 
                 continue;
             }
+            $isFixnote = Fixnote::isFixnote($v);
             $price = $v->currentPrice();
+            $regular = $v->price !== null ? (float) $v->price : null;
+            if ($regional) {
+                $price = $isFixnote ? ($regional['prices'][Fixnote::sizeKey($v->name)] ?? null) : null;
+                $regular = $price;
+            }
             $available = $v->availableQuantity();
             $problem = null;
-            if ($price === null) {
+            if ($regional && ! $isFixnote) {
+                $problem = "Only Fixnote perfumes can be ordered with {$regional['label']} prices. Remove this item to continue.";
+            } elseif ($regional && $price === null) {
+                $problem = "Not available for {$regional['label']}.";
+            } elseif ($price === null) {
                 $problem = 'No price yet: please contact us to order.';
             } elseif (! $v->inStock()) {
                 $problem = 'Out of stock.';
             } elseif ($available !== null && $qty > $available) {
                 $problem = "Only $available left in stock.";
             }
-            $isFixnote = Fixnote::isFixnote($v);
             if (! $problem && $isFixnote && $fixnoteBlocked) {
                 $problem = $fixnoteBlocked;
             }
@@ -81,7 +93,7 @@ class CartPricing
                 'variant_name' => $v->name,
                 'image' => $img?->thumb_url,
                 'unit_price' => $price,
-                'regular_price' => $v->price !== null ? (float) $v->price : null,
+                'regular_price' => $regular,
                 'quantity' => $qty,
                 'available' => $available,
                 'line_total' => $problem ? 0.0 : $line,
@@ -94,7 +106,9 @@ class CartPricing
         $discount = 0.0;
         $couponMessage = null;
         $coupon = null;
-        if ($couponCode !== null && trim($couponCode) !== '') {
+        if ($couponCode !== null && trim($couponCode) !== '' && $regional) {
+            $couponMessage = "Coupons cannot be used with {$regional['label']} prices.";
+        } elseif ($couponCode !== null && trim($couponCode) !== '') {
             $coupon = Coupon::query()->whereRaw('UPPER(code) = ?', [mb_strtoupper(trim($couponCode))])->first();
             if (! $coupon) {
                 $couponMessage = 'Coupon code not found.';
@@ -115,8 +129,13 @@ class CartPricing
         $shipping = ($freeOver !== null && $freeOver !== '' && $afterDiscount >= (float) $freeOver) ? 0.0 : $flat;
         // Fixnote delivery rule (UAE: a charge by size, free from 5 pieces). With other products in the
         // cart the higher of the two charges applies, so one parcel is never charged twice.
-        $fixnoteDelivery = app(Fixnote::class)->deliveryFor($fixnotePieces, $country);
-        if ($fixnoteDelivery) {
+        $fixnoteDelivery = $regional
+            ? Fixnote::charge($fixnotePieces, $regional['delivery']['fees'], $regional['delivery']['free_from_pieces'])
+            : app(Fixnote::class)->deliveryFor($fixnotePieces, $country);
+        if ($regional) {
+            $shipsHere = ! $country || $country === $regional['country'];
+            $shipping = $fixnoteDelivery['fee'] ?? 0.0;
+        } elseif ($fixnoteDelivery) {
             $shipping = $otherItems ? max($shipping, $fixnoteDelivery['fee']) : $fixnoteDelivery['fee'];
         }
         if ($subtotal <= 0) {
@@ -126,12 +145,19 @@ class CartPricing
         // Payment methods available for this order, and the chosen method's fee
         $methods = PaymentMethod::query()->where('is_enabled', true)->orderBy('sort_order')->get();
         $base = round($afterDiscount + $shipping, 2);
-        $available = $methods->filter(fn ($m) => $m->availableFor($base, $country ?? 'AE'))->values();
+        if ($regional) {
+            // No card (store currency only); fees and min / max totals are in the store currency, so they do not apply.
+            $available = $methods->filter(fn ($m) => $m->provider !== 'stripe' && ($m->code !== 'cod' || $regional['cod']) && $m->isConfigured()
+                && (empty($m->countries) || in_array($regional['country'], array_map('strtoupper', $m->countries), true)))->values();
+        } else {
+            $available = $methods->filter(fn ($m) => $m->code !== 'transfer' && $m->availableFor($base, $country ?? 'AE'))->values();
+        }
         $chosen = $paymentCode ? $available->firstWhere('code', $paymentCode) : null;
-        $fee = $chosen ? (float) $chosen->fee : 0.0;
+        $fee = $chosen && ! $regional ? (float) $chosen->fee : 0.0;
 
         return [
-            'currency' => Setting::get('currency', 'AED'),
+            'currency' => $regional['currency'] ?? Setting::get('currency', 'AED'),
+            'region' => $region,
             'lines' => $lines,
             'issues' => $issues,
             'quantities' => $quantities,
@@ -145,7 +171,7 @@ class CartPricing
             'payment_fee' => round($fee, 2),
             'total' => round($base + $fee, 2),
             'payment_methods' => $available->map(fn ($m) => [
-                'code' => $m->code, 'title' => $m->title, 'description' => $m->description, 'fee' => (float) $m->fee,
+                'code' => $m->code, 'title' => $m->title, 'description' => $m->description, 'fee' => $regional ? 0.0 : (float) $m->fee,
             ])->all(),
             'payment_method_valid' => $paymentCode === null || $chosen !== null,
         ];

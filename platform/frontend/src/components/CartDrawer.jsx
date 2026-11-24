@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useCart } from '../lib/cart';
+import { PRICE_REGIONS, useCart } from '../lib/cart';
 import { useStore } from '../lib/store';
 import { useToast } from '../lib/toast';
 import { money } from '../lib/format';
@@ -8,7 +8,8 @@ import { BagIcon } from './Icons';
 
 export function CartLines({ quote }) {
   const { setQty, remove, items } = useCart();
-  const { currency } = useStore();
+  const { currency: storeCurrency } = useStore();
+  const currency = quote?.currency || storeCurrency;
   const lines = quote?.lines?.length ? quote.lines : items.map((i) => ({ variant_id: i.variant_id, product_name: i.snap?.name || 'Item', variant_name: i.snap?.variant, image: i.snap?.image, quantity: i.quantity, line_total: null, product_slug: i.snap?.slug }));
   // Products without a photo (e.g. Fixnote) show the picture saved when they were added.
   const image = (l) => l.image || items.find((i) => i.variant_id === l.variant_id)?.snap?.image;
@@ -34,13 +35,14 @@ export function CartLines({ quote }) {
 }
 
 export function CouponForm() {
-  const { coupon, setCoupon, quote } = useCart();
+  const { coupon, setCoupon, quote, region } = useCart();
   const [code, setCode] = useState(coupon);
   const toast = useToast();
   useEffect(() => setCode(coupon), [coupon]);
   useEffect(() => {
     if (coupon && quote?.coupon_message) toast(quote.coupon_message, 'error');
   }, [quote?.coupon_message]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (region) return null; // no coupons on Fixnote India / Saudi prices
   return (
     <>
       <form className="pm-coupon" onSubmit={(e) => { e.preventDefault(); setCoupon(code.trim()); }}>
@@ -56,10 +58,14 @@ export function CouponForm() {
 }
 
 export function Totals({ quote, showPayment = false }) {
-  const { currency } = useStore();
+  const { currency: storeCurrency } = useStore();
   if (!quote) return null;
+  const currency = quote.currency || storeCurrency;
   return (
     <>
+      {quote.region && PRICE_REGIONS[quote.region] && (
+        <p className="pm-note" data-testid="bag-region">Fixnote {PRICE_REGIONS[quote.region].label} prices ({currency}). Delivery to {PRICE_REGIONS[quote.region].label} only.</p>
+      )}
       <div className="pm-row"><span>Subtotal</span><span data-testid="subtotal">{money(quote.subtotal, currency)}</span></div>
       {quote.discount > 0 && <div className="pm-row"><span>Discount</span><span>−{money(quote.discount, currency)}</span></div>}
       <div className="pm-row"><span>Shipping</span><span>{quote.shipping > 0 ? money(quote.shipping, currency) : 'Free'}</span></div>

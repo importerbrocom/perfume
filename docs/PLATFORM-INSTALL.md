@@ -85,15 +85,16 @@ Prices, stock, products, orders and settings are all managed in `/admin`. No com
 
 ## Fixnote page
 
-SHOP FIXNOTE opens `/shop-fixnote`, built from `FIXNOT_formatted.html`. Customers choose a region:
+SHOP FIXNOTE opens `/shop-fixnote`, built from `FIXNOT_formatted.html`. Customers choose a region, pick 30 / 50 / 100 ML and press **ADD TO CART** or **BUY NOW** (WhatsApp is still offered in the bar):
 
-- **UAE** and **Other GCC**: tick perfumes, pick 30 / 50 / 100 ML, then Checkout (COD or card) or send the list on WhatsApp. UAE delivery for Fixnote: 14 / 9 / 4 AED by size (the highest size in the order), free from 5 pieces.
-- **India** and **Saudi**: their own prices (INR / SAR); the selection is sent on WhatsApp. Checkout refuses Fixnote items for India and Saudi Arabia.
+- **UAE** and **Other GCC**: store prices (AED), COD or card. UAE delivery for Fixnote: 14 / 9 / 4 AED by size (the highest size in the order), free from 5 pieces.
+- **India** and **Saudi**: their own prices and currency (INR / SAR), delivery to that country only, Fixnote perfumes only, no coupons, no card. Payment: cash on delivery (India, switchable) or **Pay after confirmation**: send the customer your UPI / Google Pay / bank details on WhatsApp, then press **Payment received** on the order before shipping.
 
 The 378 perfumes (F01…) come from `platform/backend/database/data/fixnote-catalogue.json`. `update` adds them once; perfumes already in the shop (same code) or deleted in admin are not touched. To add missing ones again: `cd ~/pmshop/current && php artisan shop:import-fixnote`.
 
 Admin › **Fixnote**:
-- **Fixnote page**: one price per size for every perfume (only sizes you change are updated), UAE delivery, India / Saudi prices, page texts, offer banners, pictures.
+- **Fixnote page**: one price per size for every perfume (only sizes you change are updated), UAE delivery, India / Saudi prices, delivery and cash on delivery, page texts, offer banners, pictures.
+- Dashboard sales count store-currency (AED) orders only; INR / SAR orders are in the order list.
 - **Fixnote perfumes**: the Fixnote products (search by code, name or inspired-by brand), add a perfume with the three sizes.
 - **Fixnote orders**: orders with at least one Fixnote perfume.
 

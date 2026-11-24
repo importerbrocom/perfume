@@ -12,6 +12,13 @@ class PaymentMethod extends Model
 {
     protected $guarded = ['id'];
 
+    /** "Pay after confirmation": the shop confirms on WhatsApp and sends UPI / Google Pay / bank details (Fixnote India and Saudi). */
+    public const TRANSFER_DEFAULTS = [
+        'title' => 'Pay after confirmation',
+        'description' => 'UPI, Google Pay or bank transfer. We confirm your order on WhatsApp and send you the payment details.',
+        'is_enabled' => true, 'sort_order' => 3, 'fee' => 0, 'countries' => ['IN', 'SA'],
+    ];
+
     protected $hidden = ['credentials'];
 
     protected $casts = [

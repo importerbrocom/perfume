@@ -85,7 +85,6 @@ test.describe('as admin', () => {
     await page.getByLabel('Search perfumes').fill(name);
     const card = page.locator('.fx-card').filter({ hasText: name });
     await expect(card).toHaveCount(1);
-    await card.getByRole('checkbox').check();
     await expect(card.locator('.fx-price')).toContainText('99 AED'); // 100 ml first, on sale
     await expect(card.locator('.fx-price del')).toHaveText('110 AED');
     await card.getByRole('combobox').selectOption({ label: '50 ml - 70 AED' });

@@ -1,4 +1,4 @@
-import { money, paymentLabel, statusLabel } from '../lib/format';
+import { methodLabel, money, paymentLabel, statusLabel } from '../lib/format';
 import { countryName } from '../lib/countries';
 import Timeline from './Timeline';
 
@@ -59,7 +59,7 @@ export default function OrderView({ order, children }) {
           {order.payment_fee > 0 && <div className="pm-row"><span>Payment fee</span><span>{money(order.payment_fee, c)}</span></div>}
           <div className="pm-row pm-row--total"><span>Total</span><span data-testid="order-total">{money(order.total, c)}</span></div>
           <p className="pm-note">
-            {order.payment_method === 'cod' ? 'Cash on delivery' : 'Card / Apple Pay / Google Pay'}
+            {methodLabel(order.payment_method)}
             {order.ship_city ? ` · Delivering to ${order.ship_city}, ${countryName(order.ship_country)}` : ''}
           </p>
         </aside>

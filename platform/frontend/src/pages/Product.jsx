@@ -172,13 +172,12 @@ export default function Product() {
   const snap = { name: p.name, image: p.image, slug: p.slug, variant: v?.name };
   const canBuy = v?.purchasable && qty >= 1 && (v.available === null || qty + inCart <= v.available);
   const addToCart = () => {
-    add(v.id, qty, snap);
+    if (!add(v.id, qty, snap)) return;
     toast(`${p.name} added to your bag`);
     setDrawerOpen(true);
   };
   const buyNow = () => {
-    add(v.id, qty, snap);
-    navigate('/checkout');
+    if (add(v.id, qty, snap)) navigate('/checkout');
   };
   const wa = waLink(store?.settings?.whatsapp_number, `Hi Perfumarathi, I'm interested in ${p.name}${v && v.name !== 'Standard' ? ' (' + v.name + ')' : ''}.`);
   const noteLabel = { top: 'Top notes', middle: 'Heart notes', base: 'Base notes' };

@@ -6,7 +6,8 @@ async function noOverflow(page) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(1);
 }
 
-const card = (page, label) => page.locator('.fx-card').filter({ has: page.getByLabel(`Select ${label}`, { exact: true }) });
+const card = (page, label) => page.locator('.fx-card').filter({ has: page.getByRole('button', { name: `Add ${label} to cart`, exact: true }) });
+const addBtn = (page, label) => page.getByRole('button', { name: `Add ${label} to cart`, exact: true });
 
 test('Fixnote page: home, regions and the full catalogue with search and brand filter', async ({ page }) => {
   await page.goto('/shop-fixnote');
@@ -32,17 +33,17 @@ test('Fixnote page: home, regions and the full catalogue with search and brand f
   await expect(card(page, 'F132 Aventus')).toBeVisible();
 });
 
-test('Fixnote UAE: choose perfumes and sizes, UAE delivery charge, COD order shows under Fixnote orders', async ({ page, browser }) => {
+test('Fixnote UAE: add to cart with sizes, UAE delivery charge, COD order shows under Fixnote orders', async ({ page, browser }) => {
   await page.goto('/shop-fixnote/uae');
   const f01 = card(page, 'F01 Imagination');
-  await page.getByLabel('Select F01 Imagination').check();
   await expect(f01.locator('.fx-price')).toHaveText('59 AED'); // 100 ML is chosen first
-  await expect(page.getByTestId('fx-count')).toHaveText('1');
-  await expect(page.getByTestId('fx-delivery')).toHaveText('Delivery 4 AED • add 4 more pieces for FREE delivery');
   await page.getByLabel('Size for F01 Imagination').selectOption({ label: '30 ML - 29 AED' });
   await expect(f01.locator('.fx-price')).toHaveText('29 AED');
-  await expect(page.getByTestId('fx-delivery')).toContainText('Delivery 14 AED');
-  await page.getByLabel('Select F18 Sauvage').check();
+  await addBtn(page, 'F01 Imagination').click();
+  await expect(page.getByTestId('fx-count')).toHaveText('1');
+  await expect(f01.getByTestId('fx-in-bag')).toHaveText('✓ 1 in your bag');
+  await expect(page.getByTestId('fx-delivery')).toHaveText('Delivery 14 AED • add 4 more pieces for FREE delivery');
+  await addBtn(page, 'F18 Sauvage').click();
   await expect(page.getByTestId('fx-count')).toHaveText('2');
   await noOverflow(page);
 
@@ -57,6 +58,7 @@ test('Fixnote UAE: choose perfumes and sizes, UAE delivery charge, COD order sho
   await page.getByLabel('City').fill('Ajman');
   await page.getByLabel(/Complete address/).fill('Tower 3, Al Nuaimiya');
   await page.getByRole('radio', { name: /cash on delivery/i }).check();
+  await expect(page.getByRole('radio', { name: /pay after confirmation/i })).toHaveCount(0); // India / Saudi only
   await page.getByRole('checkbox').check();
   await page.getByTestId('place-order').click();
   await expect(page).toHaveURL(/\/order\/PM\d+\?token=/);
@@ -72,29 +74,69 @@ test('Fixnote UAE: choose perfumes and sizes, UAE delivery charge, COD order sho
   await admin.close();
 });
 
-test('Fixnote India: own prices, selection goes to WhatsApp, online checkout refuses Fixnote for India', async ({ page }) => {
+test('Fixnote India: add to cart in INR, checkout to India, pay after confirmation; admin marks it paid', async ({ page, browser }) => {
+  page.on('dialog', (d) => d.accept()); // "start a new bag with India prices?"
   await page.goto('/shop-fixnote/india');
   await expect(page.getByTestId('fx-quick')).toContainText('30 ML1,199 INR');
-  await expect(page.getByRole('button', { name: 'CHECKOUT' })).toHaveCount(0);
-  await page.getByLabel('Select F01 Imagination').check();
   await expect(card(page, 'F01 Imagination').locator('.fx-price')).toHaveText('1,999 INR');
+  await addBtn(page, 'F01 Imagination').click();
+  await page.getByLabel('Size for F03 L\'Immensite').selectOption({ label: '30 ML - 1,199 INR' });
+  await addBtn(page, 'F03 L\'Immensite').click();
+  await expect(page.getByTestId('fx-count')).toHaveText('2');
+  await expect(page.getByTestId('fx-delivery')).toContainText('Delivery 14 INR');
+
   let sent = '';
   await page.route(/wa\.me/, (route) => {
     sent = decodeURIComponent(route.request().url());
     return route.fulfill({ status: 200, contentType: 'text/html', body: 'ok' });
   });
-  await page.getByRole('button', { name: 'SEND MY SELECTION ON WHATSAPP' }).click();
+  await page.getByRole('button', { name: 'Send my selection on WhatsApp' }).click();
   await expect.poll(() => sent).toContain('F01 – Imagination – EXTRAIT PERFUME – 100 ML – 1,999 INR');
   expect(sent).toContain('Region: INDIA');
-  expect(sent).toContain('Total: 1,999 INR');
+  expect(sent).toContain('Total: 3,198 INR');
+  await page.unroute(/wa\.me/);
 
-  // A Fixnote item in the bag cannot be ordered online to India
+  await page.goto('/shop-fixnote/india');
+  await page.getByRole('button', { name: 'Buy F02 Ombre Nomade now' }).click();
+  await expect(page).toHaveURL(/\/checkout$/);
+  const summary = page.locator('.pc-summary');
+  await expect(summary.getByTestId('bag-region')).toContainText('India / Kerala prices (INR)');
+  await expect(summary.getByTestId('total')).toContainText('5,211'); // 1,999 × 2 + 1,199 + 14
+  await expect(page.locator('select[name="country"] option')).toHaveText(['India']);
+  await expect(page.getByRole('radio', { name: /card/i })).toHaveCount(0);
+  await page.getByLabel('Full name').fill('Anu Menon');
+  await page.getByLabel('Email').fill('anu@example.test');
+  await page.getByLabel('Mobile number').fill('+91 98470 12345');
+  await page.getByLabel('City').fill('Kochi');
+  await page.getByLabel(/Complete address/).fill('MG Road, Ernakulam');
+  await page.getByRole('radio', { name: /pay after confirmation/i }).check();
+  await page.getByRole('checkbox').check();
+  await page.getByTestId('place-order').click();
+  await expect(page).toHaveURL(/\/order\/PM\d+\?token=/);
+  await expect(page.getByText('send you the UPI / Google Pay / bank details')).toBeVisible();
+  await expect(page.getByTestId('order-total')).toContainText('5,211');
+  const number = (await page.getByTestId('order-number').textContent()).trim();
+  await noOverflow(page);
+
+  // A normal product after an India bag asks to start a new bag
+  await page.goto('/shop-fixnote/india');
+  await addBtn(page, 'F04 Afternoon Swim').click();
   await page.goto('/shop-fixnote/uae');
-  await page.getByLabel('Select F02 Ombre Nomade').check();
-  await page.goto('/checkout');
-  await page.locator('select[name="country"]').selectOption('IN');
-  await expect(page.locator('.pc-summary')).toContainText('taken on WhatsApp');
-  await expect(page.getByTestId('place-order')).toBeDisabled();
+  await addBtn(page, 'F04 Afternoon Swim').click();
+  await expect(page.getByTestId('fx-count')).toHaveText('1');
+  await page.getByRole('button', { name: 'CHECKOUT' }).click();
+  await expect(page.locator('.pc-summary').getByTestId('total')).toContainText('AED');
+
+  const admin = await browser.newContext({ storageState: adminState });
+  const ap = await admin.newPage();
+  await ap.goto('/admin/fixnote/orders');
+  await ap.getByRole('link', { name: number }).click();
+  await expect(ap.getByTestId('admin-order-status')).toContainText('Pay after confirmation');
+  await ap.getByTestId('mark-paid').click();
+  await ap.getByRole('button', { name: 'Yes, payment received' }).click();
+  await expect(ap.getByText('Payment marked as received.')).toBeVisible();
+  await expect(ap.getByTestId('admin-order-status')).toContainText('Paid');
+  await admin.close();
 });
 
 test.describe('Fixnote admin', () => {
@@ -125,7 +167,6 @@ test.describe('Fixnote admin', () => {
     await setPrice30('31');
     await visit('/shop-fixnote/uae', async (p) => {
       await expect(p.getByTestId('fx-quick')).toContainText('30 ML31 AED');
-      await p.getByLabel('Select F05 Pacific Chill').check();
       await p.getByLabel('Size for F05 Pacific Chill').selectOption({ label: '30 ML - 31 AED' });
     });
     await setPrice30('29');
@@ -159,7 +200,6 @@ test.describe('Fixnote admin', () => {
     await noOverflow(page);
     await visit('/shop-fixnote/uae', async (p) => {
       await p.getByLabel('Inspired by brand').selectOption('Test House');
-      await p.getByLabel(`Select ${code} Test Oud`).check();
       await expect(card(p, `${code} Test Oud`).locator('.fx-price')).toHaveText('59 AED');
     });
   });
