@@ -509,7 +509,7 @@ jobs:
           env RELEASE_FILE=/tmp/rel2/pmshop.tar.gz SCHEME=http HEALTH_URL=$U/up bash "$A/platform.sh" update 2>&1 | tee /tmp/update.log
           test "$(basename "$(readlink "$A/current")")" = 20260102-000000-ci000002
           ls "$A"/shared/backups/db-*.sql.gz >/dev/null
-          zcat "$A"/shared/backups/db-*.sql.gz | grep -q 'CREATE TABLE `products`'
+          test "$(zcat "$A"/shared/backups/db-*.sql.gz | grep -c 'CREATE TABLE `products`')" -ge 1   # grep -c reads it all (no broken pipe)
           test ! -e "$A/shared/storage/framework/down"
           test "$(code -H "X-Shop-Gate: $KEY" $U/api/products/kausar)" = 200
           env RELEASE_FILE=/tmp/rel2/pmshop.tar.gz SCHEME=http HEALTH_URL=$U/up bash "$A/platform.sh" update | grep -q 'Already on the newest'
