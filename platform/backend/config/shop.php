@@ -11,4 +11,7 @@ return [
     // React app shell (kept outside public/ so the web server cannot serve it around the gate).
     'spa_index' => resource_path('spa/index.html'),
 
+    // Multiplies all rate limits. Leave at 1 on real sites; only the browser tests raise it.
+    'rate_limit_scale' => (int) env('RATE_LIMIT_SCALE', 1),
+
 ];

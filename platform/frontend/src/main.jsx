@@ -1,6 +1,6 @@
 import { StrictMode, Suspense, lazy, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { createBrowserRouter, Route, RouterProvider, Routes, useLocation } from 'react-router-dom';
 import { StoreProvider } from './lib/store';
 import { ToastProvider } from './lib/toast';
 import { CartProvider } from './lib/cart';
@@ -22,7 +22,7 @@ import './styles/app.css';
 const Checkout = lazy(() => import('./pages/Checkout'));
 const Order = lazy(() => import('./pages/Order'));
 const Track = lazy(() => import('./pages/Track'));
-const AdminPlaceholder = lazy(() => import('./pages/AdminPlaceholder'));
+const AdminApp = lazy(() => import('./admin/AdminApp'));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -43,6 +43,7 @@ export function App() {
           <Suspense fallback={loading}>
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/admin/*" element={<AdminApp />} />
               <Route element={<Layout />}>
                 <Route path="/shop" element={<Shop />} />
                 <Route path="/shop-perfumarathi" element={<Shop key="perfumarathi" brand="perfumarathi" />} />
@@ -56,7 +57,6 @@ export function App() {
                 <Route path="/track-order" element={<Track />} />
                 <Route path="/wishlist" element={<Wishlist />} />
                 <Route path="/pages/:key" element={<Page />} />
-                <Route path="/admin/*" element={<AdminPlaceholder />} />
                 <Route path="*" element={<NotFound />} />
               </Route>
             </Routes>
@@ -68,13 +68,14 @@ export function App() {
   );
 }
 
+// Data router (needed for the admin's "unsaved changes" warning); the app keeps its <Routes> tree.
+const router = createBrowserRouter([{ path: '*', element: <App /> }]);
+
 const root = document.getElementById('root');
 if (root) {
   createRoot(root).render(
     <StrictMode>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <RouterProvider router={router} />
     </StrictMode>,
   );
 }

@@ -26,17 +26,21 @@ class ProductController extends Controller
         return $p->load(['brand', 'categories', 'related', 'images', 'variants']);
     }
 
-    /** GET /api/admin/products?search=&brand_id=&category_id=&status=active|hidden|deleted&stock=low|out|in&sort=&page= */
+    /** GET /api/admin/products?ids=1,2&search=&brand_id=&category_id=&status=active|hidden|deleted&stock=low|out|in&sort=&page= */
     public function index(Request $request): JsonResponse
     {
         $v = $request->validate([
             'search' => 'nullable|string|max:100', 'brand_id' => 'nullable|integer', 'category_id' => 'nullable|integer',
             'status' => 'nullable|in:active,hidden,deleted,unpriced', 'stock' => 'nullable|in:low,out,in',
             'sort' => 'nullable|in:name,latest,stock,sales', 'page' => 'nullable|integer|min:1', 'per_page' => 'nullable|integer|min:1|max:100',
+            'ids' => ['nullable', 'string', 'max:2000', 'regex:/^\d+(,\d+)*$/'],
         ]);
         $q = Product::query()->with(['brand', 'categories', 'related', 'images', 'variants']);
         if (($v['status'] ?? null) === 'deleted') {
             $q->onlyTrashed();
+        }
+        if (! empty($v['ids'])) {
+            $q->whereIn('products.id', array_slice(array_map('intval', explode(',', $v['ids'])), 0, 100));
         }
         if (! empty($v['search'])) {
             $t = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $v['search']).'%';
