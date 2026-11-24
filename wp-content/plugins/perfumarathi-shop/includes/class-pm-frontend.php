@@ -123,10 +123,6 @@ class PM_Frontend {
 		ob_start();
 		?>
 		<div class="pm-home">
-			<section class="pm-home__cta" aria-label="Shop by brand">
-				<a class="pm-btn" href="<?php echo esc_url( self::brand_link( 'perfumarathi' ) ); ?>">Shop Perfumarathi</a>
-				<a class="pm-btn pm-btn--ghost" href="<?php echo esc_url( self::brand_link( 'fixnote' ) ); ?>">Shop Fixnote</a>
-			</section>
 			<?php foreach ( $sections as $s ) : ?>
 			<section class="pm-home__section" data-pm-rail='<?php echo esc_attr( wp_json_encode( $s[1] ) ); ?>'>
 				<h2 class="pm-home__title"><?php echo esc_html( $s[0] ); ?></h2>
