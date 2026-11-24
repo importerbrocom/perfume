@@ -423,8 +423,11 @@ jobs:
           $_SERVER['SCRIPT_NAME'] = '/index.php'; $_SERVER['SCRIPT_FILENAME'] = $root . '/index.php'; chdir($root);
           require $root . '/index.php';
           PHP
-          (php -S 127.0.0.1:8092 -t "$HOME/perfume.nokkoo.in" /tmp/shop-router.php >/tmp/shop-server.log 2>&1 &)
-          echo "PM_ENV=RELEASE_FILE=/tmp/rel1/pmshop.tar.gz SCHEME=http HEALTH_URL=http://127.0.0.1:8092/up STATEFUL=127.0.0.1:8092 SKIP_BRAND_MEDIA=1" >> "$GITHUB_ENV"
+          (php -S 127.0.0.1:8195 -t "$HOME/perfume.nokkoo.in" /tmp/shop-router.php >/tmp/shop-server.log 2>&1 &)
+          sleep 1; if grep -q "Failed to listen" /tmp/shop-server.log; then cat /tmp/shop-server.log; exit 1; fi
+          # The router must be the one answering (dotfiles blocked like the shop's .htaccess)
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8195/.probe)" = 403
+          echo "PM_ENV=RELEASE_FILE=/tmp/rel1/pmshop.tar.gz SCHEME=http HEALTH_URL=http://127.0.0.1:8195/up STATEFUL=127.0.0.1:8195 SKIP_BRAND_MEDIA=1" >> "$GITHUB_ENV"
       - name: Shop installer refuses a wrong password and the WordPress database, changing nothing
         run: |
           trap 'echo "::error::check failed (line $LINENO): $BASH_COMMAND"' ERR
@@ -449,7 +452,7 @@ jobs:
         run: |
           trap 'echo "::error::check failed (line $LINENO): $BASH_COMMAND"' ERR
           set -o pipefail
-          D="$HOME/perfume.nokkoo.in"; A="$HOME/pmshop"; U=http://127.0.0.1:8092
+          D="$HOME/perfume.nokkoo.in"; A="$HOME/pmshop"; U=http://127.0.0.1:8195
           # Web folder: only the shop's public files + the cPanel files; WordPress moved to a backup
           test ! -e "$D/wp-config.php" && test ! -e "$D/.env"
           for f in index.php .htaccess assets favicon.ico .well-known php.ini .user.ini; do test -e "$D/$f"; done
@@ -498,7 +501,7 @@ jobs:
         run: |
           trap 'echo "::error::check failed (line $LINENO): $BASH_COMMAND"' ERR
           set -o pipefail
-          A="$HOME/pmshop"; U=http://127.0.0.1:8092
+          A="$HOME/pmshop"; U=http://127.0.0.1:8195
           code() { curl -s -o /dev/null -w '%{http_code}' "$@"; }
           env RELEASE_FILE=/tmp/rel2/pmshop.tar.gz SCHEME=http HEALTH_URL=$U/up bash "$A/platform.sh" update 2>&1 | tee /tmp/update.log
           test "$(basename "$(readlink "$A/current")")" = 20260102-000000-ci000002
@@ -526,7 +529,7 @@ jobs:
       - name: Put WordPress back, then switch to the shop again
         run: |
           trap 'echo "::error::check failed (line $LINENO): $BASH_COMMAND"' ERR
-          D="$HOME/perfume.nokkoo.in"; A="$HOME/pmshop"; U=http://127.0.0.1:8092
+          D="$HOME/perfume.nokkoo.in"; A="$HOME/pmshop"; U=http://127.0.0.1:8195
           printf 'y\n' | bash "$A/platform.sh" restore-wordpress
           test -f "$D/wp-config.php" && test ! -e "$D/assets"
           php "$HOME/.wp-cli/pm-staging-wp-cli.phar" --path="$D" option get siteurl | grep -q perfume.nokkoo.in
