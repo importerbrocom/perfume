@@ -2,6 +2,8 @@
 
 namespace Tests;
 
+use App\Models\Brand;
+use App\Models\Category;
 use App\Models\PaymentMethod;
 use App\Models\Product;
 use App\Models\ProductVariant;
@@ -36,10 +38,21 @@ abstract class TestCase extends BaseTestCase
 
     protected function product(array $attrs = [], array $variant = []): Product
     {
-        $p = Product::create($attrs + ['name' => 'Kausar', 'slug' => 'kausar-'.uniqid(), 'is_active' => true, 'brand_id' => 1]);
+        $p = Product::create($attrs + ['name' => 'Kausar', 'slug' => 'kausar-'.uniqid(), 'is_active' => true, 'brand_id' => $this->brandId()]);
         $p->variants()->create($variant + ['name' => '100 ml', 'price' => 150, 'track_stock' => true, 'stock_quantity' => 5]);
 
         return $p->load('variants');
+    }
+
+    /** Ids differ between SQLite and MySQL test runs (auto-increment is not reset), so look rows up by slug. */
+    protected function brandId(string $slug = 'perfumarathi'): int
+    {
+        return (int) Brand::query()->where('slug', $slug)->value('id');
+    }
+
+    protected function categoryId(string $slug): int
+    {
+        return (int) Category::query()->where('slug', $slug)->value('id');
     }
 
     protected function variant(Product $p): ProductVariant

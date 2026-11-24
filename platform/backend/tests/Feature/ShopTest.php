@@ -25,7 +25,7 @@ class ShopTest extends TestCase
     public function test_store_never_exposes_secrets(): void
     {
         $this->enableCards();
-        $body = $this->getJson('/api/store')->getContent().$this->postJson('/api/cart/quote', ['items' => [['variant_id' => 1, 'quantity' => 1]]])->getContent();
+        $body = $this->getJson('/api/store')->getContent().$this->postJson('/api/cart/quote', ['items' => [['variant_id' => $this->variant($this->product())->id, 'quantity' => 1]]])->getContent();
         $this->assertStringNotContainsString('sk_test_abc', $body);
         $this->assertStringNotContainsString('whsec_', $body);
         $this->assertStringNotContainsString('credentials', $body);

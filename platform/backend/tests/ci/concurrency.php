@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Brand;
 use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Contracts\Console\Kernel;
@@ -14,7 +15,7 @@ $app = require __DIR__.'/../../bootstrap/app.php';
 $app->make(Kernel::class)->bootstrap();
 
 $base = rtrim($argv[1] ?? 'http://127.0.0.1:8099', '/');
-$p = Product::create(['name' => 'Race Test', 'slug' => 'race-'.uniqid(), 'is_active' => true, 'brand_id' => 1]);
+$p = Product::create(['name' => 'Race Test', 'slug' => 'race-'.uniqid(), 'is_active' => true, 'brand_id' => Brand::query()->value('id')]);
 $v = $p->variants()->create(['name' => '100 ml', 'price' => 100, 'track_stock' => true, 'stock_quantity' => 3]);
 
 $mh = curl_multi_init();

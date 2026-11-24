@@ -54,9 +54,9 @@ class AdminTest extends TestCase
     {
         $this->actingAs($this->admin(), 'sanctum');
         $data = [
-            'name' => 'Oud Al Rizq', 'brand_id' => 1, 'tagline' => 'A Fragrance of Blessings',
+            'name' => 'Oud Al Rizq', 'brand_id' => $this->brandId(), 'tagline' => 'A Fragrance of Blessings',
             'notes_top' => 'Saffron, Turkish Rose', 'notes_base' => 'Amber, Vanilla', 'gender' => 'unisex',
-            'perfume_type' => 'Pure Parfume', 'concentration' => '25%', 'is_featured' => true, 'category_ids' => [4],
+            'perfume_type' => 'Pure Parfume', 'concentration' => '25%', 'is_featured' => true, 'category_ids' => [$this->categoryId('oud-collection')],
             'variants' => [
                 ['name' => '50 ml', 'price' => 120, 'stock_quantity' => 10],
                 ['name' => '100 ml', 'price' => 200, 'sale_price' => 180, 'stock_quantity' => 4, 'sku' => 'OAR-100'],
