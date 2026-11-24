@@ -513,7 +513,9 @@ jobs:
           printf 'y\n' | env SCHEME=http HEALTH_URL=$U/up bash "$A/platform.sh" rollback
           test "$(basename "$(readlink "$A/current")")" = 20260101-000000-ci000001
           test "$(code -H "X-Shop-Gate: $KEY" $U/api/products/kausar)" = 200
+          rm -f "$HOME/.lsphp_restart.txt"
           bash "$A/platform.sh" open
+          test -f "$HOME/.lsphp_restart.txt"                         # LiteSpeed is told to restart PHP
           test "$(code $U/)" = 200
           bash "$A/platform.sh" lock | tee /tmp/lock.log
           test "$(code $U/)" = 401

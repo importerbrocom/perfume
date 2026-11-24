@@ -31,7 +31,14 @@ export async function api(path, { method = 'GET', body, signal } = {}) {
   }
   const data = res.status === 204 ? null : await res.json().catch(() => null);
   if (!res.ok) {
-    if (res.status === 401 && data?.gate) window.location.reload(); // preview key expired
+    if (res.status === 401 && data?.gate) {
+      // Preview lock (key expired or the shop was locked again): reload once to show the key page, never in a loop.
+      const last = Number(sessionStorage.getItem('pm_gate_reload')) || 0;
+      if (Date.now() - last > 30000) {
+        sessionStorage.setItem('pm_gate_reload', String(Date.now()));
+        window.location.reload();
+      }
+    }
     const errors = data?.errors || {};
     const first = Object.values(errors)[0];
     const message = (Array.isArray(first) ? first[0] : first) || data?.message || 'Something went wrong. Please try again.';

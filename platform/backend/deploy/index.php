@@ -17,6 +17,15 @@ $link = '__PM_APP_DIR__';
 $target = is_link($link) ? readlink($link) : false;
 $app_dir = $target === false ? $link : ($target[0] === '/' ? $target : dirname($link).'/'.$target);
 
+// platform.sh (open, lock, mail, update) rewrites the cached settings in bootstrap/cache/. Some hosts keep
+// old copies of PHP files in OPcache for a long time, so PHP processes would disagree (e.g. the shop is
+// public in one and locked in the next). Drop a cached copy as soon as the file on disk is newer.
+if (function_exists('opcache_invalidate')) {
+    foreach (['config', 'routes-v7', 'events', 'services', 'packages'] as $cached) {
+        @opcache_invalidate($app_dir.'/bootstrap/cache/'.$cached.'.php', false);
+    }
+}
+
 if (file_exists($maintenance = $app_dir.'/storage/framework/maintenance.php')) {
     require $maintenance;
 }
