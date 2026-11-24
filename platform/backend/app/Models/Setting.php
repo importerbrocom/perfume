@@ -61,6 +61,22 @@ class Setting extends Model
         'fixnote_foot' => 'Inspired Fragrance Collection',
         'presence_text' => 'UAE · GCC · Kerala · India · International',
         'trust_line' => '12–24H LASTING  •  HIGH PROJECTION  •  TRUSTED SINCE 2015',
+        // Fixnote page (/shop-fixnote), edited in Admin > Fixnote page. See App\Services\Fixnote.
+        'fixnote_prices' => [
+            '30 ML' => ['price' => 29, 'sale_price' => null],
+            '50 ML' => ['price' => 39, 'sale_price' => null],
+            '100 ML' => ['price' => 59, 'sale_price' => null],
+        ],
+        'fixnote_delivery' => ['enabled' => true, 'countries' => ['AE'], 'fees' => ['30 ML' => 14, '50 ML' => 9, '100 ML' => 4], 'free_from_pieces' => 5],
+        'fixnote_regions' => [
+            'INDIA' => ['currency' => 'INR', 'prices' => ['30 ML' => 1199, '50 ML' => 1499, '100 ML' => 1999]],
+            'SAUDI' => ['currency' => 'SAR', 'prices' => ['30 ML' => 29, '50 ML' => 39, '100 ML' => 59]],
+        ],
+        'fixnote_page' => null,
+        'fixnote_page_logo_path' => null,
+        'fixnote_shop_logo_path' => null,
+        'fixnote_hero_path' => null,
+        'fixnote_bottle_path' => null,
     ];
 
     /** Homepage media used when nothing has been uploaded (files from the original brand page). */

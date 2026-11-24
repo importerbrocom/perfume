@@ -81,11 +81,15 @@ test.describe('as admin', () => {
     await expect(page.getByText('All changes saved')).toBeVisible();
     await noOverflow(page);
 
-    await page.goto('/shop-fixnote');
-    const card = page.getByTestId('product-card').filter({ hasText: name });
+    await page.goto('/shop-fixnote/uae');
+    await page.getByLabel('Search perfumes').fill(name);
+    const card = page.locator('.fx-card').filter({ hasText: name });
     await expect(card).toHaveCount(1);
-    await expect(card).toContainText('70.00');
-    await expect(card).toContainText('99.00');
+    await card.getByRole('checkbox').check();
+    await expect(card.locator('.fx-price')).toContainText('99 AED'); // 100 ml first, on sale
+    await expect(card.locator('.fx-price del')).toHaveText('110 AED');
+    await card.getByRole('combobox').selectOption({ label: '50 ml - 70 AED' });
+    await expect(card.locator('.fx-price')).toHaveText('70 AED');
   });
 
   test('Stock & Prices: change a price and stock, the shop shows it', async ({ page }) => {
@@ -168,7 +172,7 @@ test.describe('as admin', () => {
     await page.locator('.pc-summary').getByRole('textbox').fill(code.toLowerCase());
     await page.locator('.pc-summary').getByRole('button', { name: /apply/i }).click();
     await expect(page.locator('.pc-summary')).toContainText('Discount');
-    await expect(page.locator('.pc-summary').getByTestId('total')).toContainText('54.00');
+    await expect(page.locator('.pc-summary').getByTestId('total')).toContainText('63.00'); // 60 − 10% + 9 Fixnote UAE delivery (50 ml)
   });
 
   test('store settings and payment method changes reach the shop', async ({ page, request }, info) => {

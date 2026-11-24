@@ -14,8 +14,8 @@ test('homepage shows exactly one SHOP button per brand', async ({ page }) => {
   await expectNoHorizontalOverflow(page);
   await page.getByRole('link', { name: 'Shop Fixnote' }).click();
   await expect(page).toHaveURL(/\/shop-fixnote$/);
-  await expect(page.getByTestId('product-card').filter({ hasText: 'Fixnote Aqua' })).toHaveCount(1);
-  await expect(page.getByTestId('product-card').filter({ hasNotText: 'Fixnote' })).toHaveCount(0); // brand shop: only Fixnote
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Signature Scent.'); // the Fixnote page
+  await expect(page.getByTestId('fx-region-uae')).toBeVisible();
 });
 
 test('brand shop lists only that brand and search filters it', async ({ page }) => {

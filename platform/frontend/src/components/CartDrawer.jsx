@@ -10,9 +10,11 @@ export function CartLines({ quote }) {
   const { setQty, remove, items } = useCart();
   const { currency } = useStore();
   const lines = quote?.lines?.length ? quote.lines : items.map((i) => ({ variant_id: i.variant_id, product_name: i.snap?.name || 'Item', variant_name: i.snap?.variant, image: i.snap?.image, quantity: i.quantity, line_total: null, product_slug: i.snap?.slug }));
+  // Products without a photo (e.g. Fixnote) show the picture saved when they were added.
+  const image = (l) => l.image || items.find((i) => i.variant_id === l.variant_id)?.snap?.image;
   return lines.map((l) => (
     <div className="pm-line" key={l.variant_id} data-testid="cart-line">
-      {l.image ? <img src={l.image} alt="" loading="lazy" /> : <span className="pm-line__ph" />}
+      {image(l) ? <img src={image(l)} alt="" loading="lazy" /> : <span className="pm-line__ph" />}
       <div className="pm-line__info">
         <strong>{l.product_slug ? <Link to={`/product/${l.product_slug}`}>{l.product_name}</Link> : l.product_name}</strong>
         {l.variant_name && l.variant_name !== 'Standard' && <small>{l.variant_name}</small>}

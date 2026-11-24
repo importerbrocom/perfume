@@ -30,7 +30,7 @@ class ProductController extends Controller
     public function index(Request $request): JsonResponse
     {
         $v = $request->validate([
-            'search' => 'nullable|string|max:100', 'brand_id' => 'nullable|integer', 'category_id' => 'nullable|integer',
+            'search' => 'nullable|string|max:100', 'brand_id' => 'nullable|integer', 'brand' => 'nullable|string|max:100', 'category_id' => 'nullable|integer',
             'status' => 'nullable|in:active,hidden,deleted,unpriced', 'stock' => 'nullable|in:low,out,in',
             'sort' => 'nullable|in:name,latest,stock,sales', 'page' => 'nullable|integer|min:1', 'per_page' => 'nullable|integer|min:1|max:100',
             'ids' => ['nullable', 'string', 'max:2000', 'regex:/^\d+(,\d+)*$/'],
@@ -44,9 +44,10 @@ class ProductController extends Controller
         }
         if (! empty($v['search'])) {
             $t = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $v['search']).'%';
-            $q->where(fn ($w) => $w->where('name', 'like', $t)->orWhere('sku', 'like', $t)->orWhereHas('variants', fn ($x) => $x->where('sku', 'like', $t)));
+            $q->where(fn ($w) => $w->where('name', 'like', $t)->orWhere('sku', 'like', $t)->orWhere('inspired_by', 'like', $t)->orWhereHas('variants', fn ($x) => $x->where('sku', 'like', $t)));
         }
         $q->when($v['brand_id'] ?? null, fn ($q, $id) => $q->where('brand_id', $id))
+            ->when($v['brand'] ?? null, fn ($q, $slug) => $q->whereHas('brand', fn ($b) => $b->where('slug', $slug)))
             ->when($v['category_id'] ?? null, fn ($q, $id) => $q->whereHas('categories', fn ($c) => $c->whereKey($id)));
         match ($v['status'] ?? null) {
             'active' => $q->where('is_active', true),
@@ -88,6 +89,7 @@ class ProductController extends Controller
             'sku' => ['nullable', 'string', 'max:64', Rule::unique('products', 'sku')->ignore($p?->id)],
             'brand_id' => 'nullable|integer|exists:brands,id',
             'tagline' => 'nullable|string|max:200',
+            'inspired_by' => 'nullable|string|max:100',
             'short_description' => 'nullable|string|max:2000',
             'description' => 'nullable|string|max:20000',
             'notes_top' => 'nullable|string|max:500', 'notes_middle' => 'nullable|string|max:500', 'notes_base' => 'nullable|string|max:500',

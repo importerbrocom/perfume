@@ -194,6 +194,7 @@ export default function Product() {
           {p.brand && <span className="pm-card__brand">{p.brand.name}</span>}
           <h1 className="pp-title">{p.name}</h1>
           {p.tagline && <p className="pmc-single-tag">{p.tagline}</p>}
+          {p.inspired_by && <p className="pmc-single-tag" data-testid="inspired-by">Inspired by {p.inspired_by}</p>}
           {p.reviews > 0 && <p className="pp-rating"><Stars rating={p.rating} /> <a href="#reviews">{p.reviews} review{p.reviews === 1 ? '' : 's'}</a></p>}
 
           <div className="pp-price" aria-live="polite">

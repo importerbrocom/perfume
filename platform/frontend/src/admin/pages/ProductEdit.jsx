@@ -7,7 +7,7 @@ import ProductPicker from '../ProductPicker';
 
 const blankVariant = () => ({ id: null, name: '', sku: '', price: null, sale_price: null, track_stock: true, stock_quantity: 0, stock_status: 'in_stock', low_stock_threshold: null, is_active: true, _key: Math.random() });
 const blank = {
-  name: '', slug: '', sku: '', brand_id: null, tagline: '', short_description: '', description: '', notes_top: '', notes_middle: '', notes_base: '',
+  name: '', slug: '', sku: '', brand_id: null, tagline: '', inspired_by: '', short_description: '', description: '', notes_top: '', notes_middle: '', notes_base: '',
   accords: '', fragrance_family: '', perfume_type: '', concentration: '', gender: null, traits: '', longevity: '', is_active: true, is_featured: false,
   is_new_arrival: false, is_best_seller: false, is_combo: false, sort_order: 0, meta_title: '', meta_description: '', category_ids: [], related_ids: [],
   variants: [{ ...blankVariant(), name: '100 ml' }],
@@ -229,6 +229,7 @@ export default function ProductEdit() {
             <div className="ad-form">
               <Text label="Name" required wide value={form.name} onChange={set('name')} maxLength={200} error={errors.name} />
               <Text label="Tagline" wide value={form.tagline} onChange={set('tagline')} maxLength={200} placeholder="Long-lasting eau de parfum" error={errors.tagline} />
+              <Text label="Inspired by" value={form.inspired_by} onChange={set('inspired_by')} maxLength={100} placeholder="Dior, Chanel…" error={errors.inspired_by} help="Fixnote perfumes are grouped by this on the Fixnote page." />
               <Area label="Short description" rows={2} value={form.short_description} onChange={set('short_description')} maxLength={2000} error={errors.short_description} help="Shown next to the price." />
               <Area label="Full description" rows={6} value={form.description} onChange={set('description')} maxLength={20000} error={errors.description} help="Plain text or simple HTML (paragraphs, bold, lists, links)." />
             </div>
@@ -242,7 +243,7 @@ export default function ProductEdit() {
               <Text label="Top notes" value={form.notes_top} onChange={set('notes_top')} maxLength={500} />
               <Text label="Heart notes" value={form.notes_middle} onChange={set('notes_middle')} maxLength={500} />
               <Text label="Base notes" value={form.notes_base} onChange={set('notes_base')} maxLength={500} />
-              <Text label="Main accords" value={form.accords} onChange={set('accords')} maxLength={500} />
+              <Text label="Main accords" value={form.accords} onChange={set('accords')} maxLength={500} help="Fixnote page: the notes shown on the perfume card." />
               <Text label="Fragrance family" value={form.fragrance_family} onChange={set('fragrance_family')} maxLength={100} placeholder="Woody, Oriental…" />
               <Text label="Concentration" value={form.concentration} onChange={set('concentration')} maxLength={100} placeholder="Eau de Parfum" />
               <Text label="Perfume type" value={form.perfume_type} onChange={set('perfume_type')} maxLength={100} placeholder="Original, Inspired…" />

@@ -48,7 +48,7 @@ class ProductController extends Controller
             $term = '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $v['search']).'%';
             $q->where(fn ($w) => $w->where('name', 'like', $term)->orWhere('tagline', 'like', $term)
                 ->orWhere('notes_top', 'like', $term)->orWhere('notes_middle', 'like', $term)->orWhere('notes_base', 'like', $term)
-                ->orWhere('sku', 'like', $term));
+                ->orWhere('sku', 'like', $term)->orWhere('inspired_by', 'like', $term)->orWhere('accords', 'like', $term));
         }
         match ($v['flag'] ?? null) {
             'featured' => $q->where('is_featured', true),

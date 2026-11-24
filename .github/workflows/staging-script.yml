@@ -477,7 +477,10 @@ jobs:
           test "$(code -H "X-Shop-Gate: $KEY" $U/)" = 200
           curl -s -H "X-Shop-Gate: $KEY" $U/shop-fixnote | grep -q '<div id="root">'
           N=$(curl -s -H "X-Shop-Gate: $KEY" "$U/api/products?per_page=48" | php -r 'echo json_decode(stream_get_contents(STDIN), true)["meta"]["total"];')
-          test "$N" = 15
+          test "$N" = 393                                          # 15 from WordPress + 378 Fixnote perfumes
+          FX=$(curl -s -H "X-Shop-Gate: $KEY" $U/api/fixnote | php -r '$d = json_decode(stream_get_contents(STDIN), true); echo count($d["items"]), " ", $d["items"][0]["code"], " ", $d["items"][0]["variants"][0]["price"];')
+          test "$FX" = "378 F01 29"
+          test "$(code -H "X-Shop-Gate: $KEY" $U/shop-fixnote/uae)" = 200
           IMG=$(curl -s -H "X-Shop-Gate: $KEY" $U/api/products/kausar | php -r '$d = json_decode(stream_get_contents(STDIN), true); echo parse_url($d["product"]["images"][0]["url"] ?? "", PHP_URL_PATH);')
           test -n "$IMG" && test "$(code "$U$IMG")" = 200           # uploaded photos served through the storage link
           ASSET=$(ls "$D/assets" | grep -m1 '^index-.*\.js$'); test "$(code "$U/assets/$ASSET")" = 200
@@ -491,7 +494,7 @@ jobs:
           X=$(awk '$6 == "XSRF-TOKEN" {print $7}' $J | php -r 'echo urldecode(trim(stream_get_contents(STDIN)));')
           curl -s -c $J -b $J -H "X-XSRF-TOKEN: $X" -H "Referer: $U/admin" -H 'Accept: application/json' -H 'Content-Type: application/json' \
             -d "{\"email\":\"owner@example.test\",\"password\":\"$PASS\"}" $U/api/admin/login | grep -q '"role":"admin"'
-          curl -s -c $J -b $J -H "Referer: $U/admin" -H 'Accept: application/json' $U/api/admin/dashboard | php -r '$d = json_decode(stream_get_contents(STDIN), true); exit(($d["products_total"] ?? 0) === 15 ? 0 : 1);'
+          curl -s -c $J -b $J -H "Referer: $U/admin" -H 'Accept: application/json' $U/api/admin/dashboard | php -r '$d = json_decode(stream_get_contents(STDIN), true); exit(($d["products_total"] ?? 0) === 393 ? 0 : 1);'
           crontab -l | grep -q 'pmshop-scheduler'
           (cd "$A/current" && php artisan schedule:run | grep -qi 'running\|no scheduled')
           bash "$A/platform.sh" status | tee /tmp/status.txt; grep -q 'private' /tmp/status.txt
@@ -506,7 +509,7 @@ jobs:
           env RELEASE_FILE=/tmp/rel2/pmshop.tar.gz SCHEME=http HEALTH_URL=$U/up bash "$A/platform.sh" update 2>&1 | tee /tmp/update.log
           test "$(basename "$(readlink "$A/current")")" = 20260102-000000-ci000002
           ls "$A"/shared/backups/db-*.sql.gz >/dev/null
-          zcat "$A"/shared/backups/db-*.sql.gz | grep -q 'CREATE TABLE `products`'
+          test "$(zcat "$A"/shared/backups/db-*.sql.gz | grep -c 'CREATE TABLE `products`')" -ge 1   # grep -c reads it all (no broken pipe)
           test ! -e "$A/shared/storage/framework/down"
           test "$(code -H "X-Shop-Gate: $KEY" $U/api/products/kausar)" = 200
           env RELEASE_FILE=/tmp/rel2/pmshop.tar.gz SCHEME=http HEALTH_URL=$U/up bash "$A/platform.sh" update | grep -q 'Already on the newest'

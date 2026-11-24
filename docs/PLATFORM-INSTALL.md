@@ -83,6 +83,20 @@ Then:
 
 Prices, stock, products, orders and settings are all managed in `/admin`. No commands are needed for those.
 
+## Fixnote page
+
+SHOP FIXNOTE opens `/shop-fixnote`, built from `FIXNOT_formatted.html`. Customers choose a region:
+
+- **UAE** and **Other GCC**: tick perfumes, pick 30 / 50 / 100 ML, then Checkout (COD or card) or send the list on WhatsApp. UAE delivery for Fixnote: 14 / 9 / 4 AED by size (the highest size in the order), free from 5 pieces.
+- **India** and **Saudi**: their own prices (INR / SAR); the selection is sent on WhatsApp. Checkout refuses Fixnote items for India and Saudi Arabia.
+
+The 378 perfumes (F01…) come from `platform/backend/database/data/fixnote-catalogue.json`. `update` adds them once; perfumes already in the shop (same code) or deleted in admin are not touched. To add missing ones again: `cd ~/pmshop/current && php artisan shop:import-fixnote`.
+
+Admin › **Fixnote**:
+- **Fixnote page**: one price per size for every perfume (only sizes you change are updated), UAE delivery, India / Saudi prices, page texts, offer banners, pictures.
+- **Fixnote perfumes**: the Fixnote products (search by code, name or inspired-by brand), add a perfume with the three sizes.
+- **Fixnote orders**: orders with at least one Fixnote perfume.
+
 ## Apple Pay
 
 Stripe > Settings > Payment methods > Apple Pay > Add domain `perfume.nokkoo.in`. Download the file Stripe gives you, paste its contents into Admin > Store settings > Orders & stock > *Apple Pay domain association file*, save, then press *Verify* in Stripe. Google Pay needs no setup.

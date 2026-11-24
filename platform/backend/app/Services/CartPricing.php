@@ -31,6 +31,11 @@ class CartPricing
         $variants = $lockedVariants ?? ProductVariant::query()->whereIn('id', array_keys($quantities))
             ->with(['product.images', 'product.brand'])->get()->keyBy('id')->all();
 
+        $country = $country ? strtoupper($country) : null;
+        $fixnoteBlocked = Fixnote::blockedFor($country);
+        $fixnotePieces = []; // size => quantity, Fixnote items that can be ordered
+        $otherItems = false;
+
         $lines = [];
         $issues = [];
         $subtotal = 0.0;
@@ -51,9 +56,19 @@ class CartPricing
             } elseif ($available !== null && $qty > $available) {
                 $problem = "Only $available left in stock.";
             }
+            $isFixnote = Fixnote::isFixnote($v);
+            if (! $problem && $isFixnote && $fixnoteBlocked) {
+                $problem = $fixnoteBlocked;
+            }
             $line = round(($price ?? 0) * $qty, 2);
             if (! $problem) {
                 $subtotal += $line;
+                if ($isFixnote) {
+                    $size = Fixnote::sizeKey($v->name) ?? $v->name;
+                    $fixnotePieces[$size] = ($fixnotePieces[$size] ?? 0) + $qty;
+                } else {
+                    $otherItems = true;
+                }
             } else {
                 $issues[] = ['variant_id' => $id, 'message' => $problem];
             }
@@ -92,13 +107,18 @@ class CartPricing
         }
 
         // Shipping
-        $country = $country ? strtoupper($country) : null;
         $allowed = (array) Setting::get('shipping_countries', []);
         $shipsHere = ! $country || empty($allowed) || in_array($country, $allowed, true);
         $flat = (float) Setting::get('shipping_flat_rate', 0);
         $freeOver = Setting::get('free_shipping_over');
         $afterDiscount = max(0, $subtotal - $discount);
         $shipping = ($freeOver !== null && $freeOver !== '' && $afterDiscount >= (float) $freeOver) ? 0.0 : $flat;
+        // Fixnote delivery rule (UAE: a charge by size, free from 5 pieces). With other products in the
+        // cart the higher of the two charges applies, so one parcel is never charged twice.
+        $fixnoteDelivery = app(Fixnote::class)->deliveryFor($fixnotePieces, $country);
+        if ($fixnoteDelivery) {
+            $shipping = $otherItems ? max($shipping, $fixnoteDelivery['fee']) : $fixnoteDelivery['fee'];
+        }
         if ($subtotal <= 0) {
             $shipping = 0.0;
         }
@@ -121,6 +141,7 @@ class CartPricing
             'discount' => $discount,
             'ships_to_country' => $shipsHere,
             'shipping' => round($shipping, 2),
+            'fixnote_delivery' => $fixnoteDelivery,
             'payment_fee' => round($fee, 2),
             'total' => round($base + $fee, 2),
             'payment_methods' => $available->map(fn ($m) => [
