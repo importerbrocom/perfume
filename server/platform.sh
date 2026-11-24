@@ -311,16 +311,29 @@ Not overwriting anything.";;
     wp_db=$("$PHP_BIN" -r 'preg_match("/define\(\s*.DB_NAME.\s*,\s*.([^\x27\"]+)./", file_get_contents($argv[1]), $m); echo $m[1] ?? "";' "$DOCROOT/wp-config.php")
     [ "$wp_db" != "$db_name" ] || die "$db_name is the WordPress staging database. Use the new empty database (uddjzwrz_perfumarathi1)."
   fi
-  local rc=0
-  PM_N="$db_name" PM_U="$db_user" PM_P="$db_pass" "$PHP_BIN" -r '
-    try { $pdo = new PDO("mysql:host=localhost;dbname=" . getenv("PM_N") . ";charset=utf8mb4", getenv("PM_U"), getenv("PM_P"), [PDO::ATTR_TIMEOUT => 10]); }
-    catch (Throwable $e) { exit(3); }
-    exit(count($pdo->query("SHOW TABLES")->fetchAll()) > 0 ? 4 : 0);' || rc=$?
+  # Tries the database socket (localhost) and then TCP (127.0.0.1); prints the one that works.
+  # PDO error messages name the user and host but never contain the password.
+  local rc=0 db_host
+  db_host=$(PM_N="$db_name" PM_U="$db_user" PM_P="$db_pass" "$PHP_BIN" -r '
+    foreach (["localhost", "127.0.0.1"] as $h) {
+      try { $pdo = new PDO("mysql:host=$h;dbname=" . getenv("PM_N") . ";charset=utf8mb4", getenv("PM_U"), getenv("PM_P"), [PDO::ATTR_TIMEOUT => 10]); }
+      catch (Throwable $e) { fwrite(STDERR, "    $h: " . $e->getMessage() . "\n"); continue; }
+      if (count($pdo->query("SHOW TABLES")->fetchAll()) > 0) exit(4);
+      echo $h; exit(0);
+    }
+    exit(3);') || rc=$?
   [ "$rc" -lt 128 ] || killed "$rc" "php (database check)"
-  [ "$rc" -ne 3 ] || die "Could not log in to $db_name as $db_user. Check the password and that the user is added to the database with ALL PRIVILEGES (cPanel > MySQL Databases)."
+  if [ "$rc" -eq 3 ]; then
+    die "Could not log in to $db_name as $db_user (the reason is shown above).
+  'Access denied': the password is wrong, or the user is not added to the database
+     (cPanel > MySQL Databases > Add User To Database > ALL PRIVILEGES). You can set a new password there.
+  'Unknown database': check the database name in cPanel > MySQL Databases.
+  'No such file' / 'Connection refused': send Kiro the lines above.
+Nothing was changed; run the install again."
+  fi
   [ "$rc" -ne 4 ] || die "Database $db_name is not empty. The installer only uses an empty database."
-  [ "$rc" -eq 0 ] || die "Database check failed (exit $rc)."
-  echo "    connected to $db_name (empty)"
+  [ "$rc" -eq 0 ] && [ -n "$db_host" ] || die "Database check failed (exit $rc)."
+  echo "    connected to $db_name on $db_host (empty)"
 
   # Export first: if WordPress cannot be read, nothing has been written yet.
   local exp=""
@@ -349,7 +362,7 @@ Not overwriting anything.";;
   env_set APP_NAME Perfumarathi APP_ENV production APP_DEBUG false APP_URL "$SCHEME://$DOMAIN" APP_KEY "" \
     APP_LOCALE en APP_FALLBACK_LOCALE en APP_MAINTENANCE_DRIVER file BCRYPT_ROUNDS 12 \
     LOG_CHANNEL daily LOG_LEVEL warning LOG_DAILY_DAYS 14 \
-    DB_CONNECTION mysql DB_HOST localhost DB_PORT 3306 DB_DATABASE "$db_name" DB_USERNAME "$db_user" DB_PASSWORD "$db_pass" \
+    DB_CONNECTION mysql DB_HOST "$db_host" DB_PORT 3306 DB_DATABASE "$db_name" DB_USERNAME "$db_user" DB_PASSWORD "$db_pass" \
     SESSION_DRIVER database SESSION_LIFETIME 480 SESSION_ENCRYPT false SESSION_PATH / SESSION_SECURE_COOKIE "$([ "$SCHEME" = https ] && echo true || echo false)" SESSION_SAME_SITE lax \
     SANCTUM_STATEFUL_DOMAINS "$STATEFUL" CACHE_STORE file QUEUE_CONNECTION sync FILESYSTEM_DISK local BROADCAST_CONNECTION log \
     SHOP_GATE_KEY "$gate" PAYMENTS_ALLOW_LIVE false \
