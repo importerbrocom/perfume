@@ -42,8 +42,9 @@ $counts = array_count_values($codes);
 $stock = $v->fresh()->stock_quantity;
 $orders = OrderItem::query()->where('variant_id', $v->id)->sum('quantity');
 echo 'Responses: '.json_encode($counts).", stock left: $stock, units ordered: $orders\n";
-if (($counts[201] ?? 0) !== 3 || $stock !== 0 || (int) $orders !== 3) {
-    fwrite(STDERR, "FAIL: oversold or lost orders\n");
+$errors = array_sum(array_filter($counts, fn ($n, $code) => $code >= 500, ARRAY_FILTER_USE_BOTH));
+if (($counts[201] ?? 0) !== 3 || $stock !== 0 || (int) $orders !== 3 || $errors > 0) {
+    fwrite(STDERR, "FAIL: oversold, lost orders or server errors\n");
     foreach ($handles as $ch) {
         if (! in_array(curl_getinfo($ch, CURLINFO_RESPONSE_CODE), [201, 422], true)) {
             fwrite(STDERR, substr((string) curl_multi_getcontent($ch), 0, 300)."\n");

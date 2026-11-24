@@ -67,9 +67,10 @@ jobs:
         if: matrix.db != 'sqlite'
         run: |
           php artisan migrate:fresh --seed --force
-          PHP_CLI_SERVER_WORKERS=8 php -S 127.0.0.1:8099 -t public vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php > /tmp/server.log 2>&1 &
+          # Laravel's router file serves from the current folder, so start it inside public/ (8 parallel PHP workers).
+          (cd public && PHP_CLI_SERVER_WORKERS=8 php -S 127.0.0.1:8099 ../vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php > /tmp/server.log 2>&1 &)
           sleep 2
-          php tests/ci/concurrency.php http://127.0.0.1:8099
+          php tests/ci/concurrency.php http://127.0.0.1:8099 || { tail -50 storage/logs/laravel.log 2>/dev/null; exit 1; }
       - name: Code style (Pint)
         if: matrix.db == 'sqlite'
         run: vendor/bin/pint --test
