@@ -427,6 +427,7 @@ jobs:
           echo "PM_ENV=RELEASE_FILE=/tmp/rel1/pmshop.tar.gz SCHEME=http HEALTH_URL=http://127.0.0.1:8092/up STATEFUL=127.0.0.1:8092 SKIP_BRAND_MEDIA=1" >> "$GITHUB_ENV"
       - name: Shop installer refuses a wrong password and the WordPress database, changing nothing
         run: |
+          trap 'echo "::error::check failed (line $LINENO): $BASH_COMMAND"' ERR
           D="$HOME/perfume.nokkoo.in"
           ls -A "$D" | sort > /tmp/docroot.before
           if printf '\n\nwrong\nme@example.test\nn\n' | env $PM_ENV bash server/platform.sh install; then echo "should refuse"; exit 1; fi
@@ -438,6 +439,7 @@ jobs:
           test "$(cat "$HOME/perfumarathi.com/index.php")" = "LIVE"
       - name: Install the shop over the WordPress staging site
         run: |
+          trap 'echo "::error::check failed (line $LINENO): $BASH_COMMAND"' ERR
           set -o pipefail
           printf '\n\n%s\nowner@example.test\nn\n' "$SHOPP" | (ulimit -v 3000000; env $PM_ENV bash server/platform.sh install 2>&1) | tee /tmp/shop-install.log
           if grep -qF "$SHOPP" /tmp/shop-install.log; then echo "database password printed"; exit 1; fi
@@ -445,6 +447,7 @@ jobs:
           grep -q "15 created" /tmp/shop-install.log
       - name: Verify the installed shop (files, secrets, preview lock, products, photos, admin login)
         run: |
+          trap 'echo "::error::check failed (line $LINENO): $BASH_COMMAND"' ERR
           set -o pipefail
           D="$HOME/perfume.nokkoo.in"; A="$HOME/pmshop"; U=http://127.0.0.1:8092
           # Web folder: only the shop's public files + the cPanel files; WordPress moved to a backup
@@ -492,6 +495,7 @@ jobs:
           if printf '\n\n%s\nx@example.test\nn\n' "$SHOPP" | env $PM_ENV bash server/platform.sh install; then echo "should refuse"; exit 1; fi
       - name: Update to a new release, roll back, open and lock
         run: |
+          trap 'echo "::error::check failed (line $LINENO): $BASH_COMMAND"' ERR
           set -o pipefail
           A="$HOME/pmshop"; U=http://127.0.0.1:8092
           code() { curl -s -o /dev/null -w '%{http_code}' "$@"; }
@@ -512,6 +516,7 @@ jobs:
           test "$(code -H "X-Shop-Gate: $KEY" $U/)" = 401           # old key no longer works
       - name: Order emails (SMTP password with special characters is stored exactly)
         run: |
+          trap 'echo "::error::check failed (line $LINENO): $BASH_COMMAND"' ERR
           A="$HOME/pmshop"
           MP='M@il"pa$s\w'"'"'d'
           printf 'mail.example.test\n587\nshop@example.test\n%s\n\n' "$MP" | bash "$A/platform.sh" mail
@@ -519,6 +524,7 @@ jobs:
             $m = config("mail.mailers.smtp"); exit(config("mail.default") === "smtp" && $m["host"] === "mail.example.test" && (int) $m["port"] === 587 && $m["password"] === getenv("MP") && config("database.connections.mysql.password") === getenv("SHOPP") ? 0 : 1);')
       - name: Put WordPress back, then switch to the shop again
         run: |
+          trap 'echo "::error::check failed (line $LINENO): $BASH_COMMAND"' ERR
           D="$HOME/perfume.nokkoo.in"; A="$HOME/pmshop"; U=http://127.0.0.1:8092
           printf 'y\n' | bash "$A/platform.sh" restore-wordpress
           test -f "$D/wp-config.php" && test ! -e "$D/assets"
