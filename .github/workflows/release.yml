@@ -1,0 +1,47 @@
+name: Platform release (build for cPanel)
+# Builds the shop + Laravel app on GitHub (the cPanel server only unpacks it) and publishes it as a
+# GitHub release. server/platform.sh downloads the newest one and checks its SHA-256 before installing.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['platform/**', 'server/platform.sh', '.github/workflows/release.yml']
+permissions:
+  contents: write   # create the release
+concurrency:
+  group: platform-release
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'   # same as the server (PHP 8.3)
+          extensions: mbstring, pdo_mysql, pdo_sqlite, gd, intl, bcmath, curl, zip
+          tools: composer:v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: platform/frontend/package-lock.json
+      - name: Tests must pass before anything is published
+        run: |
+          (cd platform/backend && composer install --no-interaction --no-progress --prefer-dist -q && cp .env.example .env && php artisan key:generate -q && php artisan test --compact)
+          (cd platform/frontend && npm ci --no-audit --no-fund && npm test)
+      - name: Build release archive
+        run: |
+          rm -rf platform/backend/vendor   # the archive gets its own production-only vendor/
+          bash platform/scripts/package.sh
+          cat dist/pmshop.tar.gz.sha256
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V=$(cat dist/VERSION)
+          TAG="platform-$V"
+          gh release create "$TAG" dist/pmshop.tar.gz dist/pmshop.tar.gz.sha256 \
+            --target "$GITHUB_SHA" --title "Shop release $V" --latest \
+            --notes "Built from ${GITHUB_SHA::8}. Install or update on the server with: bash ~/pmshop/platform.sh update"

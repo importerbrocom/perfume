@@ -4,3 +4,4 @@
 *.wpress
 dev/import/
 dev/wp.log
+/dist/

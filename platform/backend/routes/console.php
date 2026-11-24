@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 use Illuminate\Support\Str;
 
-// cPanel cron (every minute): php ~/pmshop/artisan schedule:run
+// cPanel cron (every minute, added by server/platform.sh): cd ~/pmshop/current && php artisan schedule:run
 Schedule::call(function () {
     $stripe = rescue(fn () => app(StripeGateway::class)->method() ? app(StripeGateway::class) : null, null, false);
     app(OrderService::class)->expireUnpaidCardOrders($stripe);

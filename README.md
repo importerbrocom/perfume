@@ -5,4 +5,4 @@ WordPress + WooCommerce site. See [docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.m
 - `H.HTML` – updated homepage (original: `backup/H.original.HTML`)
 - `wp-content/plugins/perfumarathi-shop/` – storefront/WooCommerce extension plugin
 - `.env.example` – environment configuration
-- `dev/` – Docker staging; `tests/e2e/` – Playwright tests; `docs/` – guides (IMPLEMENTATION, PAYMENTS, DEPLOYMENT)
+- `dev/` – Docker staging; `tests/e2e/` – Playwright tests; `docs/` – guides (IMPLEMENTATION, PAYMENTS, DEPLOYMENT, [PLATFORM-INSTALL](docs/PLATFORM-INSTALL.md) for the React + Laravel shop)

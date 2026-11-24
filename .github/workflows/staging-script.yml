@@ -2,20 +2,22 @@ name: cPanel staging installer
 on:
   workflow_dispatch:
   pull_request:
-    paths: ['server/**','wp-content/**','H.HTML','dev/seed-staging.php','.github/workflows/staging-script.yml']
+    paths: ['server/**','wp-content/**','H.HTML','dev/seed-staging.php','.github/workflows/staging-script.yml','platform/scripts/**','platform/backend/deploy/**','platform/backend/app/Console/**','platform/backend/database/**']
 permissions:
   contents: read
 jobs:
   installer:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 40
     env:
       DBP: ci-Perfume-db-1   # throwaway CI-only password
       BRANCH: ${{ github.head_ref || github.ref_name }}
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
-        with: { php-version: '8.3', extensions: 'mysqli, gd, pdo_sqlite, intl, zip', tools: 'composer:v2' }
+        with: { php-version: '8.3', extensions: 'mysqli, pdo_mysql, gd, pdo_sqlite, intl, zip', tools: 'composer:v2' }
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: npm, cache-dependency-path: platform/frontend/package-lock.json }
       - name: Fake cPanel home (MySQL db + user, empty domain folder, a "live" folder)
         run: |
           sudo systemctl start mysql
@@ -389,3 +391,145 @@ jobs:
           mkdir -p /tmp/notstaging && echo "<?php define( 'DB_PASSWORD', 'x' );" > /tmp/notstaging/wp-config.php
           if printf 'n\n' | DOCROOT=/tmp/notstaging bash server/rotate-staging-secrets.sh; then echo "should refuse"; exit 1; fi
           echo "Rotation verified"
+
+      # ------------------------------------------------------------------------------------------
+      # React + Laravel shop: server/platform.sh on the same fake cPanel home, replacing the
+      # WordPress staging site above (WordPress is moved to a backup, never deleted).
+      # ------------------------------------------------------------------------------------------
+      - name: Shop release archive (built exactly like the GitHub release)
+        run: |
+          VERSION=20260101-000000-ci000001 OUT=/tmp/rel1 bash platform/scripts/package.sh
+          VERSION=20260102-000000-ci000002 OUT=/tmp/rel2 bash platform/scripts/package.sh
+          tar -tzf /tmp/rel1/pmshop.tar.gz | grep -q 'pmshop/deploy/platform.sh'
+          if tar -tzf /tmp/rel1/pmshop.tar.gz | grep -E '(^|/)\.env$|/tests/|\.sqlite$'; then echo "secrets/tests in archive"; exit 1; fi
+      - name: Shop database (password with quotes, $ and a backslash) and a local web server
+        run: |
+          # Throwaway CI-only password; exercises the .env quoting
+          echo 'SHOPP=Ci$hop"pass\9'"'"'x' >> "$GITHUB_ENV"
+          cat > /tmp/mksql.php <<'PHP'
+          <?php
+          $p = getenv('SHOPP'); $lit = "'" . strtr($p, ['\\' => '\\\\', "'" => "\\'"]) . "'";
+          echo "CREATE DATABASE uddjzwrz_perfumarathi1; CREATE USER 'uddjzwrz_perfumarathi1'@'localhost' IDENTIFIED BY $lit; ",
+               "GRANT ALL ON uddjzwrz_perfumarathi1.* TO 'uddjzwrz_perfumarathi1'@'localhost';";
+          PHP
+          SQL=$(SHOPP='Ci$hop"pass\9'"'"'x' php /tmp/mksql.php)
+          sudo mysql -uroot -proot -e "$SQL"
+          # Like LiteSpeed + the shop's .htaccess: real files are served, everything else goes to index.php
+          cat > /tmp/shop-router.php <<'PHP'
+          <?php
+          $root = $_SERVER['DOCUMENT_ROOT']; $path = urldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
+          if (preg_match('~(^|/)\.(?!well-known)~', $path)) { http_response_code(403); exit; }
+          if ($path !== '/' && is_file($root . $path)) { return false; }
+          $_SERVER['SCRIPT_NAME'] = '/index.php'; $_SERVER['SCRIPT_FILENAME'] = $root . '/index.php'; chdir($root);
+          require $root . '/index.php';
+          PHP
+          (php -S 127.0.0.1:8092 -t "$HOME/perfume.nokkoo.in" /tmp/shop-router.php >/tmp/shop-server.log 2>&1 &)
+          echo "PM_ENV=RELEASE_FILE=/tmp/rel1/pmshop.tar.gz SCHEME=http HEALTH_URL=http://127.0.0.1:8092/up STATEFUL=127.0.0.1:8092 SKIP_BRAND_MEDIA=1" >> "$GITHUB_ENV"
+      - name: Shop installer refuses a wrong password and the WordPress database, changing nothing
+        run: |
+          D="$HOME/perfume.nokkoo.in"
+          ls -A "$D" | sort > /tmp/docroot.before
+          if printf '\n\nwrong\nme@example.test\nn\n' | env $PM_ENV bash server/platform.sh install; then echo "should refuse"; exit 1; fi
+          if printf 'uddjzwrz_perfume\nuddjzwrz_perfume\nx\nme@example.test\nn\n' | env $PM_ENV bash server/platform.sh install 2>/tmp/e.log; then echo "should refuse"; exit 1; fi
+          grep -q "WordPress staging database" /tmp/e.log
+          ls -A "$D" | sort | diff - /tmp/docroot.before
+          test ! -e "$HOME/pmshop/current" && test ! -e "$HOME/pmshop/.lock"
+          test -z "$(ls -d "$HOME"/.pmshop-* 2>/dev/null)"   # temp folders cleaned up
+          test "$(cat "$HOME/perfumarathi.com/index.php")" = "LIVE"
+      - name: Install the shop over the WordPress staging site
+        run: |
+          set -o pipefail
+          printf '\n\n%s\nowner@example.test\nn\n' "$SHOPP" | (ulimit -v 3000000; env $PM_ENV bash server/platform.sh install 2>&1) | tee /tmp/shop-install.log
+          if grep -qF "$SHOPP" /tmp/shop-install.log; then echo "database password printed"; exit 1; fi
+          grep -q "SHOP INSTALLED" /tmp/shop-install.log
+          grep -q "15 created" /tmp/shop-install.log
+      - name: Verify the installed shop (files, secrets, preview lock, products, photos, admin login)
+        run: |
+          set -o pipefail
+          D="$HOME/perfume.nokkoo.in"; A="$HOME/pmshop"; U=http://127.0.0.1:8092
+          # Web folder: only the shop's public files + the cPanel files; WordPress moved to a backup
+          test ! -e "$D/wp-config.php" && test ! -e "$D/.env"
+          for f in index.php .htaccess assets favicon.ico .well-known php.ini .user.ini; do test -e "$D/$f"; done
+          test -L "$D/storage" && test "$(readlink "$D/storage")" = "$A/shared/storage/app/public"
+          grep -q "$A/current" "$D/index.php"
+          BK=$(ls -d "$HOME"/pm-wordpress-backup-* | tail -1)
+          test -f "$BK/files/wp-config.php" && test -d "$BK/files/wp-content" && test -s "$BK/wordpress-db.sql.gz"
+          test "$(cat "$HOME/perfumarathi.com/index.php")" = "LIVE" && test "$(ls -A "$HOME/perfumarathi.com")" = "index.php"
+          # Secrets: .env only in the app folder, mode 600, password kept exactly
+          test "$(stat -c %a "$A/shared/.env")" = 600
+          test -z "$(grep -rlF "$SHOPP" "$D" 2>/dev/null)"
+          (cd "$A/current" && php -r 'require "vendor/autoload.php"; $app = require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); exit(config("database.connections.mysql.password") === getenv("SHOPP") ? 0 : 1);')
+          grep -q '^APP_DEBUG=false' "$A/shared/.env" && grep -q '^APP_ENV=production' "$A/shared/.env"
+          KEY=$(grep -oE 'Preview key[^:]*:\s+[0-9a-f]+' /tmp/shop-install.log | awk '{print $NF}')
+          PASS=$(grep -oE 'Password:\s+\S+' /tmp/shop-install.log | awk '{print $NF}')
+          test -n "$KEY" && test -n "$PASS"
+          echo "KEY=$KEY" >> "$GITHUB_ENV"
+          code() { curl -s -o /dev/null -w '%{http_code}' "$@"; }
+          test "$(code $U/up)" = 200
+          test "$(code $U/)" = 401                                  # preview lock
+          test "$(code $U/api/products)" = 401
+          test "$(code -H "X-Shop-Gate: $KEY" $U/)" = 200
+          curl -s -H "X-Shop-Gate: $KEY" $U/shop-fixnote | grep -q '<div id="root">'
+          N=$(curl -s -H "X-Shop-Gate: $KEY" "$U/api/products?per_page=48" | php -r 'echo json_decode(stream_get_contents(STDIN), true)["meta"]["total"];')
+          test "$N" = 15
+          IMG=$(curl -s -H "X-Shop-Gate: $KEY" $U/api/products/kausar | php -r '$d = json_decode(stream_get_contents(STDIN), true); echo parse_url($d["product"]["images"][0]["url"] ?? "", PHP_URL_PATH);')
+          test -n "$IMG" && test "$(code "$U$IMG")" = 200           # uploaded photos served through the storage link
+          ASSET=$(ls "$D/assets" | grep -m1 '^index-.*\.js$'); test "$(code "$U/assets/$ASSET")" = 200
+          for p in /.env /.htaccess; do test "$(code -H "X-Shop-Gate: $KEY" $U$p)" = 403; done
+          if curl -s -H "X-Shop-Gate: $KEY" $U/vendor/autoload.php | grep -q '<?php'; then echo "code readable"; exit 1; fi
+          test "$(code $U/admin)" = 200                             # admin login page is outside the lock
+          # Admin login (Sanctum session + CSRF) with the printed password
+          J=/tmp/jar; rm -f $J
+          curl -s -c $J -b $J $U/sanctum/csrf-cookie -o /dev/null
+          X=$(awk '$6 == "XSRF-TOKEN" {print $7}' $J | php -r 'echo urldecode(trim(stream_get_contents(STDIN)));')
+          curl -s -c $J -b $J -H "X-XSRF-TOKEN: $X" -H "Referer: $U/admin" -H 'Accept: application/json' -H 'Content-Type: application/json' \
+            -d "{\"email\":\"owner@example.test\",\"password\":\"$PASS\"}" $U/api/admin/login | grep -q '"role":"admin"'
+          curl -s -c $J -b $J -H "Referer: $U/admin" -H 'Accept: application/json' $U/api/admin/dashboard | php -r '$d = json_decode(stream_get_contents(STDIN), true); exit(($d["products_total"] ?? 0) === 15 ? 0 : 1);'
+          crontab -l | grep -q 'pmshop-scheduler'
+          (cd "$A/current" && php artisan schedule:run | grep -qi 'running\|no scheduled')
+          bash "$A/platform.sh" status | tee /tmp/status.txt; grep -q 'private' /tmp/status.txt
+          # A second install is refused
+          if printf '\n\n%s\nx@example.test\nn\n' "$SHOPP" | env $PM_ENV bash server/platform.sh install; then echo "should refuse"; exit 1; fi
+      - name: Update to a new release, roll back, open and lock
+        run: |
+          set -o pipefail
+          A="$HOME/pmshop"; U=http://127.0.0.1:8092
+          code() { curl -s -o /dev/null -w '%{http_code}' "$@"; }
+          env RELEASE_FILE=/tmp/rel2/pmshop.tar.gz SCHEME=http HEALTH_URL=$U/up bash "$A/platform.sh" update 2>&1 | tee /tmp/update.log
+          test "$(basename "$(readlink "$A/current")")" = 20260102-000000-ci000002
+          ls "$A"/shared/backups/db-*.sql.gz >/dev/null
+          zcat "$A"/shared/backups/db-*.sql.gz | grep -q 'CREATE TABLE `products`'
+          test ! -e "$A/shared/storage/framework/down"
+          test "$(code -H "X-Shop-Gate: $KEY" $U/api/products/kausar)" = 200
+          env RELEASE_FILE=/tmp/rel2/pmshop.tar.gz SCHEME=http HEALTH_URL=$U/up bash "$A/platform.sh" update | grep -q 'Already on the newest'
+          printf 'y\n' | env SCHEME=http HEALTH_URL=$U/up bash "$A/platform.sh" rollback
+          test "$(basename "$(readlink "$A/current")")" = 20260101-000000-ci000001
+          test "$(code -H "X-Shop-Gate: $KEY" $U/api/products/kausar)" = 200
+          bash "$A/platform.sh" open
+          test "$(code $U/)" = 200
+          bash "$A/platform.sh" lock | tee /tmp/lock.log
+          test "$(code $U/)" = 401
+          test "$(code -H "X-Shop-Gate: $KEY" $U/)" = 401           # old key no longer works
+      - name: Order emails (SMTP password with special characters is stored exactly)
+        run: |
+          A="$HOME/pmshop"
+          MP='M@il"pa$s\w'"'"'d'
+          printf 'mail.example.test\n587\nshop@example.test\n%s\n\n' "$MP" | bash "$A/platform.sh" mail
+          (cd "$A/current" && MP="$MP" php -r 'require "vendor/autoload.php"; $app = require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+            $m = config("mail.mailers.smtp"); exit(config("mail.default") === "smtp" && $m["host"] === "mail.example.test" && (int) $m["port"] === 587 && $m["password"] === getenv("MP") && config("database.connections.mysql.password") === getenv("SHOPP") ? 0 : 1);')
+      - name: Put WordPress back, then switch to the shop again
+        run: |
+          D="$HOME/perfume.nokkoo.in"; A="$HOME/pmshop"; U=http://127.0.0.1:8092
+          printf 'y\n' | bash "$A/platform.sh" restore-wordpress
+          test -f "$D/wp-config.php" && test ! -e "$D/assets"
+          php "$HOME/.wp-cli/pm-staging-wp-cli.phar" --path="$D" option get siteurl | grep -q perfume.nokkoo.in
+          php "$HOME/.wp-cli/pm-staging-wp-cli.phar" --path="$D" post list --post_type=product --format=count | grep -qE '^1[5-9]|^[2-9][0-9]'
+          if crontab -l 2>/dev/null | grep -q pmshop-scheduler; then echo "cron should be removed"; exit 1; fi
+          sleep 1
+          printf 'y\n' | env SCHEME=http HEALTH_URL=$U/up bash "$A/platform.sh" publish
+          test ! -e "$D/wp-config.php" && test -f "$D/index.php" && test -L "$D/storage"
+          test "$(curl -s -o /dev/null -w '%{http_code}' $U/up)" = 200
+          crontab -l | grep -q pmshop-scheduler
+          test "$(cat "$HOME/perfumarathi.com/index.php")" = "LIVE"
+          echo "Shop installer verified"
+

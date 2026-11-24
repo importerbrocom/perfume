@@ -1,0 +1,48 @@
+# BEGIN Perfumarathi shop (written by server/platform.sh)
+Options -Indexes -MultiViews
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Hidden files are never served (except .well-known for SSL and Apple Pay)
+    RewriteRule (^|/)\.(?!well-known(/|$)) - [F,L]
+
+    # Pass the Authorization header to PHP
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Apple Pay domain file is answered by the app
+    RewriteRule ^\.well-known/apple-developer-merchantid-domain-association$ index.php [L]
+
+    # Remove trailing slashes (not for folders)
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # Everything that is not a real file goes to the app (shop pages, admin, API)
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# Built shop files have the content hash in their name: cache them for a year
+<IfModule mod_headers.c>
+    <FilesMatch "^[A-Za-z0-9_-]+-[A-Za-z0-9_-]{8}\.(js|css)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+    Header always set X-Content-Type-Options "nosniff"
+</IfModule>
+
+# Uploaded files can never run as code
+<FilesMatch "\.(php|phtml|phar|pl|py|cgi|sh)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+</FilesMatch>
+<Files "index.php">
+    <IfModule mod_authz_core.c>
+        Require all granted
+    </IfModule>
+</Files>
+# END Perfumarathi shop
