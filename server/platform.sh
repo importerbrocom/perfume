@@ -395,6 +395,8 @@ Nothing was changed; run the install again."
     say "Importing products, photos and reviews from WordPress"
     artisan shop:import-wp "$exp"
   fi
+  say "Adding the Fixnote perfume catalogue"
+  artisan shop:import-fixnote
   say "Copying the homepage video and logos into the shop"
   [ -n "${SKIP_BRAND_MEDIA:-}" ] && echo "    skipped" || artisan shop:fetch-brand-media || echo "    (some media could not be copied; the homepage keeps loading those from perfumarathi.com)"
 

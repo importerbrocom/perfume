@@ -3,11 +3,13 @@
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\CatalogController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\FixnoteController as AdminFixnote;
 use App\Http\Controllers\Admin\InventoryController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController as AdminProducts;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Shop\CheckoutController;
+use App\Http\Controllers\Shop\FixnoteController;
 use App\Http\Controllers\Shop\ProductController;
 use App\Http\Controllers\Shop\StoreController;
 use App\Http\Controllers\Shop\StripeWebhookController;
@@ -20,6 +22,7 @@ Route::get('store', [StoreController::class, 'store']);
 Route::get('home', [StoreController::class, 'home']);
 Route::get('pages/{key}', [StoreController::class, 'page'])->whereAlpha('key');
 Route::get('products', [ProductController::class, 'index']);
+Route::get('fixnote', [FixnoteController::class, 'show']);
 Route::get('products/{slug}', [ProductController::class, 'show'])->where('slug', '[A-Za-z0-9\-_]+');
 Route::post('products/{slug}/reviews', [ProductController::class, 'review'])->where('slug', '[A-Za-z0-9\-_]+')->middleware('throttle:reviews');
 
@@ -54,6 +57,13 @@ Route::prefix('admin')->group(function () {
         Route::post('products/{id}/images', [AdminProducts::class, 'uploadImages'])->whereNumber('id');
         Route::put('products/{id}/images', [AdminProducts::class, 'updateImages'])->whereNumber('id');
         Route::delete('products/{id}/images/{imageId}', [AdminProducts::class, 'deleteImage'])->whereNumber(['id', 'imageId']);
+
+        // Fixnote page (texts, images, prices for all sizes, delivery, WhatsApp regions)
+        Route::get('fixnote', [AdminFixnote::class, 'show']);
+        Route::put('fixnote', [AdminFixnote::class, 'update']);
+        Route::put('fixnote/prices', [AdminFixnote::class, 'prices']);
+        Route::post('fixnote/images', [AdminFixnote::class, 'images']);
+        Route::post('fixnote/products', [AdminFixnote::class, 'storeProduct']);
 
         // Stock & prices
         Route::get('inventory', [InventoryController::class, 'index']);

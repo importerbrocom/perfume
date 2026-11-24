@@ -11,6 +11,7 @@ rm -f "$DB_DATABASE" && touch "$DB_DATABASE"
 php artisan migrate --force -q
 php artisan cache:clear -q # rate-limit counters from earlier runs
 php artisan db:seed --class=DemoSeeder --force -q
+php artisan shop:import-fixnote -q # the 378 Fixnote perfumes (F01...)
 # Test-only staff accounts (this throwaway SQLite database only)
 php artisan shop:admin admin@example.test --name="Store Admin" --role=admin --password=E2eAdmin12345 -q
 php artisan shop:admin manager@example.test --name="Shop Manager" --role=manager --password=E2eManager12345 -q

@@ -18,6 +18,7 @@ const Content = lazy(() => import('./pages/Content'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Payments = lazy(() => import('./pages/Payments'));
 const Account = lazy(() => import('./pages/Account'));
+const FixnoteAdmin = lazy(() => import('./pages/Fixnote'));
 
 const AuthContext = createContext(null);
 export const useAuth = () => useContext(AuthContext);
@@ -30,6 +31,11 @@ const NAV = [
     ['/admin/stock', 'Stock & Prices'],
     ['/admin/customers', 'Customers'],
     ['/admin/reviews', 'Reviews'],
+  ]],
+  ['Fixnote', [
+    ['/admin/fixnote', 'Fixnote page', true],
+    ['/admin/fixnote/products', 'Fixnote perfumes'],
+    ['/admin/fixnote/orders', 'Fixnote orders'],
   ]],
   ['Marketing', [
     ['/admin/coupons', 'Coupons'],
@@ -141,12 +147,15 @@ function Gate() {
     <Shell>
       <Routes>
         <Route index element={<Dashboard />} />
-        <Route path="orders" element={<Orders />} />
+        <Route path="orders" element={<Orders key="all" />} />
         <Route path="orders/:id" element={<OrderDetail />} />
-        <Route path="products" element={<Products />} />
+        <Route path="products" element={<Products key="all" />} />
         <Route path="products/new" element={<ProductEdit />} />
         <Route path="products/:id" element={<ProductEdit />} />
         <Route path="stock" element={<Inventory />} />
+        <Route path="fixnote" element={<FixnoteAdmin />} />
+        <Route path="fixnote/products" element={<Products key="fixnote" brand="fixnote" />} />
+        <Route path="fixnote/orders" element={<Orders key="fixnote" brand="fixnote" />} />
         <Route path="customers" element={<Customers />} />
         <Route path="reviews" element={<Reviews />} />
         {['coupons', 'banners', 'home-sections', 'announcements', 'brands', 'categories'].map((k) => (

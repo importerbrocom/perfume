@@ -8,7 +8,8 @@ import { Empty, ErrorBox, Loading, PageHead, Pager, PayPill, StatusPill, Tabs, u
 const STATUSES = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'];
 const LABELS = { pending: 'New', confirmed: 'Confirmed', processing: 'Processing', shipped: 'Shipped', delivered: 'Delivered', cancelled: 'Cancelled', returned: 'Returned' };
 
-export default function Orders() {
+/** All orders, or only orders with at least one product of `brand` (Fixnote orders screen). */
+export default function Orders({ brand }) {
   const [params, setParams] = useSearchParams();
   const { notify } = useUi();
   const f = Object.fromEntries(['status', 'search', 'payment_status', 'payment_method', 'from', 'to', 'page'].map((k) => [k, params.get(k) || '']));
@@ -24,7 +25,7 @@ export default function Orders() {
     return () => clearTimeout(t);
   }, [term]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const query = qs(f);
+  const query = qs({ ...f, brand });
   const { data, error, loading, reload } = useLoad('orders?' + query);
   const counts = data?.counts || {};
   const all = Object.values(counts).reduce((a, b) => a + Number(b), 0);
@@ -32,7 +33,7 @@ export default function Orders() {
   const exportCsv = async () => {
     try {
       const { page, ...rest } = f; // eslint-disable-line no-unused-vars
-      await downloadFile('orders/export?' + qs(rest), `orders-${new Date().toISOString().slice(0, 10)}.csv`);
+      await downloadFile('orders/export?' + qs({ ...rest, brand }), `${brand ? brand + '-' : ''}orders-${new Date().toISOString().slice(0, 10)}.csv`);
     } catch (e) {
       notify(e.message, 'error');
     }
@@ -40,7 +41,7 @@ export default function Orders() {
 
   return (
     <>
-      <PageHead title="Orders" sub="Click an order to confirm it, ship it or add tracking.">
+      <PageHead title={brand ? 'Fixnote orders' : 'Orders'} sub={brand ? 'Orders that include at least one Fixnote perfume. Click an order to confirm it, ship it or add tracking.' : 'Click an order to confirm it, ship it or add tracking.'}>
         <button type="button" className="ad-btn ad-btn--ghost" onClick={exportCsv}>Export CSV</button>
       </PageHead>
       <Tabs value={f.status} onChange={(v) => set('status', v)} items={[['', 'All', all], ...STATUSES.map((s) => [s, LABELS[s], counts[s] || 0])]} />

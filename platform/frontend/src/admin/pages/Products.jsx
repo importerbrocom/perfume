@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { money } from '../../lib/format';
 import { adminApi, qs, useLoad } from '../lib';
 import { Empty, ErrorBox, Loading, PageHead, Pager, Tabs, useUi } from '../ui';
+import { NewFixnotePerfume } from './Fixnote';
 
 export function priceText(p, currency = 'AED') {
   const prices = p.variants.filter((v) => v.is_active && v.price !== null).map((v) => v.current_price ?? v.price);
@@ -19,12 +20,14 @@ function stockText(p) {
   return <span className={p.variants.some((v) => v.low_stock) ? 'ad-warn' : ''}>{p.stock_total} in stock</span>;
 }
 
-export default function Products() {
+/** All products, or only one brand's (`brand` = slug, used by the Fixnote perfumes screen). */
+export default function Products({ brand }) {
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
   const { notify, confirm } = useUi();
   const f = Object.fromEntries(['search', 'brand_id', 'category_id', 'status', 'stock', 'sort', 'page'].map((k) => [k, params.get(k) || '']));
   const [term, setTerm] = useState(f.search);
+  const [adding, setAdding] = useState(false);
   const set = (k, v) => {
     const next = new URLSearchParams(params);
     v ? next.set(k, v) : next.delete(k);
@@ -36,7 +39,7 @@ export default function Products() {
     return () => clearTimeout(t);
   }, [term]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const { data, error, loading, reload } = useLoad('products?' + qs(f));
+  const { data, error, loading, reload } = useLoad('products?' + qs(brand ? { ...f, brand, brand_id: '' } : f));
   const brands = useLoad('brands').data || [];
   const cats = useLoad('categories').data || [];
 
@@ -68,16 +71,26 @@ export default function Products() {
 
   return (
     <>
-      <PageHead title="Products" sub="Add perfumes, set sizes, prices and stock, and choose what shows in the shop.">
-        <Link className="ad-btn" to="/admin/products/new">+ Add product</Link>
-      </PageHead>
+      {brand ? (
+        <PageHead title="Fixnote perfumes" sub="The perfumes on the Fixnote page. Search by code (F01), name or inspired-by brand. Click a perfume to change its sizes, prices or stock.">
+          <Link className="ad-btn ad-btn--ghost" to="/admin/fixnote">Prices for all sizes</Link>
+          <button type="button" className="ad-btn" onClick={() => setAdding(true)}>+ Add Fixnote perfume</button>
+        </PageHead>
+      ) : (
+        <PageHead title="Products" sub="Add perfumes, set sizes, prices and stock, and choose what shows in the shop.">
+          <Link className="ad-btn" to="/admin/products/new">+ Add product</Link>
+        </PageHead>
+      )}
+      {adding && <NewFixnotePerfume onClose={() => setAdding(false)} onSaved={(p) => { setAdding(false); notify(`${p.sku} ${p.name} added with 3 sizes.`); reload(); }} />}
       <Tabs value={f.status} onChange={(v) => set('status', v)} items={[['', 'All'], ['active', 'Visible'], ['hidden', 'Hidden'], ['unpriced', 'No price'], ['deleted', 'Deleted']]} />
       <div className="ad-filters">
-        <input type="search" aria-label="Search products" placeholder="Search by name or SKU…" value={term} onChange={(e) => setTerm(e.target.value)} />
-        <select aria-label="Brand" value={f.brand_id} onChange={(e) => set('brand_id', e.target.value)}>
-          <option value="">All brands</option>
-          {brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-        </select>
+        <input type="search" aria-label="Search products" placeholder={brand ? 'Search by code, name or inspired-by brand…' : 'Search by name or SKU…'} value={term} onChange={(e) => setTerm(e.target.value)} />
+        {!brand && (
+          <select aria-label="Brand" value={f.brand_id} onChange={(e) => set('brand_id', e.target.value)}>
+            <option value="">All brands</option>
+            {brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+          </select>
+        )}
         <select aria-label="Category" value={f.category_id} onChange={(e) => set('category_id', e.target.value)}>
           <option value="">All categories</option>
           {cats.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -99,7 +112,7 @@ export default function Products() {
       {loading && !data ? <Loading /> : data && (data.data.length === 0 ? <Empty>No products found. <Link to="/admin/products/new">Add one</Link>.</Empty> : (
         <div className="ad-table-wrap">
           <table className="ad-table" data-testid="products-table">
-            <thead><tr><th>Product</th><th>Brand</th><th>Price</th><th>Stock</th><th>Shop</th><th><span className="sr-only">Actions</span></th></tr></thead>
+            <thead><tr><th>Product</th><th>{brand ? 'Inspired by' : 'Brand'}</th><th>Price</th><th>Stock</th><th>Shop</th><th><span className="sr-only">Actions</span></th></tr></thead>
             <tbody>
               {data.data.map((p) => (
                 <tr key={p.id}>
@@ -112,7 +125,7 @@ export default function Products() {
                       </span>
                     </div>
                   </td>
-                  <td data-label="Brand">{p.brand || '—'}</td>
+                  <td data-label={brand ? 'Inspired by' : 'Brand'}>{(brand ? p.inspired_by : p.brand) || '—'}</td>
                   <td data-label="Price">{priceText(p)}</td>
                   <td data-label="Stock">{stockText(p)}</td>
                   <td data-label="Shop">
@@ -151,7 +164,7 @@ export default function Products() {
  * while the form is open must not be overwritten by an old number.
  */
 export function editable(p) {
-  const keys = ['name', 'slug', 'sku', 'brand_id', 'tagline', 'short_description', 'description', 'notes_top', 'notes_middle', 'notes_base', 'accords',
+  const keys = ['name', 'slug', 'sku', 'brand_id', 'tagline', 'inspired_by', 'short_description', 'description', 'notes_top', 'notes_middle', 'notes_base', 'accords',
     'fragrance_family', 'perfume_type', 'concentration', 'gender', 'traits', 'longevity', 'is_active', 'is_featured', 'is_new_arrival', 'is_best_seller',
     'is_combo', 'sort_order', 'meta_title', 'meta_description', 'category_ids', 'related_ids'];
   const out = Object.fromEntries(keys.map((k) => [k, p[k] ?? null]));

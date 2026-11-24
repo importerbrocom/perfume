@@ -1,0 +1,2273 @@
+{
+ "source": "FIXNOT_formatted.html",
+ "items": [
+  {
+   "code": "F01",
+   "name": "Imagination",
+   "inspired_by": "Louis Vuitton",
+   "notes": "Ambrox ■ Black Tea from China ■ Tunisian Neroli ■ Sicilian Cedar ■ Calabrian Bergamot ■ Nigerian Ginger ■ Ceylon Cinnamon"
+  },
+  {
+   "code": "F02",
+   "name": "Ombre Nomade",
+   "inspired_by": "Louis Vuitton",
+   "notes": "Oud ■ Rose ■ Incense ■ Raspberry ■ Saffron ■ Benzoin ■ Amberwood"
+  },
+  {
+   "code": "F03",
+   "name": "L'Immensite",
+   "inspired_by": "Louis Vuitton",
+   "notes": "Grapefruit ■ Bergamot ■ Ginger ■ Rosemary ■ Sage ■ Ambroxan ■ Amber"
+  },
+  {
+   "code": "F04",
+   "name": "Afternoon Swim",
+   "inspired_by": "Louis Vuitton",
+   "notes": "Orange ■ Bergamot ■ Mandarin"
+  },
+  {
+   "code": "F05",
+   "name": "Pacific Chill",
+   "inspired_by": "Louis Vuitton",
+   "notes": "Blackcurrant ■ Citron ■ Lemon ■ Coriander ■ Carrot Seed ■ Mint"
+  },
+  {
+   "code": "F06",
+   "name": "Meteore",
+   "inspired_by": "Louis Vuitton",
+   "notes": "Mandarin ■ Sicilian Orange ■ Bergamot ■ Pink Pepper ■ Vetiver"
+  },
+  {
+   "code": "F07",
+   "name": "Nouveau Monde",
+   "inspired_by": "Louis Vuitton",
+   "notes": "Oud ■ Cacao ■ Saffron ■ Incense ■ Leather"
+  },
+  {
+   "code": "F08",
+   "name": "Nuit de Feu",
+   "inspired_by": "Louis Vuitton",
+   "notes": "Incense ■ Leather ■ Oud"
+  },
+  {
+   "code": "F09",
+   "name": "On The Beach",
+   "inspired_by": "Louis Vuitton",
+   "notes": "Yuzu ■ Neroli ■ Aromatic Herbs ■ Cypress"
+  },
+  {
+   "code": "F10",
+   "name": "Orage",
+   "inspired_by": "Louis Vuitton",
+   "notes": "Iris ■ Vetiver ■ Patchouli"
+  },
+  {
+   "code": "F11",
+   "name": "Sur La Route",
+   "inspired_by": "Louis Vuitton",
+   "notes": "Citron ■ Bergamot ■ Cedar ■ Peru Balsam ■ Leather"
+  },
+  {
+   "code": "F12",
+   "name": "California Dream",
+   "inspired_by": "Louis Vuitton",
+   "notes": "Mandarin ■ Ambrette ■ Benzoin ■ Musk"
+  },
+  {
+   "code": "F13",
+   "name": "City of Stars",
+   "inspired_by": "Louis Vuitton",
+   "notes": "Blood Orange ■ Lemon ■ Bergamot ■ Mandarin ■ Lime ■ Tiare Flower"
+  },
+  {
+   "code": "F14",
+   "name": "LV Lovers",
+   "inspired_by": "Louis Vuitton",
+   "notes": "Galbanum ■ Bergamot ■ Ginger ■ Cedarwood ■ Sandalwood"
+  },
+  {
+   "code": "F15",
+   "name": "Pur Oud",
+   "inspired_by": "Louis Vuitton",
+   "notes": "Assam Oud"
+  },
+  {
+   "code": "F16",
+   "name": "Pur Ambre",
+   "inspired_by": "Louis Vuitton",
+   "notes": "Ambergris ■ Warm Amber ■ Musky Notes"
+  },
+  {
+   "code": "F17",
+   "name": "Pur Santal",
+   "inspired_by": "Louis Vuitton",
+   "notes": "Sandalwood ■ Soft Woods ■ Musky Notes"
+  },
+  {
+   "code": "F18",
+   "name": "Sauvage",
+   "inspired_by": "Dior",
+   "notes": "Calabrian Bergamot ■ Pepper • Sichuan Pepper ■ Lavender ■ Pink Pepper • Ambroxan ■ Cedar ■ Labdanum"
+  },
+  {
+   "code": "F21",
+   "name": "Sauvage Elixir",
+   "inspired_by": "Dior",
+   "notes": "Spices ■ Lavender ■ Woods"
+  },
+  {
+   "code": "F22",
+   "name": "Dior Homme",
+   "inspired_by": "Dior",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F23",
+   "name": "Dior Homme Intense",
+   "inspired_by": "Dior",
+   "notes": "Iris ■ Amber ■ Cedar"
+  },
+  {
+   "code": "F25",
+   "name": "Dior Homme Sport",
+   "inspired_by": "Dior",
+   "notes": "Citrus ■ Aromatics ■ Woods"
+  },
+  {
+   "code": "F26",
+   "name": "Fahrenheit",
+   "inspired_by": "Dior",
+   "notes": "Violet Leaf ■ Leather ■ Woods"
+  },
+  {
+   "code": "F28",
+   "name": "Eau Sauvage",
+   "inspired_by": "Dior",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F30",
+   "name": "Miss Dior",
+   "inspired_by": "Dior",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F32",
+   "name": "J'adore",
+   "inspired_by": "Dior",
+   "notes": "White Flowers ■ Rose ■ Musk"
+  },
+  {
+   "code": "F33",
+   "name": "J'adore L'Or",
+   "inspired_by": "Dior",
+   "notes": "White Flowers ■ Rose ■ Musk"
+  },
+  {
+   "code": "F34",
+   "name": "Hypnotic Poison",
+   "inspired_by": "Dior",
+   "notes": "Almond ■ Jasmine ■ Vanilla"
+  },
+  {
+   "code": "F35",
+   "name": "Pure Poison",
+   "inspired_by": "Dior",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F36",
+   "name": "Poison Girl",
+   "inspired_by": "Dior",
+   "notes": "Fruits ■ Flowers ■ Musk"
+  },
+  {
+   "code": "F37",
+   "name": "Gris Dior",
+   "inspired_by": "Dior",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F38",
+   "name": "Ambre Nuit",
+   "inspired_by": "Dior",
+   "notes": "Spices ■ Amber ■ Woods"
+  },
+  {
+   "code": "F39",
+   "name": "Oud Ispahan",
+   "inspired_by": "Dior",
+   "notes": "Oud ■ Amber ■ Woods"
+  },
+  {
+   "code": "F40",
+   "name": "Bois d'Argent",
+   "inspired_by": "Dior",
+   "notes": "Citrus ■ Vetiver ■ Woods"
+  },
+  {
+   "code": "F41",
+   "name": "Tobacolor",
+   "inspired_by": "Dior",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F42",
+   "name": "Bleu de Chanel",
+   "inspired_by": "Chanel",
+   "notes": "Grapefruit ■ Lemon ■ Mint ■ Pink Pepper • Ginger ■ Nutmeg ■ Jasmine ■ Iso E Super • Incense ■ Cedar ■ Vetiver ■ Sandalwood"
+  },
+  {
+   "code": "F45",
+   "name": "Allure Homme Sport",
+   "inspired_by": "Chanel",
+   "notes": "Orange ■ Pepper ■ Tonka"
+  },
+  {
+   "code": "F47",
+   "name": "Allure Homme",
+   "inspired_by": "Chanel",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F48",
+   "name": "Allure Homme Edition",
+   "inspired_by": "Chanel",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F49",
+   "name": "Platinum Egoiste",
+   "inspired_by": "Chanel",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F50",
+   "name": "Egoiste",
+   "inspired_by": "Chanel",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F51",
+   "name": "Coco Mademoiselle",
+   "inspired_by": "Chanel",
+   "notes": "Orange ■ Rose ■ Patchouli"
+  },
+  {
+   "code": "F53",
+   "name": "Chance",
+   "inspired_by": "Chanel",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F54",
+   "name": "Chance Eau Tendre",
+   "inspired_by": "Chanel",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F55",
+   "name": "Chance Eau Fraiche",
+   "inspired_by": "Chanel",
+   "notes": "Citrus ■ Aromatics ■ Woods"
+  },
+  {
+   "code": "F56",
+   "name": "Chance Eau Splendide",
+   "inspired_by": "Chanel",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F57",
+   "name": "N°5",
+   "inspired_by": "Chanel",
+   "notes": "Aldehydes ■ Jasmine ■ Vanilla"
+  },
+  {
+   "code": "F58",
+   "name": "Coco Noir",
+   "inspired_by": "Chanel",
+   "notes": "Spices ■ Amber ■ Woods"
+  },
+  {
+   "code": "F59",
+   "name": "Gabrielle Chanel",
+   "inspired_by": "Chanel",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F60",
+   "name": "Chanel No. 19",
+   "inspired_by": "Chanel",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F61",
+   "name": "Guilty Pour Homme",
+   "inspired_by": "Gucci",
+   "notes": "Lavender ■ Amalfi Lemon • African Orange Flower • Virginia Cedar ■ Patchouli ■ Vanilla"
+  },
+  {
+   "code": "F64",
+   "name": "Guilty Absolute Pour",
+   "inspired_by": "Gucci",
+   "notes": "Spices ■ Amber ■ Vanilla"
+  },
+  {
+   "code": "F65",
+   "name": "Guilty Pour Femme",
+   "inspired_by": "Gucci",
+   "notes": "White Flowers ■ Rose ■ Musk"
+  },
+  {
+   "code": "F67",
+   "name": "Flora Gorgeous",
+   "inspired_by": "Gucci",
+   "notes": "Pear ■ Gardenia ■ Brown Sugar"
+  },
+  {
+   "code": "F70",
+   "name": "Gucci Bloom",
+   "inspired_by": "Gucci",
+   "notes": "Jasmine ■ Tuberose ■ Rangoon Creeper"
+  },
+  {
+   "code": "F71",
+   "name": "Bloom Intense",
+   "inspired_by": "Gucci",
+   "notes": "Spices ■ Amber ■ Vanilla"
+  },
+  {
+   "code": "F72",
+   "name": "Gucci Rush",
+   "inspired_by": "Gucci",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F73",
+   "name": "Gucci Bamboo",
+   "inspired_by": "Gucci",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F74",
+   "name": "Gucci by Gucci Pour",
+   "inspired_by": "Gucci",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F75",
+   "name": "The Voice of the",
+   "inspired_by": "Gucci",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F76",
+   "name": "A Midnight Stroll",
+   "inspired_by": "Gucci",
+   "notes": "Spices ■ Amber ■ Woods"
+  },
+  {
+   "code": "F77",
+   "name": "Eros",
+   "inspired_by": "Versace",
+   "notes": "Mint ■ Green Apple ■ Lemon • Tonka Bean ■ Ambroxan ■ Geranium • Madagascar Vanilla ■ Virginian Cedar ■"
+  },
+  {
+   "code": "F80",
+   "name": "Eros Flame",
+   "inspired_by": "Versace",
+   "notes": "Italian Lemon ■ Italian Mandarin ■ Litsea Cubeba ■ Elemi ■ Black Pepper ■ Pomarose ■ Egyptian Geranium ■ Lavender ■ Clary Sage ■ Benzoin ■ Cashmeran ■ Patchouli ■ Vanilla ■ Haitian Vetiver"
+  },
+  {
+   "code": "F81",
+   "name": "Dylan Blue Pour",
+   "inspired_by": "Versace",
+   "notes": "Bergamot ■ Ambrox ■ Incense"
+  },
+  {
+   "code": "F82",
+   "name": "Versace Pour Homme",
+   "inspired_by": "Versace",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F83",
+   "name": "Man Eau Fraiche",
+   "inspired_by": "Versace",
+   "notes": "Citrus ■ Aromatics ■ Woods"
+  },
+  {
+   "code": "F84",
+   "name": "The Dreamer",
+   "inspired_by": "Versace",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F85",
+   "name": "Blue Jeans",
+   "inspired_by": "Versace",
+   "notes": "Citrus ■ Marine Notes ■ Musk"
+  },
+  {
+   "code": "F86",
+   "name": "Bright Crystal",
+   "inspired_by": "Versace",
+   "notes": "Yuzu ■ Peony ■ Musk"
+  },
+  {
+   "code": "F87",
+   "name": "Bright Crystal Absolu",
+   "inspired_by": "Versace",
+   "notes": "Spices ■ Amber ■ Vanilla"
+  },
+  {
+   "code": "F88",
+   "name": "Crystal Noir",
+   "inspired_by": "Versace",
+   "notes": "Spices ■ Gardenia ■ Amber"
+  },
+  {
+   "code": "F89",
+   "name": "Dylan Purple",
+   "inspired_by": "Versace",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F90",
+   "name": "Dylan Turquoise",
+   "inspired_by": "Versace",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F91",
+   "name": "Yellow Diamond",
+   "inspired_by": "Versace",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F92",
+   "name": "Versense",
+   "inspired_by": "Versace",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F93",
+   "name": "Y",
+   "inspired_by": "Yves Saint Laurent (YSL)",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F95",
+   "name": "Y Le",
+   "inspired_by": "Yves Saint Laurent (YSL)",
+   "notes": "Spices ■ Amber ■ Vanilla"
+  },
+  {
+   "code": "F96",
+   "name": "Y Elixir",
+   "inspired_by": "Yves Saint Laurent (YSL)",
+   "notes": "Spices ■ Amber ■ Vanilla"
+  },
+  {
+   "code": "F97",
+   "name": "MYSLF",
+   "inspired_by": "Yves Saint Laurent (YSL)",
+   "notes": "Bergamot ■ Orange Blossom ■ Woods"
+  },
+  {
+   "code": "F98",
+   "name": "MYSLF Le",
+   "inspired_by": "Yves Saint Laurent (YSL)",
+   "notes": "Spices ■ Amber ■ Vanilla"
+  },
+  {
+   "code": "F99",
+   "name": "La Nuit de L'Homme",
+   "inspired_by": "Yves Saint Laurent (YSL)",
+   "notes": "Cardamom ■ Lavender ■ Cedar"
+  },
+  {
+   "code": "F100",
+   "name": "L'Homme",
+   "inspired_by": "Yves Saint Laurent (YSL)",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F101",
+   "name": "L'Homme Le",
+   "inspired_by": "Yves Saint Laurent (YSL)",
+   "notes": "Spices ■ Amber ■ Vanilla"
+  },
+  {
+   "code": "F102",
+   "name": "Kouros",
+   "inspired_by": "Yves Saint Laurent (YSL)",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F103",
+   "name": "Libre",
+   "inspired_by": "Yves Saint Laurent (YSL)",
+   "notes": "Lavender ■ Orange Blossom ■ Vanilla"
+  },
+  {
+   "code": "F104",
+   "name": "Libre Intense",
+   "inspired_by": "Yves Saint Laurent (YSL)",
+   "notes": "Spices ■ Amber ■ Vanilla"
+  },
+  {
+   "code": "F105",
+   "name": "Libre Le",
+   "inspired_by": "Yves Saint Laurent (YSL)",
+   "notes": "Spices ■ Amber ■ Vanilla"
+  },
+  {
+   "code": "F106",
+   "name": "Black Opium",
+   "inspired_by": "Yves Saint Laurent (YSL)",
+   "notes": "Coffee ■ White Flowers ■ Vanilla"
+  },
+  {
+   "code": "F107",
+   "name": "Black Opium Le",
+   "inspired_by": "Yves Saint Laurent (YSL)",
+   "notes": "Spices ■ Amber ■ Woods"
+  },
+  {
+   "code": "F108",
+   "name": "Black Opium Over Red",
+   "inspired_by": "Yves Saint Laurent (YSL)",
+   "notes": "Spices ■ Amber ■ Woods"
+  },
+  {
+   "code": "F109",
+   "name": "Mon Paris",
+   "inspired_by": "Yves Saint Laurent (YSL)",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F110",
+   "name": "Babycat",
+   "inspired_by": "Yves Saint Laurent (YSL)",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F111",
+   "name": "Tuxedo",
+   "inspired_by": "Yves Saint Laurent (YSL)",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F112",
+   "name": "Oud Wood",
+   "inspired_by": "Tom Ford",
+   "notes": "Oud ■ Rosewood ■ Sandalwood"
+  },
+  {
+   "code": "F113",
+   "name": "Tobacco Vanille",
+   "inspired_by": "Tom Ford",
+   "notes": "Tobacco ■ Spices ■ Vanilla"
+  },
+  {
+   "code": "F114",
+   "name": "Ombre Leather",
+   "inspired_by": "Tom Ford",
+   "notes": "Leather ■ Jasmine ■ Amber"
+  },
+  {
+   "code": "F116",
+   "name": "Lost Cherry",
+   "inspired_by": "Tom Ford",
+   "notes": "Cherry ■ Almond ■ Tonka"
+  },
+  {
+   "code": "F117",
+   "name": "Bitter Peach",
+   "inspired_by": "Tom Ford",
+   "notes": "Peach ■ Rum ■ Patchouli"
+  },
+  {
+   "code": "F118",
+   "name": "Black Orchid",
+   "inspired_by": "Tom Ford",
+   "notes": "Truffle ■ Orchid ■ Patchouli"
+  },
+  {
+   "code": "F119",
+   "name": "Noir Extreme",
+   "inspired_by": "Tom Ford",
+   "notes": "Cardamom ■ Kulfi ■ Amber"
+  },
+  {
+   "code": "F120",
+   "name": "Tuscan Leather",
+   "inspired_by": "Tom Ford",
+   "notes": "Saffron ■ Leather ■ Raspberry"
+  },
+  {
+   "code": "F121",
+   "name": "Neroli Portofino",
+   "inspired_by": "Tom Ford",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F122",
+   "name": "Grey Vetiver",
+   "inspired_by": "Tom Ford",
+   "notes": "Citrus ■ Vetiver ■ Woods"
+  },
+  {
+   "code": "F123",
+   "name": "Soleil Blanc",
+   "inspired_by": "Tom Ford",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F124",
+   "name": "Fucking Fabulous",
+   "inspired_by": "Tom Ford",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F125",
+   "name": "Rose Prick",
+   "inspired_by": "Tom Ford",
+   "notes": "Rose ■ Musk ■ Woods"
+  },
+  {
+   "code": "F126",
+   "name": "Ebene Fume",
+   "inspired_by": "Tom Ford",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F127",
+   "name": "Costa Azzurra",
+   "inspired_by": "Tom Ford",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F128",
+   "name": "Electric Cherry",
+   "inspired_by": "Tom Ford",
+   "notes": "Fruits ■ Flowers ■ Musk"
+  },
+  {
+   "code": "F129",
+   "name": "Cherry Smoke",
+   "inspired_by": "Tom Ford",
+   "notes": "Fruits ■ Flowers ■ Musk"
+  },
+  {
+   "code": "F130",
+   "name": "Vanille Fatale",
+   "inspired_by": "Tom Ford",
+   "notes": "Vanilla ■ Amber ■ Musk"
+  },
+  {
+   "code": "F131",
+   "name": "Beau de Jour",
+   "inspired_by": "Tom Ford",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F132",
+   "name": "Aventus",
+   "inspired_by": "Creed",
+   "notes": "Pineapple ■ Birch ■ Musk"
+  },
+  {
+   "code": "F133",
+   "name": "Aventus Cologne",
+   "inspired_by": "Creed",
+   "notes": "Citrus ■ Aromatics ■ Woods"
+  },
+  {
+   "code": "F134",
+   "name": "Aventus Absolu",
+   "inspired_by": "Creed",
+   "notes": "Spices ■ Amber ■ Vanilla"
+  },
+  {
+   "code": "F135",
+   "name": "Green Irish Tweed",
+   "inspired_by": "Creed",
+   "notes": "Lemon ■ Violet Leaf ■ Sandalwood"
+  },
+  {
+   "code": "F136",
+   "name": "Silver Mountain Water",
+   "inspired_by": "Creed",
+   "notes": "Bergamot ■ Tea ■ Musk"
+  },
+  {
+   "code": "F137",
+   "name": "Millesime Imperial",
+   "inspired_by": "Creed",
+   "notes": "Citrus ■ Sea Salt ■ Musk"
+  },
+  {
+   "code": "F138",
+   "name": "Royal Oud",
+   "inspired_by": "Creed",
+   "notes": "Cedar ■ Oud ■ Sandalwood"
+  },
+  {
+   "code": "F139",
+   "name": "Viking",
+   "inspired_by": "Creed",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F140",
+   "name": "Viking Cologne",
+   "inspired_by": "Creed",
+   "notes": "Citrus ■ Aromatics ■ Woods"
+  },
+  {
+   "code": "F141",
+   "name": "Virgin Island Water",
+   "inspired_by": "Creed",
+   "notes": "Citrus ■ Marine Notes ■ Musk"
+  },
+  {
+   "code": "F142",
+   "name": "Original Vetiver",
+   "inspired_by": "Creed",
+   "notes": "Citrus ■ Vetiver ■ Woods"
+  },
+  {
+   "code": "F143",
+   "name": "Himalaya",
+   "inspired_by": "Creed",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F144",
+   "name": "Bois du Portugal",
+   "inspired_by": "Creed",
+   "notes": "Citrus ■ Vetiver ■ Woods"
+  },
+  {
+   "code": "F145",
+   "name": "Love in White",
+   "inspired_by": "Creed",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F146",
+   "name": "Carmina",
+   "inspired_by": "Creed",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F147",
+   "name": "Queen of Silk",
+   "inspired_by": "Creed",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F148",
+   "name": "Acqua di Gio",
+   "inspired_by": "Giorgio Armani",
+   "notes": "Citrus ■ Marine Notes ■ Cedar"
+  },
+  {
+   "code": "F150",
+   "name": "Acqua di Gio Profondo",
+   "inspired_by": "Giorgio Armani",
+   "notes": "Marine Notes ■ Aromatics ■ Musk"
+  },
+  {
+   "code": "F153",
+   "name": "Armani Code",
+   "inspired_by": "Giorgio Armani",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F156",
+   "name": "Stronger With You",
+   "inspired_by": "Giorgio Armani",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F160",
+   "name": "My Way",
+   "inspired_by": "Giorgio Armani",
+   "notes": "Orange Blossom ■ Tuberose ■ Vanilla"
+  },
+  {
+   "code": "F161",
+   "name": "My Way Intense",
+   "inspired_by": "Giorgio Armani",
+   "notes": "Spices ■ Amber ■ Vanilla"
+  },
+  {
+   "code": "F162",
+   "name": "Si",
+   "inspired_by": "Giorgio Armani",
+   "notes": "Blackcurrant ■ Rose ■ Vanilla"
+  },
+  {
+   "code": "F163",
+   "name": "Si Passione",
+   "inspired_by": "Giorgio Armani",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F164",
+   "name": "Si Intense",
+   "inspired_by": "Giorgio Armani",
+   "notes": "Spices ■ Amber ■ Vanilla"
+  },
+  {
+   "code": "F165",
+   "name": "Acqua di Gioia",
+   "inspired_by": "Giorgio Armani",
+   "notes": "Citrus ■ Marine Notes ■ Musk"
+  },
+  {
+   "code": "F166",
+   "name": "Luna Rossa Carbon",
+   "inspired_by": "Prada",
+   "notes": "Bergamot ■ Lavender ■ Ambroxan"
+  },
+  {
+   "code": "F167",
+   "name": "Luna Rossa Black",
+   "inspired_by": "Prada",
+   "notes": "Bergamot ■ Amber ■ Musk"
+  },
+  {
+   "code": "F168",
+   "name": "Luna Rossa Ocean",
+   "inspired_by": "Prada",
+   "notes": "Citrus ■ Marine Notes ■ Musk"
+  },
+  {
+   "code": "F170",
+   "name": "Luna Rossa Sport",
+   "inspired_by": "Prada",
+   "notes": "Citrus ■ Aromatics ■ Woods"
+  },
+  {
+   "code": "F171",
+   "name": "L'Homme Prada",
+   "inspired_by": "Prada",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F173",
+   "name": "Prada Amber Pour",
+   "inspired_by": "Prada",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F174",
+   "name": "Paradoxe",
+   "inspired_by": "Prada",
+   "notes": "Pear ■ Orange Blossom ■ Vanilla"
+  },
+  {
+   "code": "F175",
+   "name": "Paradoxe Intense",
+   "inspired_by": "Prada",
+   "notes": "Spices ■ Amber ■ Vanilla"
+  },
+  {
+   "code": "F176",
+   "name": "Paradoxe Virtual",
+   "inspired_by": "Prada",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F177",
+   "name": "Candy",
+   "inspired_by": "Prada",
+   "notes": "Vanilla ■ Amber ■ Musk"
+  },
+  {
+   "code": "F178",
+   "name": "Infusion d'Iris",
+   "inspired_by": "Prada",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F179",
+   "name": "1 Million",
+   "inspired_by": "Rabanne",
+   "notes": "Blood Mandarin ■ Cinnamon ■ Leather"
+  },
+  {
+   "code": "F181",
+   "name": "1 Million Elixir",
+   "inspired_by": "Rabanne",
+   "notes": "Spices ■ Amber ■ Vanilla"
+  },
+  {
+   "code": "F182",
+   "name": "1 Million Royal",
+   "inspired_by": "Rabanne",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F183",
+   "name": "Invictus",
+   "inspired_by": "Rabanne",
+   "notes": "Grapefruit ■ Marine Notes ■ Woods"
+  },
+  {
+   "code": "F184",
+   "name": "Invictus Platinum",
+   "inspired_by": "Rabanne",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F185",
+   "name": "Invictus Victory",
+   "inspired_by": "Rabanne",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F186",
+   "name": "Invictus Victory Elixir",
+   "inspired_by": "Rabanne",
+   "notes": "Lavender ■ Incense ■ Vanilla"
+  },
+  {
+   "code": "F187",
+   "name": "Phantom",
+   "inspired_by": "Rabanne",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F189",
+   "name": "Fame",
+   "inspired_by": "Rabanne",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F191",
+   "name": "Lady Million",
+   "inspired_by": "Rabanne",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F192",
+   "name": "Lady Million Royal",
+   "inspired_by": "Rabanne",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F193",
+   "name": "Pure XS",
+   "inspired_by": "Rabanne",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F194",
+   "name": "Pure XS For Her",
+   "inspired_by": "Rabanne",
+   "notes": "Fruits ■ Flowers ■ Musk"
+  },
+  {
+   "code": "F195",
+   "name": "Man in Black",
+   "inspired_by": "Bvlgari",
+   "notes": "Spices ■ Tuberose ■ Leather"
+  },
+  {
+   "code": "F196",
+   "name": "Man Wood Essence",
+   "inspired_by": "Bvlgari",
+   "notes": "Coriander ■ Cypress ■ Cedar"
+  },
+  {
+   "code": "F197",
+   "name": "Man Glacial Essence",
+   "inspired_by": "Bvlgari",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F198",
+   "name": "Bvlgari Pour Homme",
+   "inspired_by": "Bvlgari",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F200",
+   "name": "Aqva Pour Homme",
+   "inspired_by": "Bvlgari",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F201",
+   "name": "Aqva Marine",
+   "inspired_by": "Bvlgari",
+   "notes": "Citrus ■ Marine Notes ■ Musk"
+  },
+  {
+   "code": "F202",
+   "name": "Aqva Amara",
+   "inspired_by": "Bvlgari",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F203",
+   "name": "Tygar",
+   "inspired_by": "Bvlgari",
+   "notes": "Grapefruit ■ Ginger ■ Ambroxan"
+  },
+  {
+   "code": "F204",
+   "name": "Gyan",
+   "inspired_by": "Bvlgari",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F205",
+   "name": "Falkar",
+   "inspired_by": "Bvlgari",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F206",
+   "name": "Le Gemme Orom",
+   "inspired_by": "Bvlgari",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F207",
+   "name": "Omnia Crystalline",
+   "inspired_by": "Bvlgari",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F208",
+   "name": "Omnia Amethyste",
+   "inspired_by": "Bvlgari",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F209",
+   "name": "Rose Goldea",
+   "inspired_by": "Bvlgari",
+   "notes": "Rose ■ Musk ■ Woods"
+  },
+  {
+   "code": "F210",
+   "name": "Goldea The Roman",
+   "inspired_by": "Bvlgari",
+   "notes": "Spices ■ Amber ■ Woods"
+  },
+  {
+   "code": "F211",
+   "name": "The One for Men",
+   "inspired_by": "Dolce & Gabbana",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F214",
+   "name": "Light Blue Pour",
+   "inspired_by": "Dolce & Gabbana",
+   "notes": "Citrus ■ Rosemary ■ Musk"
+  },
+  {
+   "code": "F215",
+   "name": "Light Blue Eau Intense",
+   "inspired_by": "Dolce & Gabbana",
+   "notes": "Citrus ■ Marine Notes ■ Musk"
+  },
+  {
+   "code": "F216",
+   "name": "Light Blue Forever",
+   "inspired_by": "Dolce & Gabbana",
+   "notes": "Citrus ■ Marine Notes ■ Musk"
+  },
+  {
+   "code": "F217",
+   "name": "K by Dolce & Gabbana",
+   "inspired_by": "Dolce & Gabbana",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F220",
+   "name": "Devotion",
+   "inspired_by": "Dolce & Gabbana",
+   "notes": "Candied Citrus ■ Orange Blossom ■ Vanilla"
+  },
+  {
+   "code": "F221",
+   "name": "Devotion Intense",
+   "inspired_by": "Dolce & Gabbana",
+   "notes": "Spices ■ Amber ■ Vanilla"
+  },
+  {
+   "code": "F222",
+   "name": "The One for Women",
+   "inspired_by": "Dolce & Gabbana",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F223",
+   "name": "Light Blue Women",
+   "inspired_by": "Dolce & Gabbana",
+   "notes": "Citrus ■ Marine Notes ■ Musk"
+  },
+  {
+   "code": "F224",
+   "name": "Q by Dolce & Gabbana",
+   "inspired_by": "Dolce & Gabbana",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F225",
+   "name": "L'Imperatrice",
+   "inspired_by": "Dolce & Gabbana",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F226",
+   "name": "Dolce",
+   "inspired_by": "Dolce & Gabbana",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F227",
+   "name": "Gentleman",
+   "inspired_by": "Givenchy",
+   "notes": "Spices ■ Amber ■ Vanilla"
+  },
+  {
+   "code": "F228",
+   "name": "Gentleman Boisee",
+   "inspired_by": "Givenchy",
+   "notes": "Pepper ■ Iris ■ Woods"
+  },
+  {
+   "code": "F229",
+   "name": "Gentleman Reserve",
+   "inspired_by": "Givenchy",
+   "notes": "Whisky ■ Iris ■ Chestnut"
+  },
+  {
+   "code": "F230",
+   "name": "Gentleman Society",
+   "inspired_by": "Givenchy",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F232",
+   "name": "Gentleman Only",
+   "inspired_by": "Givenchy",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F233",
+   "name": "Pi",
+   "inspired_by": "Givenchy",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F234",
+   "name": "Xeryus Rouge",
+   "inspired_by": "Givenchy",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F235",
+   "name": "L'Interdit",
+   "inspired_by": "Givenchy",
+   "notes": "Orange Blossom ■ Tuberose ■ Patchouli"
+  },
+  {
+   "code": "F236",
+   "name": "L'Interdit Rouge",
+   "inspired_by": "Givenchy",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F237",
+   "name": "L'Interdit Intense",
+   "inspired_by": "Givenchy",
+   "notes": "Spices ■ Amber ■ Vanilla"
+  },
+  {
+   "code": "F238",
+   "name": "Irresistible",
+   "inspired_by": "Givenchy",
+   "notes": "Fruits ■ Flowers ■ Musk"
+  },
+  {
+   "code": "F239",
+   "name": "Very Irresistible",
+   "inspired_by": "Givenchy",
+   "notes": "Fruits ■ Flowers ■ Musk"
+  },
+  {
+   "code": "F240",
+   "name": "Ange ou Demon",
+   "inspired_by": "Givenchy",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F241",
+   "name": "Hero",
+   "inspired_by": "Burberry",
+   "notes": "Fruits ■ Flowers ■ Musk"
+  },
+  {
+   "code": "F244",
+   "name": "Mr. Burberry",
+   "inspired_by": "Burberry",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F245",
+   "name": "Mr. Burberry Indigo",
+   "inspired_by": "Burberry",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F246",
+   "name": "Burberry London for",
+   "inspired_by": "Burberry",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F247",
+   "name": "Burberry Touch for",
+   "inspired_by": "Burberry",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F248",
+   "name": "Burberry Brit for Men",
+   "inspired_by": "Burberry",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F249",
+   "name": "Burberry Her",
+   "inspired_by": "Burberry",
+   "notes": "Berries ■ Jasmine ■ Amber"
+  },
+  {
+   "code": "F250",
+   "name": "Burberry Her Elixir",
+   "inspired_by": "Burberry",
+   "notes": "Spices ■ Amber ■ Vanilla"
+  },
+  {
+   "code": "F251",
+   "name": "Burberry Her Intense",
+   "inspired_by": "Burberry",
+   "notes": "Spices ■ Amber ■ Vanilla"
+  },
+  {
+   "code": "F252",
+   "name": "Burberry Goddess",
+   "inspired_by": "Burberry",
+   "notes": "Lavender ■ Vanilla ■ Cacao"
+  },
+  {
+   "code": "F254",
+   "name": "My Burberry",
+   "inspired_by": "Burberry",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F255",
+   "name": "My Burberry Black",
+   "inspired_by": "Burberry",
+   "notes": "Spices ■ Amber ■ Woods"
+  },
+  {
+   "code": "F256",
+   "name": "Burberry Weekend",
+   "inspired_by": "Burberry",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F257",
+   "name": "Le Male",
+   "inspired_by": "Jean Paul Gaultier",
+   "notes": "Mint ■ Lavender ■ Vanilla"
+  },
+  {
+   "code": "F258",
+   "name": "Ultra Male",
+   "inspired_by": "Jean Paul Gaultier",
+   "notes": "Pear ■ Cinnamon ■ Vanilla"
+  },
+  {
+   "code": "F259",
+   "name": "Le Male Le",
+   "inspired_by": "Jean Paul Gaultier",
+   "notes": "Cardamom ■ Lavender ■ Vanilla"
+  },
+  {
+   "code": "F260",
+   "name": "Le Male Elixir",
+   "inspired_by": "Jean Paul Gaultier",
+   "notes": "Spices ■ Amber ■ Vanilla"
+  },
+  {
+   "code": "F261",
+   "name": "Le Beau",
+   "inspired_by": "Jean Paul Gaultier",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F262",
+   "name": "Le Beau Le",
+   "inspired_by": "Jean Paul Gaultier",
+   "notes": "Pineapple ■ Coconut ■ Tonka"
+  },
+  {
+   "code": "F263",
+   "name": "Le Beau Paradise",
+   "inspired_by": "Jean Paul Gaultier",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F264",
+   "name": "Scandal Pour Homme",
+   "inspired_by": "Jean Paul Gaultier",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F267",
+   "name": "La Belle",
+   "inspired_by": "Jean Paul Gaultier",
+   "notes": "Fruits ■ Flowers ■ Musk"
+  },
+  {
+   "code": "F268",
+   "name": "La Belle Le",
+   "inspired_by": "Jean Paul Gaultier",
+   "notes": "Spices ■ Amber ■ Vanilla"
+  },
+  {
+   "code": "F269",
+   "name": "La Belle Paradise",
+   "inspired_by": "Jean Paul Gaultier",
+   "notes": "Fruits ■ Flowers ■ Musk"
+  },
+  {
+   "code": "F270",
+   "name": "Scandal",
+   "inspired_by": "Jean Paul Gaultier",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F271",
+   "name": "Scandal Le",
+   "inspired_by": "Jean Paul Gaultier",
+   "notes": "Spices ■ Amber ■ Vanilla"
+  },
+  {
+   "code": "F272",
+   "name": "Classique",
+   "inspired_by": "Jean Paul Gaultier",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F273",
+   "name": "Boss Bottled",
+   "inspired_by": "Hugo Boss",
+   "notes": "Apple ■ Cinnamon ■ Woods"
+  },
+  {
+   "code": "F276",
+   "name": "Boss Bottled Elixir",
+   "inspired_by": "Hugo Boss",
+   "notes": "Incense ■ Vetiver ■ Cedar"
+  },
+  {
+   "code": "F277",
+   "name": "Boss Bottled Night",
+   "inspired_by": "Hugo Boss",
+   "notes": "Spices ■ Amber ■ Woods"
+  },
+  {
+   "code": "F278",
+   "name": "Boss Bottled Infinite",
+   "inspired_by": "Hugo Boss",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F279",
+   "name": "Boss The Scent",
+   "inspired_by": "Hugo Boss",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F281",
+   "name": "Boss The Scent Elixir",
+   "inspired_by": "Hugo Boss",
+   "notes": "Spices ■ Amber ■ Vanilla"
+  },
+  {
+   "code": "F282",
+   "name": "Boss The Scent for Her",
+   "inspired_by": "Hugo Boss",
+   "notes": "Fruits ■ Flowers ■ Musk"
+  },
+  {
+   "code": "F283",
+   "name": "Hugo Man",
+   "inspired_by": "Hugo Boss",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F284",
+   "name": "Hugo Reversed",
+   "inspired_by": "Hugo Boss",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F285",
+   "name": "Boss Orange Man",
+   "inspired_by": "Hugo Boss",
+   "notes": "Citrus ■ Neroli ■ Woods"
+  },
+  {
+   "code": "F286",
+   "name": "Boss Selection",
+   "inspired_by": "Hugo Boss",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F287",
+   "name": "Terre d'Hermes",
+   "inspired_by": "Hermès",
+   "notes": "Orange ■ Pepper ■ Vetiver"
+  },
+  {
+   "code": "F289",
+   "name": "Terre d'Hermes Eau",
+   "inspired_by": "Hermès",
+   "notes": "Fruits ■ Flowers ■ Musk"
+  },
+  {
+   "code": "F290",
+   "name": "H24",
+   "inspired_by": "Hermès",
+   "notes": "Clary Sage ■ Narcissus ■ Woods"
+  },
+  {
+   "code": "F292",
+   "name": "Voyage d'Hermes",
+   "inspired_by": "Hermès",
+   "notes": "Fruits ■ Flowers ■ Musk"
+  },
+  {
+   "code": "F293",
+   "name": "Eau d'Orange Verte",
+   "inspired_by": "Hermès",
+   "notes": "Citrus ■ Neroli ■ Woods"
+  },
+  {
+   "code": "F294",
+   "name": "Un Jardin sur le Nil",
+   "inspired_by": "Hermès",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F295",
+   "name": "Un Jardin en",
+   "inspired_by": "Hermès",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F296",
+   "name": "Un Jardin sur la",
+   "inspired_by": "Hermès",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F297",
+   "name": "Twilly d'Hermes",
+   "inspired_by": "Hermès",
+   "notes": "Fruits ■ Flowers ■ Musk"
+  },
+  {
+   "code": "F298",
+   "name": "Barenia",
+   "inspired_by": "Hermès",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F299",
+   "name": "Ambre Narguile",
+   "inspired_by": "Hermès",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F300",
+   "name": "Osmanthe Yunnan",
+   "inspired_by": "Hermès",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F301",
+   "name": "Declaration",
+   "inspired_by": "Cartier",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F303",
+   "name": "Declaration d'Un Soir",
+   "inspired_by": "Cartier",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F304",
+   "name": "Pasha de Cartier",
+   "inspired_by": "Cartier",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F306",
+   "name": "Santos de Cartier",
+   "inspired_by": "Cartier",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F307",
+   "name": "Roadster",
+   "inspired_by": "Cartier",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F308",
+   "name": "L'Envol de Cartier",
+   "inspired_by": "Cartier",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F309",
+   "name": "La Panthere",
+   "inspired_by": "Cartier",
+   "notes": "Fruits ■ Flowers ■ Musk"
+  },
+  {
+   "code": "F311",
+   "name": "Baiser Vole",
+   "inspired_by": "Cartier",
+   "notes": "White Flowers ■ Rose ■ Musk"
+  },
+  {
+   "code": "F312",
+   "name": "Must de Cartier",
+   "inspired_by": "Cartier",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F313",
+   "name": "CK One",
+   "inspired_by": "Calvin Klein",
+   "notes": "Citrus ■ Green Tea ■ Musk"
+  },
+  {
+   "code": "F314",
+   "name": "CK Be",
+   "inspired_by": "Calvin Klein",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F315",
+   "name": "CK Everyone",
+   "inspired_by": "Calvin Klein",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F316",
+   "name": "Eternity for Men",
+   "inspired_by": "Calvin Klein",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F317",
+   "name": "Eternity Aqua for Men",
+   "inspired_by": "Calvin Klein",
+   "notes": "Citrus ■ Marine Notes ■ Musk"
+  },
+  {
+   "code": "F318",
+   "name": "Eternity for Women",
+   "inspired_by": "Calvin Klein",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F319",
+   "name": "Euphoria Men",
+   "inspired_by": "Calvin Klein",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F320",
+   "name": "Euphoria Women",
+   "inspired_by": "Calvin Klein",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F321",
+   "name": "Obsession for Men",
+   "inspired_by": "Calvin Klein",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F322",
+   "name": "Obsession for Women",
+   "inspired_by": "Calvin Klein",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F323",
+   "name": "Defy",
+   "inspired_by": "Calvin Klein",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F325",
+   "name": "Escape for Men",
+   "inspired_by": "Calvin Klein",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F326",
+   "name": "Contradiction for Men",
+   "inspired_by": "Calvin Klein",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F327",
+   "name": "Cool Water",
+   "inspired_by": "Davidoff",
+   "notes": "Mint ■ Lavender ■ Musk"
+  },
+  {
+   "code": "F328",
+   "name": "Cool Water Intense",
+   "inspired_by": "Davidoff",
+   "notes": "Citrus ■ Marine Notes ■ Musk"
+  },
+  {
+   "code": "F330",
+   "name": "Cool Water Reborn",
+   "inspired_by": "Davidoff",
+   "notes": "Citrus ■ Marine Notes ■ Musk"
+  },
+  {
+   "code": "F331",
+   "name": "Cool Water Woman",
+   "inspired_by": "Davidoff",
+   "notes": "Citrus ■ Marine Notes ■ Musk"
+  },
+  {
+   "code": "F333",
+   "name": "Zino Davidoff",
+   "inspired_by": "Davidoff",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F334",
+   "name": "Davidoff Adventure",
+   "inspired_by": "Davidoff",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F335",
+   "name": "Champion",
+   "inspired_by": "Davidoff",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F336",
+   "name": "The Game",
+   "inspired_by": "Davidoff",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F337",
+   "name": "Horizon",
+   "inspired_by": "Davidoff",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F338",
+   "name": "Run Wild",
+   "inspired_by": "Davidoff",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F339",
+   "name": "L.12.12 Blanc",
+   "inspired_by": "Lacoste",
+   "notes": "Grapefruit ■ Rosemary ■ Cedar"
+  },
+  {
+   "code": "F340",
+   "name": "L.12.12 Blanc Eau",
+   "inspired_by": "Lacoste",
+   "notes": "Spices ■ Amber ■ Vanilla"
+  },
+  {
+   "code": "F341",
+   "name": "L.12.12 Noir",
+   "inspired_by": "Lacoste",
+   "notes": "Spices ■ Amber ■ Woods"
+  },
+  {
+   "code": "F342",
+   "name": "L.12.12 Rouge",
+   "inspired_by": "Lacoste",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F343",
+   "name": "L.12.12 Rose",
+   "inspired_by": "Lacoste",
+   "notes": "Rose ■ Musk ■ Woods"
+  },
+  {
+   "code": "F344",
+   "name": "Essential",
+   "inspired_by": "Lacoste",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F345",
+   "name": "Essential Sport",
+   "inspired_by": "Lacoste",
+   "notes": "Citrus ■ Aromatics ■ Woods"
+  },
+  {
+   "code": "F346",
+   "name": "Challenge",
+   "inspired_by": "Lacoste",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F347",
+   "name": "Match Point",
+   "inspired_by": "Lacoste",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F348",
+   "name": "Match Point Cologne",
+   "inspired_by": "Lacoste",
+   "notes": "Citrus ■ Aromatics ■ Woods"
+  },
+  {
+   "code": "F349",
+   "name": "Booster",
+   "inspired_by": "Lacoste",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F350",
+   "name": "Pour Femme",
+   "inspired_by": "Lacoste",
+   "notes": "White Flowers ■ Rose ■ Musk"
+  },
+  {
+   "code": "F351",
+   "name": "Explorer",
+   "inspired_by": "Montblanc",
+   "notes": "Bergamot ■ Vetiver ■ Patchouli"
+  },
+  {
+   "code": "F352",
+   "name": "Explorer Ultra Blue",
+   "inspired_by": "Montblanc",
+   "notes": "Citrus ■ Marine Notes ■ Musk"
+  },
+  {
+   "code": "F353",
+   "name": "Explorer Platinum",
+   "inspired_by": "Montblanc",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F354",
+   "name": "Legend",
+   "inspired_by": "Montblanc",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F356",
+   "name": "Legend Spirit",
+   "inspired_by": "Montblanc",
+   "notes": "Grapefruit ■ Lavender ■ White Woods"
+  },
+  {
+   "code": "F357",
+   "name": "Legend Night",
+   "inspired_by": "Montblanc",
+   "notes": "Spices ■ Amber ■ Woods"
+  },
+  {
+   "code": "F358",
+   "name": "Emblem",
+   "inspired_by": "Montblanc",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F359",
+   "name": "Emblem Intense",
+   "inspired_by": "Montblanc",
+   "notes": "Spices ■ Amber ■ Vanilla"
+  },
+  {
+   "code": "F360",
+   "name": "Individuel",
+   "inspired_by": "Montblanc",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F361",
+   "name": "Starwalker",
+   "inspired_by": "Montblanc",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F362",
+   "name": "Presence",
+   "inspired_by": "Montblanc",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F363",
+   "name": "L'Eau d'Issey Pour",
+   "inspired_by": "Issey Miyake",
+   "notes": "Yuzu ■ Spices ■ Woods"
+  },
+  {
+   "code": "F367",
+   "name": "Nuit d'Issey",
+   "inspired_by": "Issey Miyake",
+   "notes": "Spices ■ Amber ■ Woods"
+  },
+  {
+   "code": "F369",
+   "name": "Fusion d'Issey",
+   "inspired_by": "Issey Miyake",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F371",
+   "name": "L'Eau d'Issey",
+   "inspired_by": "Issey Miyake",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F372",
+   "name": "L'Eau d'Issey Rose &",
+   "inspired_by": "Issey Miyake",
+   "notes": "Rose ■ Musk ■ Woods"
+  },
+  {
+   "code": "F373",
+   "name": "A Drop d'Issey",
+   "inspired_by": "Issey Miyake",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F375",
+   "name": "Angels' Share",
+   "inspired_by": "Kilian Paris",
+   "notes": "Cognac ■ Cinnamon ■ Praline"
+  },
+  {
+   "code": "F376",
+   "name": "Angels' Share Paradis",
+   "inspired_by": "Kilian Paris",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F377",
+   "name": "Love, Don't Be Shy",
+   "inspired_by": "Kilian Paris",
+   "notes": "Neroli ■ Orange Blossom ■ Marshmallow"
+  },
+  {
+   "code": "F379",
+   "name": "Black Phantom",
+   "inspired_by": "Kilian Paris",
+   "notes": "Rum ■ Coffee ■ Caramel"
+  },
+  {
+   "code": "F380",
+   "name": "Straight to Heaven",
+   "inspired_by": "Kilian Paris",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F381",
+   "name": "Apple Brandy on the",
+   "inspired_by": "Kilian Paris",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F382",
+   "name": "Roses on Ice",
+   "inspired_by": "Kilian Paris",
+   "notes": "Rose ■ Musk ■ Woods"
+  },
+  {
+   "code": "F383",
+   "name": "Vodka on the Rocks",
+   "inspired_by": "Kilian Paris",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F384",
+   "name": "Good Girl Gone Bad",
+   "inspired_by": "Kilian Paris",
+   "notes": "Fruits ■ Flowers ■ Musk"
+  },
+  {
+   "code": "F385",
+   "name": "Rolling in Love",
+   "inspired_by": "Kilian Paris",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F386",
+   "name": "Intoxicated",
+   "inspired_by": "Kilian Paris",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F387",
+   "name": "Moonlight in Heaven",
+   "inspired_by": "Kilian Paris",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F388",
+   "name": "Smoking Hot",
+   "inspired_by": "Kilian Paris",
+   "notes": "Tobacco ■ Spices ■ Amber"
+  },
+  {
+   "code": "F389",
+   "name": "Old Fashioned",
+   "inspired_by": "Kilian Paris",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F390",
+   "name": "Blue Moon Ginger",
+   "inspired_by": "Kilian Paris",
+   "notes": "Citrus ■ Marine Notes ■ Musk"
+  },
+  {
+   "code": "F391",
+   "name": "Interlude Man",
+   "inspired_by": "Amouage",
+   "notes": "Oregano ■ Incense ■ Amber"
+  },
+  {
+   "code": "F392",
+   "name": "Interlude Black Iris",
+   "inspired_by": "Amouage",
+   "notes": "Spices ■ Amber ■ Woods"
+  },
+  {
+   "code": "F393",
+   "name": "Reflection Man",
+   "inspired_by": "Amouage",
+   "notes": "Neroli ■ Jasmine ■ Sandalwood"
+  },
+  {
+   "code": "F394",
+   "name": "Reflection 45",
+   "inspired_by": "Amouage",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F395",
+   "name": "Jubilation XXV Man",
+   "inspired_by": "Amouage",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F396",
+   "name": "Jubilation 40",
+   "inspired_by": "Amouage",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F397",
+   "name": "Epic Man",
+   "inspired_by": "Amouage",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F398",
+   "name": "Journey Man",
+   "inspired_by": "Amouage",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F399",
+   "name": "Memoir Man",
+   "inspired_by": "Amouage",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F400",
+   "name": "Beach Hut Man",
+   "inspired_by": "Amouage",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F401",
+   "name": "Enclave",
+   "inspired_by": "Amouage",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F402",
+   "name": "Overture Man",
+   "inspired_by": "Amouage",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F403",
+   "name": "Guidance",
+   "inspired_by": "Amouage",
+   "notes": "Pear ■ Saffron ■ Sandalwood"
+  },
+  {
+   "code": "F404",
+   "name": "Guidance 46",
+   "inspired_by": "Amouage",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F405",
+   "name": "Honour Woman",
+   "inspired_by": "Amouage",
+   "notes": "White Flowers ■ Rose ■ Musk"
+  },
+  {
+   "code": "F406",
+   "name": "Epic Woman",
+   "inspired_by": "Amouage",
+   "notes": "White Flowers ■ Rose ■ Musk"
+  },
+  {
+   "code": "F407",
+   "name": "Love Tuberose",
+   "inspired_by": "Amouage",
+   "notes": "Rose ■ Musk ■ Woods"
+  },
+  {
+   "code": "F408",
+   "name": "Sunshine Woman",
+   "inspired_by": "Amouage",
+   "notes": "White Flowers ■ Rose ■ Musk"
+  },
+  {
+   "code": "F409",
+   "name": "Naxos",
+   "inspired_by": "Xerjoff",
+   "notes": "Lavender ■ Honey ■ Tobacco"
+  },
+  {
+   "code": "F410",
+   "name": "Erba Pura",
+   "inspired_by": "Xerjoff",
+   "notes": "Citrus ■ Fruits ■ Musk"
+  },
+  {
+   "code": "F411",
+   "name": "Erba Gold",
+   "inspired_by": "Xerjoff",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F412",
+   "name": "Alexandria II",
+   "inspired_by": "Xerjoff",
+   "notes": "Lavender ■ Oud ■ Sandalwood"
+  },
+  {
+   "code": "F413",
+   "name": "Torino21",
+   "inspired_by": "Xerjoff",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F414",
+   "name": "Torino22",
+   "inspired_by": "Xerjoff",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F415",
+   "name": "Torino23",
+   "inspired_by": "Xerjoff",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F416",
+   "name": "Tony Iommi Monkey",
+   "inspired_by": "Xerjoff",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F417",
+   "name": "Lira",
+   "inspired_by": "Xerjoff",
+   "notes": "Citrus ■ Caramel ■ Vanilla"
+  },
+  {
+   "code": "F418",
+   "name": "Dama Bianca",
+   "inspired_by": "Xerjoff",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F419",
+   "name": "Italica",
+   "inspired_by": "Xerjoff",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F420",
+   "name": "Renaissance",
+   "inspired_by": "Xerjoff",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F421",
+   "name": "Uden",
+   "inspired_by": "Xerjoff",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F422",
+   "name": "Uden Overdose",
+   "inspired_by": "Xerjoff",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F423",
+   "name": "More Than Words",
+   "inspired_by": "Xerjoff",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F424",
+   "name": "40 Knots",
+   "inspired_by": "Xerjoff",
+   "notes": "Marine Notes ■ Woods ■ Amber"
+  },
+  {
+   "code": "F425",
+   "name": "Accento",
+   "inspired_by": "Xerjoff",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F426",
+   "name": "Opera",
+   "inspired_by": "Xerjoff",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F427",
+   "name": "La Capitale",
+   "inspired_by": "Xerjoff",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F428",
+   "name": "Ivory Route",
+   "inspired_by": "Xerjoff",
+   "notes": "Citrus ■ Aromatic Notes ■ Woods"
+  },
+  {
+   "code": "F429",
+   "name": "Hudson Valley",
+   "inspired_by": "Gissah",
+   "notes": "Blackcurrant ■ Saffron ■ Rose ■ Patchouli ■ Amber"
+  },
+  {
+   "code": "F430",
+   "name": "Imperial Valley",
+   "inspired_by": "Gissah",
+   "notes": "Davana ■ Italian Bergamot ■ Pink Pepper ■ White Amber ■ Rosemary ■ Oud ■ Musk ■ Leather ■ Vetiver"
+  },
+  {
+   "code": "F431",
+   "name": "La Luna",
+   "inspired_by": "Gissah",
+   "notes": "Incense ■ Raspberry ■ Apricot ■ Cotton Candy ■ Sandalwood ■ Guaiac Wood ■ Patchouli ■ Tonka ■ Amber"
+  },
+  {
+   "code": "F432",
+   "name": "One & Only",
+   "inspired_by": "Gissah",
+   "notes": "Bergamot ■ Passion Fruit ■ Peach ■ Jasmine ■ Geranium ■ Caramel ■ Patchouli ■ Ambergris ■ White Musk"
+  },
+  {
+   "code": "F433",
+   "name": "Sava",
+   "inspired_by": "Gissah",
+   "notes": "Berries ■ Citrus Aurantium ■ Praline ■ Cinnamon ■ Orris ■ Madagascar Vanilla ■ Amber ■ Sandalwood"
+  },
+  {
+   "code": "F434",
+   "name": "Liquid Gold",
+   "inspired_by": "Gissah",
+   "notes": "Saffron ■ Rose ■ Sandalwood ■ Cashmere ■ Patchouli ■ Oud ■ Amber ■ Musk"
+  },
+  {
+   "code": "F435",
+   "name": "Capri",
+   "inspired_by": "Gissah",
+   "notes": "Sorrento Lemon ■ Marine Notes ■ Blue Ginger ■ Sandalwood ■ Apple ■ Patchouli ■ Incense ■ Amber ■ Vetiver"
+  },
+  {
+   "code": "F436",
+   "name": "Calabria",
+   "inspired_by": "Gissah",
+   "notes": "Bergamot ■ Pink Pepper ■ Green Apple ■ Cashmere ■ Iris ■ Patchouli ■ Amberwood ■ Tonka ■ Vetiver"
+  },
+  {
+   "code": "F437",
+   "name": "Akoya",
+   "inspired_by": "Gissah",
+   "notes": "Bergamot ■ Orange ■ Raspberry ■ Caramel ■ Lavender ■ Jasmine ■ Woodleather ■ Patchouli ■ Sandalwood"
+  },
+  {
+   "code": "F438",
+   "name": "Hudson II",
+   "inspired_by": "Gissah",
+   "notes": "Floral Fruits ■ White Roses ■ Saffron ■ Amber ■ Musk ■ Tonka Bean"
+  },
+  {
+   "code": "F439",
+   "name": "Mavro",
+   "inspired_by": "Gissah",
+   "notes": "Bergamot ■ Grapefruit ■ Lemon ■ Pink Pepper ■ Praline ■ Saffron ■ Cedarwood ■ Patchouli ■ Tonka"
+  },
+  {
+   "code": "F440",
+   "name": "Siena Valley",
+   "inspired_by": "Gissah",
+   "notes": "Bergamot ■ Raspberry ■ Rosemary ■ Caramel ■ Osmanthus ■ Jasmine ■ Patchouli ■ Cedarwood ■ Leather"
+  }
+ ]
+}

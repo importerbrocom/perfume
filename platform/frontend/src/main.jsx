@@ -7,6 +7,7 @@ import { CartProvider } from './lib/cart';
 import Layout from './components/Layout';
 import CartDrawer from './components/CartDrawer';
 import Home from './pages/Home';
+import Fixnote from './pages/Fixnote';
 import Shop from './pages/Shop';
 import Product from './pages/Product';
 import Cart from './pages/Cart';
@@ -43,11 +44,12 @@ export function App() {
           <Suspense fallback={loading}>
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/shop-fixnote" element={<Fixnote />} />
+              <Route path="/shop-fixnote/:region" element={<Fixnote />} />
               <Route path="/admin/*" element={<AdminApp />} />
               <Route element={<Layout />}>
                 <Route path="/shop" element={<Shop />} />
                 <Route path="/shop-perfumarathi" element={<Shop key="perfumarathi" brand="perfumarathi" />} />
-                <Route path="/shop-fixnote" element={<Shop key="fixnote" brand="fixnote" />} />
                 <Route path="/brand/:brand" element={<Shop />} />
                 <Route path="/category/:category" element={<Shop />} />
                 <Route path="/product/:slug" element={<Product />} />

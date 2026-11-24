@@ -26,6 +26,11 @@ class OrderController extends Controller
                 ->orWhere('customer_email', 'like', $t)->orWhere('customer_phone', 'like', $t)->orWhere('tracking_number', 'like', $t));
         }
 
+        // Orders with at least one item of this brand (deleted products included).
+        if (! empty($v['brand'])) {
+            $q->whereHas('items.product', fn ($p) => $p->withTrashed()->whereHas('brand', fn ($b) => $b->where('slug', $v['brand'])));
+        }
+
         return $q->when($v['status'] ?? null, fn ($q, $s) => $q->where('status', $s))
             ->when($v['payment_status'] ?? null, fn ($q, $s) => $q->where('payment_status', $s))
             ->when($v['payment_method'] ?? null, fn ($q, $s) => $q->where('payment_method', $s))
@@ -41,6 +46,7 @@ class OrderController extends Controller
             'status' => ['nullable', Rule::in(Order::STATUSES)],
             'payment_status' => ['nullable', Rule::in(Order::PAYMENT_STATUSES)],
             'payment_method' => 'nullable|string|max:30',
+            'brand' => 'nullable|string|max:100',
             'from' => 'nullable|date', 'to' => 'nullable|date',
             'page' => 'nullable|integer|min:1',
         ]);
@@ -48,7 +54,8 @@ class OrderController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $page = $this->filtered($this->filters($request))->paginate(25);
+        $v = $this->filters($request);
+        $page = $this->filtered($v)->paginate(25);
 
         return response()->json([
             'data' => collect($page->items())->map(fn (Order $o) => [
@@ -59,7 +66,9 @@ class OrderController extends Controller
                 'total' => (float) $o->total, 'currency' => $o->currency, 'items_count' => $o->items_count,
             ]),
             'meta' => ['page' => $page->currentPage(), 'pages' => $page->lastPage(), 'total' => $page->total()],
-            'counts' => Order::query()->selectRaw('status, count(*) as n')->groupBy('status')->pluck('n', 'status'),
+            'counts' => Order::query()
+                ->when($v['brand'] ?? null, fn ($q, $slug) => $q->whereHas('items.product', fn ($p) => $p->withTrashed()->whereHas('brand', fn ($b) => $b->where('slug', $slug))))
+                ->selectRaw('status, count(*) as n')->groupBy('status')->pluck('n', 'status'),
         ]);
     }
 
