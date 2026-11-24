@@ -4,7 +4,7 @@ namespace Tests\Unit;
 
 use App\Models\Coupon;
 use App\Services\StripeGateway;
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
 
 class MoneyTest extends TestCase
 {
