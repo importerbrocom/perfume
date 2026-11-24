@@ -196,10 +196,15 @@ sync_assets() { # $1 release folder, $2 previous release folder (optional)
   done
 }
 
+write_index() { # $1 release: its front controller, pointing at ~/pmshop/current (written atomically)
+  PM_APP_DIR="$APP/current" "$PHP_BIN" -r '$t = file_get_contents($argv[1]); file_put_contents($argv[2], str_replace("__PM_APP_DIR__", addcslashes(getenv("PM_APP_DIR"), "\\\x27"), $t));' \
+    "$1/deploy/index.php" "$DOCROOT/index.php.new"
+  chmod 644 "$DOCROOT/index.php.new" && mv -f "$DOCROOT/index.php.new" "$DOCROOT/index.php"
+}
+
 write_docroot() { # turns the (cleared) web folder into the shop
   local blocks; blocks=$(cpanel_blocks "${1:-}")
-  PM_APP_DIR="$APP/current" "$PHP_BIN" -r '$t = file_get_contents($argv[1]); file_put_contents($argv[2], str_replace("__PM_APP_DIR__", addcslashes(getenv("PM_APP_DIR"), "\\\x27"), $t));' \
-    "$APP/current/deploy/index.php" "$DOCROOT/index.php"
+  write_index "$APP/current"
   { [ -z "$blocks" ] || printf '%s\n\n' "$blocks"; cat "$APP/current/deploy/htaccess"; } > "$DOCROOT/.htaccess"
   chmod 644 "$DOCROOT/index.php" "$DOCROOT/.htaccess"
   ln -sfn "$APP/shared/storage/app/public" "$DOCROOT/storage"
@@ -451,11 +456,12 @@ cmd_update() {
   fi
   cache_app "$rel"
   switch_to "$rel"
+  write_index "$rel"
   sync_assets "$rel" "$old"
   artisan up -q || true
   if ! health; then
     echo "    The new version did not answer; going back to $(basename "$old")." >&2
-    switch_to "$old"; sync_assets "$old" "$rel"; cache_app "$old"
+    switch_to "$old"; write_index "$old"; sync_assets "$old" "$rel"; cache_app "$old"
     die "Rolled back to $(basename "$old"). Database changes (if any) were kept; backup in $APP/shared/backups/."
   fi
   install_cron >/dev/null
@@ -475,7 +481,7 @@ cmd_rollback() {
   [ -n "$prev" ] && [ -d "$prev" ] || die "There is no older release to go back to."
   echo "    $(basename "$cur")  ->  $(basename "$prev")"
   yes_no "Go back? Database changes made by the newer version are not undone. y/n" y || die "Cancelled."
-  link_shared "$prev"; cache_app "$prev"; switch_to "$prev"; sync_assets "$prev" "$cur"
+  link_shared "$prev"; cache_app "$prev"; switch_to "$prev"; write_index "$prev"; sync_assets "$prev" "$cur"
   health || echo "    warning: $HEALTH_URL did not answer 200." >&2
   echo "Now running $(basename "$prev"). Database backups: $APP/shared/backups/"
 }

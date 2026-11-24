@@ -11,7 +11,11 @@ use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
-$app_dir = '__PM_APP_DIR__';
+$link = '__PM_APP_DIR__';
+// Follow the "current" link on every request. readlink() is not cached (realpath() is, for up to
+// 2 minutes), so a release switch takes effect at once in long-running PHP processes (LiteSpeed).
+$target = is_link($link) ? readlink($link) : false;
+$app_dir = $target === false ? $link : ($target[0] === '/' ? $target : dirname($link).'/'.$target);
 
 if (file_exists($maintenance = $app_dir.'/storage/framework/maintenance.php')) {
     require $maintenance;
