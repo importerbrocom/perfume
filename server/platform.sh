@@ -160,7 +160,13 @@ cache_app() { # $1 release folder
   artisan_in "$1" route:cache -q
   artisan_in "$1" view:cache -q
   artisan_in "$1" event:cache -q
+  restart_php
 }
+
+# LiteSpeed runs this account's PHP in "detached mode": the processes keep old settings and code in memory.
+# Touching these files makes LiteSpeed (or CloudLinux mod_lsapi) restart them on the next request.
+# https://docs.litespeedtech.com/lsws/cp/cpanel/php/
+restart_php() { touch "$HOME/.lsphp_restart.txt" "$HOME/mod_lsapi_reset_me" 2>/dev/null || true; }
 
 current_version() { [ -L "$APP/current" ] && basename "$(readlink "$APP/current")" || echo none; }
 switch_to() { ln -sfn "$1" "$APP/current.new" && mv -T "$APP/current.new" "$APP/current"; }
@@ -459,6 +465,7 @@ cmd_update() {
   write_index "$rel"
   sync_assets "$rel" "$old"
   artisan up -q || true
+  restart_php
   if ! health; then
     echo "    The new version did not answer; going back to $(basename "$old")." >&2
     switch_to "$old"; write_index "$old"; sync_assets "$old" "$rel"; cache_app "$old"
@@ -481,7 +488,7 @@ cmd_rollback() {
   [ -n "$prev" ] && [ -d "$prev" ] || die "There is no older release to go back to."
   echo "    $(basename "$cur")  ->  $(basename "$prev")"
   yes_no "Go back? Database changes made by the newer version are not undone. y/n" y || die "Cancelled."
-  link_shared "$prev"; cache_app "$prev"; switch_to "$prev"; write_index "$prev"; sync_assets "$prev" "$cur"
+  link_shared "$prev"; cache_app "$prev"; switch_to "$prev"; write_index "$prev"; sync_assets "$prev" "$cur"; restart_php
   health || echo "    warning: $HEALTH_URL did not answer 200." >&2
   echo "Now running $(basename "$prev"). Database backups: $APP/shared/backups/"
 }
@@ -522,6 +529,7 @@ cmd_publish() {
     *) die "$DOCROOT has other files; not overwriting.";;
   esac
   write_docroot "${bk:+$bk/files/.htaccess}"
+  restart_php
   health || echo "    warning: $HEALTH_URL did not answer 200." >&2
   install_cron
   echo "The shop is on $DOMAIN.${bk:+ WordPress backup: $bk}"

@@ -222,7 +222,7 @@ test.describe('as manager', () => {
   test('manager handles products but cannot open settings, payments or staff', async ({ page, isMobile }) => {
     await page.goto('/admin');
     await openMenu(page, isMobile);
-    await expect(page.getByRole('link', { name: 'Products' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Products', exact: true })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Store settings' })).toHaveCount(0);
     await expect(page.getByRole('link', { name: 'Payment methods' })).toHaveCount(0);
     await page.goto('/admin/payments');
